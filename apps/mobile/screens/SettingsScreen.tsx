@@ -1,5 +1,13 @@
 import { useEffect, useState } from "react";
-import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import {
+  ActivityIndicator,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import { ALL_SECTORS, translateSector, type Locale } from "@borocean/shared";
 import { useLocale } from "../lib/locale-context";
 import { useTheme, radius, spacing, type ThemeColors } from "../lib/theme";
@@ -10,6 +18,8 @@ import {
 } from "../lib/notification-settings-client";
 import { registerForPushNotificationsAsync } from "../lib/push-notifications";
 import { fetchEntitlement, type Entitlement } from "../lib/entitlements-client";
+import { deleteAccount } from "../lib/account-client";
+import { openWebPage } from "../lib/web-links";
 
 export function SettingsScreen({ onBack }: { onBack: () => void }) {
   const { locale, messages, setLocale } = useLocale();
@@ -23,6 +33,24 @@ export function SettingsScreen({ onBack }: { onBack: () => void }) {
   const [error, setError] = useState<string | null>(null);
   const [interestSectors, setInterestSectors] = useState<string[]>([]);
   const [entitlement, setEntitlement] = useState<Entitlement | null>(null);
+  const [deleteConfirmText, setDeleteConfirmText] = useState("");
+  const [deletingAccount, setDeletingAccount] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+
+  const deleteConfirmed =
+    deleteConfirmText.trim().toLocaleUpperCase("tr") === messages.settings.deleteAccountConfirmWord;
+
+  async function handleDeleteAccount() {
+    setDeletingAccount(true);
+    setDeleteError(null);
+    try {
+      // On success the session is cleared and App.tsx swaps to AuthScreen, unmounting this.
+      await deleteAccount();
+    } catch {
+      setDeleteError(messages.settings.deleteAccountError);
+      setDeletingAccount(false);
+    }
+  }
 
   useEffect(() => {
     let cancelled = false;
@@ -136,7 +164,7 @@ export function SettingsScreen({ onBack }: { onBack: () => void }) {
   }
 
   return (
-    <View style={styles.container}>
+    <ScrollView style={styles.scroll} contentContainerStyle={styles.container}>
       <TouchableOpacity onPress={onBack}>
         <Text style={styles.backLink}>{messages.settings.backToDashboard}</Text>
       </TouchableOpacity>
@@ -278,16 +306,85 @@ export function SettingsScreen({ onBack }: { onBack: () => void }) {
         )}
         {error && <Text style={styles.error}>{error}</Text>}
       </View>
-    </View>
+
+      <View style={styles.card}>
+        <Text style={styles.label}>{messages.settings.legalTitle}</Text>
+        <TouchableOpacity onPress={() => openWebPage("terms")}>
+          <Text style={styles.linkText}>{messages.legal.termsTitle}</Text>
+        </TouchableOpacity>
+        <TouchableOpacity onPress={() => openWebPage("kvkk")}>
+          <Text style={styles.linkText}>{messages.legal.kvkkTitle}</Text>
+        </TouchableOpacity>
+        <TouchableOpacity onPress={() => openWebPage("privacy")}>
+          <Text style={styles.linkText}>{messages.legal.privacyTitle}</Text>
+        </TouchableOpacity>
+      </View>
+
+      <View style={styles.card}>
+        <Text style={styles.label}>{messages.settings.deleteAccountTitle}</Text>
+        <Text style={styles.hint}>{messages.settings.deleteAccountBody}</Text>
+        <TextInput
+          style={styles.input}
+          placeholder={messages.settings.deleteAccountConfirmLabel}
+          placeholderTextColor={colors.textTertiary}
+          autoCapitalize="characters"
+          autoCorrect={false}
+          value={deleteConfirmText}
+          onChangeText={setDeleteConfirmText}
+        />
+        {deleteError && <Text style={styles.error}>{deleteError}</Text>}
+        <TouchableOpacity
+          style={[styles.dangerButton, (!deleteConfirmed || deletingAccount) && styles.disabled]}
+          disabled={!deleteConfirmed || deletingAccount}
+          onPress={handleDeleteAccount}
+        >
+          <Text style={styles.dangerButtonText}>
+            {deletingAccount
+              ? messages.settings.deletingAccount
+              : messages.settings.deleteAccountButton}
+          </Text>
+        </TouchableOpacity>
+      </View>
+    </ScrollView>
   );
 }
 
 function makeStyles(colors: ThemeColors) {
   return StyleSheet.create({
-    container: {
+    scroll: {
       flex: 1,
-      gap: spacing[3],
       backgroundColor: colors.canvas,
+    },
+    container: {
+      gap: spacing[3],
+      paddingBottom: spacing[6],
+    },
+    linkText: {
+      color: colors.accent,
+      fontWeight: "600",
+    },
+    input: {
+      borderWidth: 1,
+      borderColor: colors.borderDefault,
+      backgroundColor: colors.surfaceElevated,
+      borderRadius: radius.md,
+      paddingHorizontal: spacing[3],
+      paddingVertical: spacing[2],
+      color: colors.textPrimary,
+    },
+    dangerButton: {
+      borderWidth: 1,
+      borderColor: colors.negative,
+      borderRadius: radius.md,
+      paddingVertical: spacing[3],
+      alignItems: "center",
+    },
+    dangerButtonText: {
+      color: colors.negative,
+      fontWeight: "700",
+    },
+    disabled: {
+      opacity: 0.5,
     },
     backLink: {
       color: colors.accent,

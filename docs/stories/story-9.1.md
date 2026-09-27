@@ -4,13 +4,15 @@ epic: "Epic 9 — AI Destekli Yorum ve Örüntü Tanıma"
 story_id: "9.1"
 status: done
 created: 2026-09-16
-updated: 2026-09-20
+updated: 2026-09-28
 author: Mary (BMAD Business Analyst) & Bob (BMAD Scrum Master) — Serdar Ulaş Budak ile birlikte
 based_on: ["docs/PRD.md §5.11", "docs/epics.md §13", "docs/product-brief-epic9-ai.md §\"2026-09-18 Güncellemesi\""]
 depends_on: ["2.1", "2.2", "2.3", "8.1"]
 ---
 
 # Story 9.1: Temel Analiz AI Raporu
+
+> **Güncelleme (2026-09-28, Story 12.1):** Prompt, ortak uyum kurallarıyla (al/sat/tut, hedef fiyat, kişisel tavsiye yasak) yeniden yazıldı. Rapor "Finansal durum / Analiz / Riskler" yapısında; eski prompt'la üretilmiş önbellekteki raporlar yeniden üretiliyor. Bu story'nin açık "hukuki teyit" maddesi için bkz. `docs/compliance.md` §4.
 
 ## Kullanıcı Hikayesi
 

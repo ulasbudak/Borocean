@@ -3,7 +3,7 @@ import type { Messages } from "../types";
 export const tr: Messages = {
   common: {
     appName: "Borocean",
-    disclaimer: "Bu sayfadaki bilgiler yatırım tavsiyesi değildir.",
+    disclaimer: "Bu içerik yatırım tavsiyesi değildir; yalnızca kamuya açık verilerin analizi ve bilgilendirme amacı taşır.",
     dataUnavailable: "Veri şu an güncellenemiyor.",
     noData: "Veri yok",
     loading: "Yükleniyor...",
@@ -14,7 +14,7 @@ export const tr: Messages = {
   },
   auth: {
     title: "Giriş Yap / Kayıt Ol",
-    subtitle: "Piyasaları takip et, sinyalleri yakala, bir adım önde ol.",
+    subtitle: "Hisseleri kamuya açık verilerle analiz et, karşılaştır, takip et.",
     email: "E-posta",
     password: "Şifre",
     login: "Giriş Yap",
@@ -26,6 +26,7 @@ export const tr: Messages = {
     redirecting: "Yönlendiriliyor...",
     orDivider: "veya",
     forgotPassword: "Şifremi unuttum",
+    forgotPasswordBrowserHint: "Şifre sıfırlama sayfası tarayıcında açılır. Yeni şifreni belirledikten sonra uygulamaya dönüp giriş yap.",
     forgotPasswordTitle: "Şifreni sıfırla",
     forgotPasswordSubtitle: "Hesabının e-posta adresini gir, sana şifre sıfırlama bağlantısı gönderelim.",
     sendResetLink: "Sıfırlama bağlantısı gönder",
@@ -143,12 +144,22 @@ export const tr: Messages = {
     bearish: "Düşüş",
   },
   score: {
-    title: "Özet Değerlendirme Skoru",
+    title: "Metrik Puanı",
     noData: "Yeterli veri yok",
     outOf: "/ 100",
-    explanationToggle: "Bu skor neye dayanıyor?",
-    consensusLabel: "Teknik Konsensüs",
-    consensusOutOf: "gösterge yükseliş yönünde",
+    explanationToggle: "Bu puan neye dayanıyor?",
+    consensusLabel: "Teknik göstergeler",
+    consensusOutOf: "gösterge şu an yukarı yönlü",
+    categoriesLabel: "Kategoriler",
+    categories: {
+      valuation: "Değerleme",
+      profitability: "Kârlılık",
+      leverage: "Borçluluk",
+      growth: "Büyüme",
+      technical: "Teknik görünüm",
+    },
+    basisNote:
+      "Puanlar, kamuya açık finansal ve fiyat verilerinden sabit kurallarla hesaplanır; bir al/sat önerisi değildir ve kişisel durumunu dikkate almaz.",
   },
   fundamentals: {
     peRatio: "F/K Oranı",
@@ -194,6 +205,15 @@ export const tr: Messages = {
     notificationSaveError: "Bildirim tercihi kaydedilemedi.",
     on: "Açık",
     off: "Kapalı",
+    legalTitle: "Hukuki metinler",
+    deleteAccountTitle: "Hesabı sil",
+    deleteAccountBody:
+      "Hesabın ve ona bağlı tüm verilerin (izleme listeleri, alarmlar, portföyler, simülasyonlar, notlar, kayıtlı taramalar, bildirim ayarları) kalıcı olarak silinir. Bu işlem geri alınamaz.",
+    deleteAccountButton: "Hesabımı kalıcı olarak sil",
+    deleteAccountConfirmLabel: "Onaylamak için SİL yaz",
+    deleteAccountConfirmWord: "SİL",
+    deletingAccount: "Siliniyor...",
+    deleteAccountError: "Hesap şu an silinemedi. Lütfen tekrar dene.",
   },
   screener: {
     bistDisabledNote: "Borsa İstanbul (BIST) şu an devre dışı — şimdilik yalnızca ABD hisseleri destekleniyor.",
@@ -215,8 +235,8 @@ export const tr: Messages = {
     rsiMaxLabel: "Maks. RSI",
     volumeMinLabel: "Min. hacim",
     defaultsNote:
-      "Alanlar önerilen bir kalite taraması (F/K, ROE, Borç/Özsermaye, RSI) ile önceden dolduruldu — istediğini değiştirebilir veya boşaltabilirsin.",
-    resetDefaults: "Önerilen değerlere dön",
+      "Alanlar örnek bir kalite taraması (F/K, ROE, Borç/Özsermaye, RSI) ile önceden dolduruldu — istediğini değiştirebilir veya boşaltabilirsin.",
+    resetDefaults: "Varsayılan değerlere dön",
     runButton: "Taramayı çalıştır",
     running: "Çalışıyor...",
     noResults: "Kriterlere uyan hisse bulunamadı.",
@@ -330,7 +350,7 @@ export const tr: Messages = {
     rowDebtToEquity: "Borç/Özsermaye",
     rowNetMargin: "Net Kâr Marjı",
     rowRsi: "RSI",
-    rowScore: "Özet Skor",
+    rowScore: "Metrik Puanı",
     noValue: "—",
   },
   portfolio: {
@@ -469,7 +489,7 @@ export const tr: Messages = {
   },
   aiAnalysis: {
     title: "AI Analiz",
-    deterministicTitle: "Deterministik Skor",
+    deterministicTitle: "Kural Bazlı Metrik Puanı",
     combinedTitle: "Ortak Değerlendirme",
     technicalTitle: "Teknik Analiz AI Raporu",
     technicalGeneratingHint: "Grafik modeli çalışıyor, bu biraz daha uzun sürebilir…",
@@ -484,7 +504,7 @@ export const tr: Messages = {
       "Temel ve teknik raporların yapay zeka tarafından sentezlenmiş özetidir — yatırım tavsiyesi değildir.",
     technicalDisclaimer:
       "Üçüncü taraf, deneysel bir modelin okumasıdır — yatırım tavsiyesi değildir.",
-    fundamentalDisclaimer: "Yapay zeka tarafından üretilmiştir — yatırım tavsiyesi değildir.",
+    fundamentalDisclaimer: "Yapay zeka tarafından kamuya açık verilerden üretilmiştir — yatırım tavsiyesi değildir.",
     bistUnsupported: "BIST hisseleri için bu rapor henüz desteklenmiyor.",
   },
   bulletin: {
@@ -493,9 +513,18 @@ export const tr: Messages = {
     loadError: "Bülten şu an yüklenemiyor.",
     empty: "Henüz bülten yok.",
     lockedMessage: "Günlük sektör bülteni premium'a özel.",
-    picksLabel: "Öne çıkan hisseler",
-    disclaimer: "Yapay zeka tarafından üretilmiştir — yatırım tavsiyesi değildir.",
+    picksLabel: "Bültende incelenen şirketler (piyasa değerine göre)",
+    disclaimer: "Yapay zeka tarafından kamuya açık verilerden üretilmiştir — yatırım tavsiyesi değildir.",
     readMoreLabel: "Devamını oku",
     readLessLabel: "Daha az göster",
+  },
+  legal: {
+    termsTitle: "Kullanım Koşulları",
+    kvkkTitle: "KVKK Aydınlatma Metni",
+    privacyTitle: "Gizlilik Politikası",
+    signupNotice:
+      "Kayıt olarak Kullanım Koşulları'nı kabul etmiş ve KVKK Aydınlatma Metni'ni okumuş olursun. Borocean bir yatırım danışmanlığı hizmeti değildir.",
+    lastUpdated: "Son güncelleme",
+    backToHome: "Ana sayfaya dön",
   },
 };

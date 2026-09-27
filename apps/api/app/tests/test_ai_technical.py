@@ -90,7 +90,7 @@ async def test_generates_and_saves_report_on_cache_miss(monkeypatch):
         return _make_candles(30)
 
     def fake_run_inference(candles):
-        return [Detection(label="Buy", confidence=0.8)]
+        return [Detection(label="upward", confidence=0.8)]
 
     def fake_save_report(symbol, exchange, report_type, content):
         saved["symbol"] = symbol
@@ -106,10 +106,10 @@ async def test_generates_and_saves_report_on_cache_miss(monkeypatch):
     report = await get_technical_report("AAPL", "US")
 
     assert report.cached is False
-    assert report.detections == [Detection(label="Buy", confidence=0.8)]
+    assert report.detections == [Detection(label="upward", confidence=0.8)]
     assert saved["symbol"] == "AAPL"
     assert saved["report_type"] == "technical"
-    assert "Al" in report.report
+    assert "yukarı yönlü" in report.report
 
 
 def test_summarize_detections_handles_empty_list():
@@ -121,14 +121,17 @@ def test_summarize_detections_handles_empty_list():
 
 def test_summarize_detections_reports_counts_and_top_confidence():
     detections = [
-        Detection(label="Buy", confidence=0.4),
-        Detection(label="Sell", confidence=0.9),
+        Detection(label="upward", confidence=0.4),
+        Detection(label="downward", confidence=0.9),
     ]
 
     text = _summarize_detections(detections)
 
-    assert "1 Al ve 1 Sat" in text
-    assert "Sell" in text
+    assert "1 yukarı yönlü ve 1 aşağı yönlü" in text
+    assert "aşağı yönlü örüntü (%90" in text
+    assert "yatırım tavsiyesi değildir" in text
+    for word in (" Al ", " Sat ", "Buy", "Sell"):
+        assert word not in text
 
 
 def _yolo_output(rows: list[tuple[float, float, float, float, float, float]]) -> np.ndarray:
@@ -149,8 +152,8 @@ def test_decode_detections_drops_low_confidence_and_overlapping_boxes():
     detections = _decode_detections(output)
 
     assert [(d.label, round(d.confidence, 2)) for d in detections] == [
-        ("Buy", 0.9),
-        ("Sell", 0.7),
+        ("upward", 0.9),
+        ("downward", 0.7),
     ]
 
 
@@ -164,4 +167,4 @@ def test_decode_detections_keeps_overlapping_boxes_of_different_classes():
 
     labels = sorted(d.label for d in _decode_detections(output))
 
-    assert labels == ["Buy", "Sell"]
+    assert labels == ["downward", "upward"]

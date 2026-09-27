@@ -29,6 +29,18 @@ export default async function Home() {
           {isAuthenticated ? t.home.goToDashboard : t.home.loginOrSignup}
           <ArrowRight size={16} />
         </Link>
+        <p className="text-xs text-text-tertiary">{t.common.disclaimer}</p>
+        <nav className="flex flex-wrap justify-center gap-x-4 gap-y-1 text-xs text-text-tertiary">
+          <Link href="/terms" className="underline hover:text-text-primary">
+            {t.legal.termsTitle}
+          </Link>
+          <Link href="/kvkk" className="underline hover:text-text-primary">
+            {t.legal.kvkkTitle}
+          </Link>
+          <Link href="/privacy" className="underline hover:text-text-primary">
+            {t.legal.privacyTitle}
+          </Link>
+        </nav>
       </div>
     </div>
   );

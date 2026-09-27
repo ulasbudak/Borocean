@@ -7,7 +7,13 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { formatChange, formatMarketCap, formatPrice, signColor } from "@borocean/shared";
+import {
+  BIST_ENABLED,
+  formatChange,
+  formatMarketCap,
+  formatPrice,
+  signColor,
+} from "@borocean/shared";
 import { useLocale } from "../lib/locale-context";
 import { useTheme, radius, spacing, type ThemeColors } from "../lib/theme";
 import { AIAnalysisPanel } from "./AIAnalysisPanel";
@@ -18,6 +24,7 @@ import { AddToWatchlistButton } from "./AddToWatchlistButton";
 import { CreatePriceAlertButton } from "./CreatePriceAlertButton";
 import { CreateSignalAlertButton } from "./CreateSignalAlertButton";
 import { StockNoteCard } from "./StockNoteCard";
+import { SimulateBuyButton } from "./SimulateBuyButton";
 import { fetchEntitlement } from "../lib/entitlements-client";
 
 type StockOverview = {
@@ -42,10 +49,12 @@ export function StockOverviewScreen({
   symbol,
   exchange,
   onBack,
+  onOpenSimulation,
 }: {
   symbol: string;
   exchange: string;
   onBack: () => void;
+  onOpenSimulation: () => void;
 }) {
   const { locale, messages } = useLocale();
   const { mode, colors } = useTheme();
@@ -56,6 +65,9 @@ export function StockOverviewScreen({
   const [fetchFailed, setFetchFailed] = useState(false);
   const [tab, setTab] = useState<"overview" | "fundamentals" | "technical" | "ai">("overview");
   const [showDelayDisclosure, setShowDelayDisclosure] = useState(false);
+  // Old links/watchlist items can still open a BIST stock while BIST is disabled
+  // (Story 1.6) — same as web, no actions are offered for it.
+  const exchangeDisabled = exchange.toUpperCase() === "BIST" && !BIST_ENABLED;
 
   useEffect(() => {
     let cancelled = false;
@@ -115,23 +127,36 @@ export function StockOverviewScreen({
         {overview?.name ?? symbol} ({exchange.toUpperCase()})
       </Text>
 
-      <View style={styles.actionsRow}>
-        <AddToWatchlistButton
-          symbol={symbol.toUpperCase()}
-          exchange={exchange.toUpperCase()}
-          name={overview?.name ?? null}
-        />
-        <CreatePriceAlertButton
-          symbol={symbol.toUpperCase()}
-          exchange={exchange.toUpperCase()}
-          name={overview?.name ?? null}
-        />
-        <CreateSignalAlertButton
-          symbol={symbol.toUpperCase()}
-          exchange={exchange.toUpperCase()}
-          name={overview?.name ?? null}
-        />
-      </View>
+      {!exchangeDisabled && (
+        <View style={styles.actionsRow}>
+          <AddToWatchlistButton
+            symbol={symbol.toUpperCase()}
+            exchange={exchange.toUpperCase()}
+            name={overview?.name ?? null}
+          />
+          <CreatePriceAlertButton
+            symbol={symbol.toUpperCase()}
+            exchange={exchange.toUpperCase()}
+            name={overview?.name ?? null}
+          />
+          <CreateSignalAlertButton
+            symbol={symbol.toUpperCase()}
+            exchange={exchange.toUpperCase()}
+            name={overview?.name ?? null}
+          />
+          {/* The simulator only executes against live US prices (see app/simulations.py). */}
+          {exchange.toUpperCase() === "US" && (
+            <SimulateBuyButton
+              symbol={symbol.toUpperCase()}
+              exchange="US"
+              name={overview?.name ?? null}
+              price={overview?.price ?? null}
+              currency={overview?.currency ?? null}
+              onOpenSimulation={onOpenSimulation}
+            />
+          )}
+        </View>
+      )}
 
       <View style={styles.tabRow}>
         <TouchableOpacity onPress={() => setTab("overview")}>

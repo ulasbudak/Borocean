@@ -28,7 +28,7 @@ export default async function LoginPage({
         </div>
       )}
 
-      <LoginForm messages={t.auth} />
+      <LoginForm messages={t.auth} legal={t.legal} />
     </AuthShell>
   );
 }

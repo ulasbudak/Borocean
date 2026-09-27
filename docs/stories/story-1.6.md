@@ -4,7 +4,7 @@ epic: "Epic 1 — Kimlik Doğrulama, Hisse Keşfi ve Temel Altyapı"
 story_id: "1.6"
 status: done
 created: 2026-09-26
-updated: 2026-09-26
+updated: 2026-09-28
 author: Claude (kullanıcı isteğiyle, 2026-09-26)
 based_on: ["docs/PRD.md §3 (2026-09-26 güncellemesi)", "docs/stories/story-1.4.md", "docs/stories/story-1.5.md"]
 depends_on: ["1.4", "1.5"]
@@ -40,6 +40,7 @@ Doğrulama sırasında ayrı ama ilişkili bir sorun bulundu: Finnhub'ın sembol
 3. **[Shared]** `BIST_ENABLED`, `search.bistDisabledNote`, `screener.bistDisabledNote` (tr/en). ✅
 4. **[Web]** Seçenek gizleme, notlar, BIST hisse sayfası aksiyonlarının gizlenmesi. ✅
 5. **[Mobil]** Seçenek gizleme ve notlar. ✅
+6. **[Mobil]** BIST hisse ekranında aksiyon butonlarının gizlenmesi (web ile eşitlik; eski izleme listesi öğelerinden açılan BIST hisselerinde izleme listesi/alarm butonları hâlâ görünüyordu). ✅ (2026-09-28)
 
 ## Kabul Kriterleri
 

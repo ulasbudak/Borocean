@@ -3,7 +3,9 @@
 Uses Omar-Karimov/ChartScanAI's pretrained YOLOv8 model (MIT licensed; see
 docs/product-brief-epic9-ai.md §"2026-09-18 Güncellemesi" for the model-selection
 rationale) to read a candlestick chart image rendered from our own candle data and
-classify detected patterns as "Buy" or "Sell". This is a third-party, pretrained
+classify detected patterns into two classes (the model's own names are "Buy"/"Sell";
+we expose them as "upward"/"downward" patterns — Story 12.1, a directional pattern finding
+is presented as such, never as a buy/sell instruction). This is a third-party, pretrained
 model — not something we trained — so its output is presented as a clearly labeled
 "model reading", separate from the deterministic score (app/scoring.py) and never as
 investment advice.
@@ -28,7 +30,12 @@ import httpx
 import numpy as np
 from pydantic import BaseModel
 
-from app.ai_reports import AIReportUnavailableError, get_cached_report, save_report
+from app.ai_reports import (
+    DISCLAIMER_LINE,
+    AIReportUnavailableError,
+    get_cached_report,
+    save_report,
+)
 from app.market_data import CandlePoint
 
 if TYPE_CHECKING:
@@ -49,7 +56,10 @@ MODEL_URL = (
 MODEL_SHA256 = "f57623db970b7bb31133618aedd2ad3dad3cacbdffb8ab33aca0f23eedd84d07"
 MODEL_LOCAL_PATH = Path(__file__).parent / "models" / "chartscan_yolov8.onnx"
 MODEL_DOWNLOAD_TIMEOUT_SECONDS = 60.0
-MODEL_CLASS_NAMES = {0: "Buy", 1: "Sell"}
+# ChartScanAI's class 0 is "Buy" and class 1 is "Sell" — renamed on purpose, see the
+# module docstring.
+MODEL_CLASS_NAMES = {0: "upward", 1: "downward"}
+PATTERN_NAMES_TR = {"upward": "yukarı yönlü örüntü", "downward": "aşağı yönlü örüntü"}
 
 # Matches ChartScanAI's own default confidence slider (30%) — see its app.py.
 DETECTION_CONFIDENCE_THRESHOLD = 0.30
@@ -171,22 +181,26 @@ class TechnicalAIReport(BaseModel):
 def _summarize_detections(detections: list[Detection]) -> str:
     if not detections:
         return (
-            "Grafik modeli bu grafikte güvenilir bir Al/Sat örüntüsü tespit etmedi. "
-            "Bu, üçüncü taraf, deneysel bir modelin okumasıdır — yatırım tavsiyesi değildir."
+            "Grafik modeli bu grafikte belirgin bir yukarı ya da aşağı yönlü örüntü tespit "
+            "etmedi. Bu, üçüncü taraf, deneysel bir modelin geçmiş fiyat grafiği üzerindeki "
+            f"okumasıdır. {DISCLAIMER_LINE}"
         )
 
-    buy_count = sum(1 for d in detections if d.label == "Buy")
-    sell_count = sum(1 for d in detections if d.label == "Sell")
+    upward = sum(1 for d in detections if d.label == "upward")
+    downward = sum(1 for d in detections if d.label == "downward")
     top = max(detections, key=lambda d: d.confidence)
 
     lines = [
-        f"Grafik modeli, incelenen grafikte {buy_count} Al ve {sell_count} Sat "
-        "örüntüsü tespit etti.",
-        f"En yüksek güvenli bulgu: {top.label} (%{top.confidence * 100:.0f} güven).",
-        "Bu, ChartScanAI adlı üçüncü taraf, açık kaynak bir modelin ikili (Al/Sat) "
-        "sınıflandırmasıdır; isimli bir formasyon (üçgen, omuz-baş-omuz vb.) tespit etmiyor, "
-        "resmi bir doğruluk metriği yayınlanmamış, görece küçük bir toplulukla destekleniyor. "
-        "Deneysel/gösterge niteliğindedir — yatırım tavsiyesi değildir.",
+        f"Grafik modeli, incelenen geçmiş fiyat grafiğinde {upward} yukarı yönlü ve "
+        f"{downward} aşağı yönlü örüntü tespit etti.",
+        f"En yüksek güvenli bulgu: {PATTERN_NAMES_TR[top.label]} "
+        f"(%{top.confidence * 100:.0f} model güveni).",
+        "Bu, ChartScanAI adlı üçüncü taraf, açık kaynak bir modelin grafik görüntüsü "
+        "üzerindeki ikili örüntü sınıflandırmasıdır. İsimli bir formasyon (üçgen, "
+        "omuz-baş-omuz vb.) tespit etmez, resmi bir doğruluk metriği yayınlanmamıştır ve "
+        "gelecekteki fiyat hareketi hakkında bir tahmin değildir; deneysel/gösterge "
+        "niteliğindedir.",
+        DISCLAIMER_LINE,
     ]
     return "\n\n".join(lines)
 

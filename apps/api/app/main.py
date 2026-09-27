@@ -4,6 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
 from app import market_data
+from app.account import delete_account
 from app.ai_combined import CombinedAIReport, get_combined_report
 from app.ai_fundamental import AIReportUnavailableError, FundamentalAIReport, get_fundamental_report
 from app.ai_technical import TechnicalAIReport, get_technical_report
@@ -146,6 +147,16 @@ def health_db(response: Response) -> dict[str, str]:
 @app.get("/me")
 def me(claims: dict = Depends(get_current_claims)) -> dict[str, str | None]:
     return {"id": claims.get("sub"), "email": claims.get("email")}
+
+
+@app.delete("/me", status_code=204)
+def delete_me(claims: dict = Depends(get_current_claims)) -> Response:
+    """Permanently deletes the caller's account and all of their data (Story 12.2)."""
+    try:
+        delete_account(claims["sub"])
+    except psycopg.Error as exc:
+        raise HTTPException(status_code=503, detail="Hesap şu an silinemiyor.") from exc
+    return Response(status_code=204)
 
 
 SearchResponse = dict[str, list[SymbolResult] | list[str]]

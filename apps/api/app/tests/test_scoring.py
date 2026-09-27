@@ -69,7 +69,6 @@ def test_compute_score_strong_fundamentals_and_uptrend_scores_high():
 
     assert result is not None
     assert result.value >= 70
-    assert result.label == "Al"
     # Fundamental factors alone should already contribute their full 50 points.
     technical_names = {"Trend (Fiyat/SMA50/SMA200)", "RSI (14)", "Teknik Konsensüs"}
     fundamental_points = sum(f.points for f in result.factors if f.name not in technical_names)
@@ -83,7 +82,6 @@ def test_compute_score_weak_fundamentals_and_downtrend_scores_low():
 
     assert result is not None
     assert result.value < 40
-    assert result.label == "Sat"
 
 
 def test_compute_score_factors_sum_to_value():
@@ -94,13 +92,36 @@ def test_compute_score_factors_sum_to_value():
     assert round(sum(f.points for f in result.factors)) == result.value
 
 
-def test_compute_score_label_boundaries():
-    from app.scoring import _label_for
+def test_compute_score_has_no_buy_sell_verdict():
+    """Story 12.1: no directive Al/Nötr/Sat label anywhere in the score response."""
+    result = compute_score(STRONG_FUNDAMENTALS, make_candles([100.0 + i * 0.3 for i in range(260)]))
 
-    assert _label_for(70) == "Al"
-    assert _label_for(69) == "Nötr"
-    assert _label_for(40) == "Nötr"
-    assert _label_for(39) == "Sat"
+    assert result is not None
+    payload = result.model_dump()
+    assert "label" not in payload
+    for word in ("Al.", "Al)", "Sat", "Nötr", "öneri"):
+        assert word not in result.rationale
+
+
+def test_compute_score_categories_cover_every_factor_and_normalize():
+    result = compute_score(STRONG_FUNDAMENTALS, make_candles([100.0 + i * 0.3 for i in range(260)]))
+
+    assert result is not None
+    assert [c.key for c in result.categories] == [
+        "valuation",
+        "profitability",
+        "leverage",
+        "growth",
+        "technical",
+    ]
+    assert sum(c.max_points for c in result.categories) == sum(
+        f.max_points for f in result.factors
+    )
+    by_key = {c.key: c for c in result.categories}
+    # Every fundamental factor of STRONG_FUNDAMENTALS earns full points.
+    for key in ("valuation", "profitability", "leverage", "growth"):
+        assert by_key[key].score == 100
+    assert all(0 <= c.score <= 100 for c in result.categories)
 
 
 def test_compute_score_includes_consensus_and_rationale():
@@ -114,7 +135,6 @@ def test_compute_score_includes_consensus_and_rationale():
         == result.consensus.total
     )
     assert str(result.value) in result.rationale
-    assert result.label in result.rationale
     assert "yatırım tavsiyesi değildir" in result.rationale
 
 
@@ -154,14 +174,14 @@ def test_score_consensus_factor_is_proportional_to_bullish_ratio():
     assert all_bullish.max_points == 25
 
 
-def test_build_rationale_mentions_top_fundamental_factor():
-    result = compute_score(STRONG_FUNDAMENTALS, make_candles([100.0 + i * 0.2 for i in range(260)]))
+def test_build_rationale_names_highest_and_lowest_category():
+    result = compute_score(WEAK_FUNDAMENTALS, make_candles([100.0 + i * 0.3 for i in range(260)]))
 
     assert result is not None
-    # Every scored fundamental factor for STRONG_FUNDAMENTALS earns full points, so any one of
-    # them may be picked as "top" - just assert the rationale references one of their labels.
-    fundamental_labels = {"F/K Oranı", "ROE", "Borç/Özsermaye", "Net Kâr Marjı", "EPS Büyüme Oranı"}
-    assert any(label in result.rationale for label in fundamental_labels)
+    # Weak fundamentals score 0 in every fundamental category; the uptrend keeps the
+    # technical category above zero, so it is the highest one.
+    assert "En yüksek kategori: Teknik görünüm" in result.rationale
+    assert "en düşük:" in result.rationale
 
 
 @pytest.mark.anyio
@@ -238,7 +258,8 @@ def test_score_endpoint_returns_computed_score_for_us(monkeypatch):
     assert response.status_code == 200
     body = response.json()
     assert body["score"]["value"] >= 70
-    assert body["score"]["label"] == "Al"
+    assert "label" not in body["score"]
+    assert len(body["score"]["categories"]) == 5
     assert len(body["score"]["factors"]) == 8
     assert "consensus" in body["score"]
     assert "total" in body["score"]["consensus"]

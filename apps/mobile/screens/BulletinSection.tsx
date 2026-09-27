@@ -49,7 +49,7 @@ function BulletinCard({
             {bulletin.picks.map((pick) => (
               <View key={pick.symbol} style={styles.pickChip}>
                 <Text style={styles.pickChipText}>
-                  {pick.symbol} · {pick.score}/100 · {pick.label}
+                  {pick.symbol} · {pick.name}
                 </Text>
               </View>
             ))}

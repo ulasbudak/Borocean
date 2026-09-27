@@ -37,6 +37,7 @@ export interface Messages {
     redirecting: string;
     orDivider: string;
     forgotPassword: string;
+    forgotPasswordBrowserHint: string;
     forgotPasswordTitle: string;
     forgotPasswordSubtitle: string;
     sendResetLink: string;
@@ -142,6 +143,15 @@ export interface Messages {
     explanationToggle: string;
     consensusLabel: string;
     consensusOutOf: string;
+    categoriesLabel: string;
+    categories: {
+      valuation: string;
+      profitability: string;
+      leverage: string;
+      growth: string;
+      technical: string;
+    };
+    basisNote: string;
   };
   fundamentals: {
     peRatio: string;
@@ -187,6 +197,14 @@ export interface Messages {
     notificationSaveError: string;
     on: string;
     off: string;
+    legalTitle: string;
+    deleteAccountTitle: string;
+    deleteAccountBody: string;
+    deleteAccountButton: string;
+    deleteAccountConfirmLabel: string;
+    deleteAccountConfirmWord: string;
+    deletingAccount: string;
+    deleteAccountError: string;
   };
   screener: {
     bistDisabledNote: string;
@@ -487,5 +505,13 @@ export interface Messages {
     disclaimer: string;
     readMoreLabel: string;
     readLessLabel: string;
+  };
+  legal: {
+    termsTitle: string;
+    kvkkTitle: string;
+    privacyTitle: string;
+    signupNotice: string;
+    lastUpdated: string;
+    backToHome: string;
   };
 }

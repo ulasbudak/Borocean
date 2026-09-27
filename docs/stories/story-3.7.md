@@ -4,13 +4,15 @@ epic: "Epic 3 — Teknik Analiz ve Özet Değerlendirme Skoru"
 story_id: "3.7"
 status: done
 created: 2026-09-15
-updated: 2026-09-15
+updated: 2026-09-28
 author: Bob (BMAD Scrum Master)
 based_on: ["docs/PRD.md", "docs/architecture.md", "docs/epics.md"]
 depends_on: ["3.5", "3.6"]
 ---
 
 # Story 3.7: Gelişmiş Al/Sat Önerisi Motoru
+
+> **Güncelleme (2026-09-28, Story 12.1):** Bu story'nin adındaki "Al/Sat Önerisi" çerçevesi artık geçerli değil. Gerekçe cümlesi etiket içermiyor, yalnızca en yüksek/en düşük kategoriyi ve yukarı yönlü gösterge sayısını anlatıyor. Sinyal kuralları ve teknik göstergeler değişmedi; bkz. `docs/stories/story-12.1.md`.
 
 ## Kullanıcı Hikayesi
 

@@ -4,13 +4,15 @@ epic: "Epic 3 — Teknik Analiz ve Özet Değerlendirme Skoru"
 story_id: "3.6"
 status: done
 created: 2026-09-15
-updated: 2026-09-15
+updated: 2026-09-28
 author: Bob (BMAD Scrum Master)
 based_on: ["docs/PRD.md", "docs/architecture.md", "docs/epics.md"]
 depends_on: ["1.5", "2.1", "3.1", "3.5"]
 ---
 
 # Story 3.6: Özet Değerlendirme Skoru
+
+> **Güncelleme (2026-09-28, Story 12.1):** SPK yatırım danışmanlığı sınırı nedeniyle skorun **Al/Nötr/Sat etiketi kaldırıldı**. Skor artık "Metrik Puanı" adıyla, beş objektif kategoriye (Değerleme, Kârlılık, Borçluluk, Büyüme, Teknik görünüm) ayrılarak gösteriliyor. Puanlama kuralları ve faktörler değişmedi. Aşağıdaki AC'lerdeki "Al/Nötr/Sat etiketi" ifadeleri tarihsel kayıttır; bkz. `docs/stories/story-12.1.md`.
 
 ## Kullanıcı Hikayesi
 

@@ -4,7 +4,7 @@ epic: "Epic 10 — Alım-Satım Simülasyonu (Paper Trading)"
 story_id: "10.3"
 status: done
 created: 2026-09-26
-updated: 2026-09-26
+updated: 2026-09-28
 author: Claude (kullanıcı isteğiyle, 2026-09-26)
 based_on: ["docs/stories/story-10.1.md"]
 depends_on: ["10.1"]
@@ -29,13 +29,15 @@ Story 10.1'de emir vermek yalnızca `/simulation` sayfasındaki formdan mümkün
 - **i18n:** `simulation.buyFromStock*`, `selectSimulationLabel`, `cashAvailable`, `estimatedCost`, `buyButton`, `buying`, `buySuccess`, `goToSimulation`, `quickCreate*`, `defaultSimulationName` (tr/en).
 - Aynı çalışmada hisse sayfası başlık satırı `flex-wrap` yapıldı: dört buton başlığın yanına sığmadığında alt satıra geçiyor, "Apple Inc" artık ikiye bölünmüyor.
 
-**Kapsam dışı:** Satış (satış, pozisyonun durduğu simülasyon sayfasında kalıyor); mobil `StockOverviewScreen` karşılığı (mobil yayın şu an kapsam dışı).
+- **Mobil (2026-09-28, mobil eşitlik):** `apps/mobile/screens/SimulateBuyButton.tsx` — `StockOverviewScreen`'deki aksiyonlara, fiyat alarmı butonuyla aynı alttan açılan panel deseninde eklendi. Simülasyon seçimi yatay seçeneklerle; kullanılabilir nakit, adet (virgüllü ondalık kabul edilir), tahmini tutar ve gerçek fiyat notu; hiç simülasyon yoksa tek dokunuşla oluşturma; başarıda "Simülasyona git", `HomeScreen`'e eklenen `onOpenSimulation` ile simülasyon ekranını açıyor. Yalnızca ABD hisselerinde görünür. Aynı i18n anahtarları kullanıldı.
+
+**Kapsam dışı:** Satış (satış, pozisyonun durduğu simülasyon sayfasında kalıyor).
 
 ## Görevler
 
 1. **[Web]** `SimulateBuyButton` bileşeni + hisse sayfasına bağlanması. ✅
 2. **[Shared]** i18n anahtarları. ✅
-3. **[Mobil]** — kapsam dışı bırakıldı. ☐
+3. **[Mobil]** `SimulateBuyButton` + `StockOverviewScreen`/`HomeScreen` bağlantısı. ✅ (2026-09-28)
 
 ## Kabul Kriterleri
 
@@ -47,4 +49,5 @@ Story 10.1'de emir vermek yalnızca `/simulation` sayfasındaki formdan mümkün
 
 - [x] Web typecheck + lint temiz.
 - [x] **Gerçek tarayıcıda doğrulandı** (2026-09-26, Playwright, yerel web + API, gerçek AAPL fiyatı, dev Supabase test kullanıcısı): hızlı oluşturma → nakit 10.000 $; 2 adet AAPL alımı → bakiye tam 682,14 $ (2 × 341,07 $) düştü, başarı mesajı ve simülasyon bağlantısı göründü; 100.000 adet → "Yetersiz bakiye" mesajı; `/simulation` sayfasında AAPL pozisyonu; 390 px genişlikte yatay taşma yok. Test kullanıcısı ve verisi sonrasında silindi.
-- [ ] Mobil karşılık — kapsam dışı.
+- [x] Mobil karşılık uygulandı (2026-09-28): mobil typecheck + lint temiz, Metro bundle (`expo export --platform ios`) başarılı.
+- [ ] Mobil cihaz/simülatör doğrulaması — bu ortamda yok.

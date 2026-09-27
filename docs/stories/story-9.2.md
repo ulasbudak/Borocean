@@ -4,13 +4,15 @@ epic: "Epic 9 — AI Destekli Yorum ve Örüntü Tanıma"
 story_id: "9.2"
 status: done
 created: 2026-09-16
-updated: 2026-09-18
+updated: 2026-09-28
 author: Mary (BMAD Business Analyst) & Bob (BMAD Scrum Master) — Serdar Ulaş Budak ile birlikte
 based_on: ["docs/PRD.md §5.11", "docs/epics.md §13", "docs/product-brief-epic9-ai.md §\"2026-09-18 Güncellemesi\""]
 depends_on: ["3.1", "3.2", "8.1"]
 ---
 
 # Story 9.2: Teknik Analiz AI Raporu — CV Modeli
+
+> **Güncelleme (2026-09-28, Story 12.1):** Modelin "Buy"/"Sell" sınıfları "yukarı yönlü / aşağı yönlü örüntü" (`upward`/`downward`) olarak sunuluyor. Rapor, bulgunun geçmiş grafiğin okuması olduğunu ve tahmin olmadığını belirtiyor; bkz. `docs/stories/story-12.1.md`.
 
 ## Kullanıcı Hikayesi
 

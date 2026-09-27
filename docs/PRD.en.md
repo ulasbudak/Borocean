@@ -2,7 +2,7 @@
 title: "Borocean (Stock Tracking App) - Product Requirements Document"
 status: draft
 created: 2026-09-15
-updated: 2026-09-26
+updated: 2026-09-28
 author: Mary (BMAD Business Analyst) — together with Serdar Ulaş Budak
 language: en
 translationOf: docs/PRD.md
@@ -147,6 +147,13 @@ Requirements are grouped by feature area and numbered globally. The **[MVP]** ta
 - **FR-125** The system must allow crypto assets to be screened and compared by crypto-appropriate criteria such as market cap, volume, price change and RSI.
 - **FR-126** Whether the AI reports (FR-100, FR-101) apply to crypto must be settled by a separate decision; a misleading crypto report generated under stock assumptions must not be shown.
 
+### 5.14 Legal Compliance (SPK and KVKK)
+
+> **Analyst note (2026-09-28):** Added based on a legal assessment the user shared; for the summary and open items see `docs/compliance.md`. In the SPK (Capital Markets Board of Turkey) guidance, investment advice is an investment service that requires a license. Personal buy/sell/hold direction falls into it, and a disclaimer alone does not change the nature of the activity.
+
+- **FR-130** The system must not produce, on any screen or in any AI output, buy/sell/hold direction for a specific capital-markets instrument, price targets, return forecasts, advice based on the user's personal situation, or portfolio allocation suggestions. Scores must be shown broken down into categories that show which objective metrics they come from; stock lists (e.g. the bulletin) must be built by non-evaluative criteria; AI outputs must stay within a "financial position / analysis / risks" frame and carry the notice "This content is not investment advice; it is an analysis of publicly available data for information purposes only."
+- **FR-131** The system must provide a KVKK privacy notice, terms of use and a privacy policy; link to them on the sign-up screen; and let users permanently delete their account and all personal data linked to it from within the app.
+
 ## 6. Non-Functional Requirements (NFR)
 
 | Category | Requirement |
@@ -177,7 +184,8 @@ Requirements are grouped by feature area and numbered globally. The **[MVP]** ta
   1. **FR-100, FR-101** (AI-assisted stock commentary + deterministic chart pattern recognition) — marked by the user as the **first priority** after MVP (see `docs/product-brief-epic9-ai.md`), added to the backlog as Epic 9.
   2. **FR-110, FR-111, FR-112** (Trading simulation / paper trading) — user request (2026-09-19), in parallel with Epic 9, added to the backlog as Epic 10.
   3. **FR-120 – FR-126** (Cryptocurrency market — data, analysis and virtual trading) — user request (2026-09-26), added to the backlog as Epic 11.
-  4. **FR-102** (ML-based pattern recognition — the expanded form of FR-025), FR-012 (customizable score weighting), FR-033 (screen notifications), FR-053 (portfolio risk analysis), FR-063 (advanced personalization), FR-071 (SMS) — no firm priority order has been set among these yet.
+  4. **FR-130, FR-131** (Legal compliance — SPK and KVKK) — based on the legal assessment the user shared (2026-09-28), added and completed as Epic 12.
+  5. **FR-102** (ML-based pattern recognition — the expanded form of FR-025), FR-012 (customizable score weighting), FR-033 (screen notifications), FR-053 (portfolio risk analysis), FR-063 (advanced personalization), FR-071 (SMS) — no firm priority order has been set among these yet.
 - **Out of scope (for now):** The forex asset class (crypto was brought into scope as Epic 11 on 2026-09-26 — data/analysis/virtual trading only), social/community features, actual order routing (brokerage/crypto-exchange integration).
 
 ## 9. Open Questions and Assumptions
@@ -188,7 +196,7 @@ Requirements are grouped by feature area and numbered globally. The **[MVP]** ta
 - **[OPEN QUESTION]** The phase-split proposal in Section 8 must be approved by the user; if not approved, the timeline may need to extend or additional developer capacity may be needed.
 - **[ASSUMPTION]** The user journeys (UJ-1, UJ-2) are written as drafts and have not been validated against a real user account.
 - **[OPEN QUESTION]** The exact formula for the summary score/rating (FR-003) algorithm (which metrics combine at what weight) needs to be defined.
-- **[OPEN QUESTION — must be settled before any investor pitch]** The boundary that keeps the app outside investment-advisory regulation in the US/Turkey has become more concrete alongside FR-100/FR-101/FR-102 (AI commentary + pattern recognition/strategy): whether "pattern/signal finding" language (as opposed to "advice") is a legally sufficient framing should be confirmed with legal counsel. See `docs/product-brief-epic9-ai.md`.
+- **[OPEN QUESTION — must be settled before any investor pitch]** The boundary that keeps the app outside investment-advisory regulation in the US/Turkey has become more concrete alongside FR-100/FR-101/FR-102 (AI commentary + pattern recognition/strategy): whether "pattern/signal finding" language (as opposed to "advice") is a legally sufficient framing should be confirmed with legal counsel. See `docs/product-brief-epic9-ai.md`. **2026-09-28 progress:** the product was adjusted according to the legal assessment the user shared (FR-130/FR-131, Epic 12): buy/sell labels and directive AI language were removed, KVKK texts and account deletion were added. A final review by a lawyer is still open; see `docs/compliance.md` §4.
 - **[OPEN QUESTION — code review recommended]** The third-party model chosen for FR-101 (see `docs/product-brief-epic9-ai.md` §"2026-09-18 Update") is MIT-licensed and suitable for commercial use; still, before any investor pitch it is recommended to re-confirm the source/integrity of the weights file (`best.pt`) and the copyright status of the model's own training data (it is a third-party open-source model, not trained in-house).
 
 ## 10. Explicit Out of Scope

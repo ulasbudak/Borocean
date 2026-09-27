@@ -84,7 +84,9 @@ async def test_generates_from_both_underlying_reports_on_cache_miss(monkeypatch)
     report = await ai_combined.get_combined_report("AAPL", "US")
 
     assert report.cached is False
-    assert report.report == "Sentezlenmiş ortak rapor."
+    assert report.report.startswith("Sentezlenmiş ortak rapor.")
+    # The model left out the disclaimer, so ensure_disclaimer appended it (Story 12.1).
+    assert report.report.endswith("bilgilendirme amacı taşır.")
     assert saved["report_type"] == "combined"
 
 

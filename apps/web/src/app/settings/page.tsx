@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { messages } from "@borocean/shared";
 import { createClient } from "@/lib/supabase/server";
@@ -9,6 +10,7 @@ import { LanguageSwitcher } from "./language-switcher";
 import { NotificationSettings } from "./notification-settings";
 import { InterestSectors } from "./interest-sectors";
 import { BillingCard } from "./billing-card";
+import { DeleteAccount } from "./delete-account";
 
 export default async function SettingsPage() {
   const supabase = await createClient();
@@ -61,6 +63,30 @@ export default async function SettingsPage() {
           <CardTitle>{t.personalization.interestSectorsTitle}</CardTitle>
         </CardHeader>
         <InterestSectors currentSectors={currentSectors} locale={locale} messages={t.personalization} />
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>{t.settings.legalTitle}</CardTitle>
+        </CardHeader>
+        <nav className="flex flex-wrap gap-x-4 gap-y-2 text-sm">
+          <Link href="/terms" className="text-accent underline">
+            {t.legal.termsTitle}
+          </Link>
+          <Link href="/kvkk" className="text-accent underline">
+            {t.legal.kvkkTitle}
+          </Link>
+          <Link href="/privacy" className="text-accent underline">
+            {t.legal.privacyTitle}
+          </Link>
+        </nav>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>{t.settings.deleteAccountTitle}</CardTitle>
+        </CardHeader>
+        <DeleteAccount messages={t.settings} />
       </Card>
     </div>
   );

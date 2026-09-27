@@ -2,7 +2,7 @@
 title: "Borocean (Borsa Takip Uygulaması) - Ürün Gereksinim Dokümanı"
 status: draft
 created: 2026-09-15
-updated: 2026-09-26
+updated: 2026-09-28
 author: Mary (BMAD Business Analyst) — Serdar Ulaş Budak ile birlikte
 ---
 
@@ -145,6 +145,13 @@ Gereksinimler özellik alanlarına göre gruplanmış ve global olarak numaralan
 - **FR-125** Sistem, kripto varlıkları piyasa değeri, hacim, fiyat değişimi ve RSI gibi kriptoya uygun kriterlerle taramaya ve karşılaştırmaya izin vermelidir.
 - **FR-126** AI raporlarının (FR-100, FR-101) kriptoya uygulanıp uygulanmayacağı ayrı bir kararla belirlenmeli; hisse varsayımlarıyla üretilmiş yanıltıcı bir kripto raporu sunulmamalıdır.
 
+### 5.14 Hukuki Uyum (SPK ve KVKK)
+
+> **Analist notu (2026-09-28):** Kullanıcının paylaştığı hukuki değerlendirmeye göre eklendi; özet ve açık maddeler için bkz. `docs/compliance.md`. SPK rehberinde yatırım danışmanlığı izne tabi bir yatırım hizmetidir. Kişiye yönelik al/sat/tut yönlendirmesi bu alana girer ve uyarı metni faaliyetin niteliğini tek başına değiştirmez.
+
+- **FR-130** Sistem, hiçbir ekranda ve hiçbir AI çıktısında belirli bir sermaye piyasası aracı için al/sat/tut yönlendirmesi, hedef fiyat, getiri tahmini, kullanıcının kişisel durumuna göre tavsiye veya portföy dağılımı önerisi üretmemelidir. Skorlar, hangi objektif metriklerden türediğini gösteren kategorilere ayrılarak sunulmalı; hisse listeleri (ör. bülten) değerlendirme içermeyen ölçütlerle oluşturulmalı; AI çıktıları "finansal durum / analiz / riskler" çerçevesinde kalmalı ve "Bu içerik yatırım tavsiyesi değildir. Yalnızca kamuya açık verilerin analizi ve bilgilendirme amacı taşır." ibaresini taşımalıdır.
+- **FR-131** Sistem, KVKK kapsamında bir aydınlatma metni, kullanım koşulları ve gizlilik politikası sunmalı; kayıt ekranında bunlara bağlantı vermeli ve kullanıcının hesabını ve ona bağlı tüm kişisel verilerini uygulama içinden kalıcı olarak silebilmesini sağlamalıdır.
+
 ## 6. Fonksiyonel Olmayan Gereksinimler (NFR)
 
 | Kategori | Gereksinim |
@@ -175,7 +182,8 @@ Gereksinimler özellik alanlarına göre gruplanmış ve global olarak numaralan
   1. **FR-100, FR-101** (AI destekli hisse yorumu + deterministik grafik örüntü tanıma) — kullanıcı tarafından MVP sonrası **ilk öncelik** olarak belirlendi (bkz. `docs/product-brief-epic9-ai.md`), Epic 9 olarak backlog'a eklendi.
   2. **FR-110, FR-111, FR-112** (Alım-satım simülasyonu/paper trading) — kullanıcı isteği (2026-09-19), Epic 9 ile eş zamanlı, Epic 10 olarak backlog'a eklendi.
   3. **FR-120 – FR-126** (Kripto para piyasası — veri, analiz ve sanal işlem) — kullanıcı isteği (2026-09-26), Epic 11 olarak backlog'a eklendi.
-  4. **FR-102** (ML tabanlı örüntü tanıma — FR-025'in genişletilmiş hali), FR-012 (özelleştirilebilir skor ağırlıklandırma), FR-033 (tarama bildirimi), FR-053 (portföy risk analizi), FR-063 (gelişmiş kişiselleştirme), FR-071 (SMS) — sıralama arasında henüz kesin öncelik belirlenmedi.
+  4. **FR-130, FR-131** (Hukuki uyum — SPK ve KVKK) — kullanıcının paylaştığı hukuki değerlendirme (2026-09-28), Epic 12 olarak eklendi ve tamamlandı.
+  5. **FR-102** (ML tabanlı örüntü tanıma — FR-025'in genişletilmiş hali), FR-012 (özelleştirilebilir skor ağırlıklandırma), FR-033 (tarama bildirimi), FR-053 (portföy risk analizi), FR-063 (gelişmiş kişiselleştirme), FR-071 (SMS) — sıralama arasında henüz kesin öncelik belirlenmedi.
 - **Kapsam dışı (şimdilik):** Döviz varlık sınıfı (kripto 2026-09-26'da Epic 11 olarak kapsama alındı — yalnızca veri/analiz/sanal işlem), sosyal/topluluk özellikleri, gerçek alım-satım emri iletimi (brokerage/kripto borsası entegrasyonu).
 
 ## 9. Açık Sorular ve Varsayımlar
@@ -186,7 +194,7 @@ Gereksinimler özellik alanlarına göre gruplanmış ve global olarak numaralan
 - **[OPEN QUESTION]** Bölüm 8'deki faz ayrımı önerisi kullanıcı tarafından onaylanmalı; onaylanmazsa zaman çizelgesinin uzatılması veya ek geliştirici kaynağı gerekebilir.
 - **[ASSUMPTION]** Kullanıcı senaryoları (UJ-1, UJ-2) taslak olarak yazılmıştır, gerçek kullanıcı anlatımıyla doğrulanmamıştır.
 - **[OPEN QUESTION]** Özet skor/derecelendirme (FR-003) algoritmasının kesin formülü (hangi metriklerin ne ağırlıkla birleştirileceği) tanımlanmalıdır.
-- **[OPEN QUESTION — yatırımcı sunumundan önce netleştirilmeli]** ABD/Türkiye'deki yatırım danışmanlığı düzenlemelerine tabi olmama sınırı, FR-100/FR-101/FR-102 (AI yorum + örüntü tanıma/strateji) ile birlikte daha somut hale geldi: "örüntü/sinyal bulgusu" dilinin ("tavsiye" değil) hukuki olarak yeterli bir konumlandırma olup olmadığı bir hukuk danışmanıyla teyit edilmelidir. Bkz. `docs/product-brief-epic9-ai.md`.
+- **[OPEN QUESTION — yatırımcı sunumundan önce netleştirilmeli]** ABD/Türkiye'deki yatırım danışmanlığı düzenlemelerine tabi olmama sınırı, FR-100/FR-101/FR-102 (AI yorum + örüntü tanıma/strateji) ile birlikte daha somut hale geldi: "örüntü/sinyal bulgusu" dilinin ("tavsiye" değil) hukuki olarak yeterli bir konumlandırma olup olmadığı bir hukuk danışmanıyla teyit edilmelidir. Bkz. `docs/product-brief-epic9-ai.md`. **2026-09-28 ilerleme:** Kullanıcının paylaştığı hukuki değerlendirmeye göre ürün düzenlendi (FR-130/FR-131, Epic 12): al/sat etiketleri ve yönlendirici AI dili kaldırıldı, KVKK metinleri ve hesap silme eklendi. Bir hukukçunun nihai incelemesi hâlâ açık; bkz. `docs/compliance.md` §4.
 - **[OPEN QUESTION — kod incelemesi önerilir]** FR-101 için seçilen üçüncü taraf model (bkz. `docs/product-brief-epic9-ai.md` §"2026-09-18 Güncellemesi") MIT lisanslı ve ticari kullanıma uygun; yine de yatırımcı sunumundan önce ağırlık dosyasının (`best.pt`) kaynağı/bütünlüğü ve modelin kendi eğitim verisinin telif durumu tekrar teyit edilmesi önerilir (üçüncü taraf açık kaynak bir model, dahili olarak eğitilmiş değil).
 
 ## 10. Kapsam Dışı (Explicit Out of Scope)

@@ -28,6 +28,37 @@ GEMINI_MAX_ATTEMPTS = 3
 GEMINI_RETRY_BACKOFF_SECONDS = 1.5
 
 
+# Story 12.1 — every AI prompt carries these rules. SPK counts personal buy/sell/hold
+# direction as investment advice (a licensed activity); a disclaimer alone doesn't change
+# what the output actually does, so the model is told not to produce that kind of output.
+COMPLIANCE_RULES = (
+    "Uyman gereken kurallar: (1) Hiçbir hisse için al, sat, tut, biriktir, ekle, azalt "
+    "gibi bir yönlendirme veya öneri yapma; 'fırsat', 'kaçırılmaz', 'güçlü al' gibi "
+    "yönlendirici ifadeler kullanma. (2) Hedef fiyat, fiyat tahmini veya getiri beklentisi "
+    "verme. (3) Okurun kişisel durumuna, risk profiline veya portföyüne göre tavsiye verme; "
+    "portföy dağılımı önerme. (4) 'Garanti', 'kesin', 'risksiz kazanç' gibi ifadeler "
+    "kullanma. (5) Yalnızca sana verilen veriyi objektif olarak yorumla; verilmeyen bir "
+    "sayıyı, haberi veya olayı uydurma. Olumlu ve olumsuz yönleri dengeli anlat, riskleri "
+    "mutlaka belirt."
+)
+
+DISCLAIMER_LINE = (
+    "Bu içerik yatırım tavsiyesi değildir. Yalnızca kamuya açık verilerin analizi ve "
+    "bilgilendirme amacı taşır."
+)
+
+# Bumped whenever the prompts change in a way that makes cached reports non-compliant.
+# get_cached_report() treats reports saved under an older version as a cache miss.
+PROMPT_VERSION = 2
+
+
+def ensure_disclaimer(text: str) -> str:
+    """The prompts ask for the disclaimer line; append it if the model left it out."""
+    if "yatırım tavsiyesi değildir" in text:
+        return text
+    return f"{text.rstrip()}\n\n{DISCLAIMER_LINE}"
+
+
 class AIReportUnavailableError(Exception):
     """Raised by app.ai_fundamental, app.ai_technical, and app.bulletins when a
     report cannot be produced (missing data, exchange not supported, provider/model
@@ -115,6 +146,8 @@ def get_cached_report(
         return None
     if row["generated_at"] < datetime.now(UTC) - timedelta(hours=ttl_hours):
         return None
+    if row["content"].get("prompt_version", 1) < PROMPT_VERSION:
+        return None
     return row["content"], row["generated_at"]
 
 
@@ -128,7 +161,12 @@ def save_report(symbol: str, exchange: str, report_type: str, content: dict) -> 
             DO UPDATE SET content = EXCLUDED.content, generated_at = now()
             RETURNING generated_at
             """,
-            (symbol.upper(), exchange.upper(), report_type, Json(content)),
+            (
+                symbol.upper(),
+                exchange.upper(),
+                report_type,
+                Json({**content, "prompt_version": PROMPT_VERSION}),
+            ),
         )
         row = cur.fetchone()
         conn.commit()

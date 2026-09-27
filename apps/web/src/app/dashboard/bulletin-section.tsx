@@ -77,7 +77,7 @@ export function BulletinSection({ messages, locale }: { messages: Messages["bull
                     key={pick.symbol}
                     className="rounded-full bg-surface-hover px-2.5 py-1 text-xs text-text-secondary"
                   >
-                    {pick.symbol} · {pick.score}/100 · {pick.label}
+                    {pick.symbol} · {pick.name}
                   </li>
                 ))}
               </ul>

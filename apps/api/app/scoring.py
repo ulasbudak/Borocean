@@ -22,20 +22,42 @@ class TechnicalConsensus(BaseModel):
     total: int
 
 
+class ScoreCategory(BaseModel):
+    """A group of factors normalized to 0-100 (e.g. "profitability" = ROE + net margin).
+    Shown instead of a single Buy/Neutral/Sell verdict: a directive label next to a score
+    reads as a personal buy/sell recommendation (SPK investment-advice boundary, Story 12.1);
+    per-category scores show which objective metrics the number comes from."""
+
+    key: str
+    points: float
+    max_points: float
+    score: int
+
+
 class StockScore(BaseModel):
     value: int
-    label: str
+    categories: list[ScoreCategory]
     factors: list[ScoreFactor]
     consensus: TechnicalConsensus
     rationale: str
 
 
-def _label_for(value: int) -> str:
-    if value >= 70:
-        return "Al"
-    if value >= 40:
-        return "Nötr"
-    return "Sat"
+# Category key -> factor names. Keys are translated on the client (score.categories.*).
+CATEGORY_FACTORS: dict[str, tuple[str, ...]] = {
+    "valuation": ("F/K Oranı",),
+    "profitability": ("ROE", "Net Kâr Marjı"),
+    "leverage": ("Borç/Özsermaye",),
+    "growth": ("EPS Büyüme Oranı",),
+    "technical": ("Trend (Fiyat/SMA50/SMA200)", "RSI (14)", "Teknik Konsensüs"),
+}
+
+CATEGORY_NAMES_TR = {
+    "valuation": "Değerleme",
+    "profitability": "Kârlılık",
+    "leverage": "Borçluluk",
+    "growth": "Büyüme",
+    "technical": "Teknik görünüm",
+}
 
 
 def _score_pe(pe_ratio: float | None) -> ScoreFactor:
@@ -219,22 +241,42 @@ def _score_consensus(consensus: TechnicalConsensus) -> ScoreFactor:
     return ScoreFactor(name="Teknik Konsensüs", points=round(points, 2), max_points=25)
 
 
+def _build_categories(factors: list[ScoreFactor]) -> list[ScoreCategory]:
+    by_name = {f.name: f for f in factors}
+    categories = []
+    for key, names in CATEGORY_FACTORS.items():
+        members = [by_name[n] for n in names if n in by_name]
+        points = sum(f.points for f in members)
+        max_points = sum(f.max_points for f in members)
+        score = round(100 * points / max_points) if max_points else 0
+        categories.append(
+            ScoreCategory(key=key, points=round(points, 2), max_points=max_points, score=score)
+        )
+    return categories
+
+
 def _build_rationale(
-    value: int, label: str, factors: list[ScoreFactor], consensus: TechnicalConsensus
+    value: int, categories: list[ScoreCategory], consensus: TechnicalConsensus
 ) -> str:
-    fundamental_names = {"F/K Oranı", "ROE", "Borç/Özsermaye", "Net Kâr Marjı", "EPS Büyüme Oranı"}
-    fundamental_factors = [f for f in factors if f.name in fundamental_names]
-    top_fundamental = max(fundamental_factors, key=lambda f: f.points, default=None)
-
-    parts = [f"Özet skor {value}/100 ({label})."]
-    if top_fundamental is not None and top_fundamental.points > 0:
-        contribution = f"{top_fundamental.points:.0f}/{top_fundamental.max_points:.0f}p"
-        parts.append(f"Temel tarafta en güçlü katkı: {top_fundamental.name} ({contribution}).")
+    """Describes what the numbers are, never what to do with the stock."""
+    parts = [f"Metrik puanı {value}/100."]
+    if categories:
+        highest = max(categories, key=lambda c: c.score)
+        lowest = min(categories, key=lambda c: c.score)
+        if highest.key != lowest.key:
+            parts.append(
+                f"En yüksek kategori: {CATEGORY_NAMES_TR[highest.key]} ({highest.score}/100); "
+                f"en düşük: {CATEGORY_NAMES_TR[lowest.key]} ({lowest.score}/100)."
+            )
     if consensus.total > 0:
-        bullish_ratio = f"{consensus.bullish}/{consensus.total}"
-        parts.append(f"Teknik göstergelerin {bullish_ratio} kadarı şu an yükseliş yönünde.")
-    parts.append("Bu değerlendirme kural bazlı bir özettir, yatırım tavsiyesi değildir.")
-
+        parts.append(
+            f"İzlenen {consensus.total} teknik göstergenin {consensus.bullish} tanesi "
+            "şu an yukarı yönlü."
+        )
+    parts.append(
+        "Puan, kamuya açık verilerden sabit kurallarla hesaplanan bir özettir; "
+        "yatırım tavsiyesi değildir."
+    )
     return " ".join(parts)
 
 
@@ -261,10 +303,14 @@ def compute_score(
 
     total = sum(f.points for f in factors)
     value = round(total)
-    label = _label_for(value)
-    rationale = _build_rationale(value, label, factors, consensus)
+    categories = _build_categories(factors)
+    rationale = _build_rationale(value, categories, consensus)
     return StockScore(
-        value=value, label=label, factors=factors, consensus=consensus, rationale=rationale
+        value=value,
+        categories=categories,
+        factors=factors,
+        consensus=consensus,
+        rationale=rationale,
     )
 
 

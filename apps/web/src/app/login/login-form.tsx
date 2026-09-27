@@ -14,7 +14,13 @@ import { authenticate, type AuthFormState } from "./actions";
 import { SocialButtons } from "./social-buttons";
 import { SubmitButton } from "./submit-button";
 
-export function LoginForm({ messages }: { messages: Messages["auth"] }) {
+export function LoginForm({
+  messages,
+  legal,
+}: {
+  messages: Messages["auth"];
+  legal: Messages["legal"];
+}) {
   const [state, formAction] = useActionState<AuthFormState, FormData>(
     authenticate,
     {
@@ -110,6 +116,17 @@ export function LoginForm({ messages }: { messages: Messages["auth"] }) {
       </div>
 
       <SocialButtons messages={messages} />
+
+      <p className="mt-5 text-center text-xs leading-relaxed text-text-tertiary">
+        {legal.signupNotice}{" "}
+        <Link href="/terms" className="underline hover:text-text-primary">
+          {legal.termsTitle}
+        </Link>
+        {" · "}
+        <Link href="/kvkk" className="underline hover:text-text-primary">
+          {legal.kvkkTitle}
+        </Link>
+      </p>
     </>
   );
 }

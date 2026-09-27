@@ -13,19 +13,28 @@ from datetime import datetime
 from pydantic import BaseModel
 
 from app.ai_fundamental import FundamentalAIReport, get_fundamental_report
-from app.ai_reports import call_gemini, get_cached_report, save_report
+from app.ai_reports import (
+    COMPLIANCE_RULES,
+    DISCLAIMER_LINE,
+    call_gemini,
+    ensure_disclaimer,
+    get_cached_report,
+    save_report,
+)
 from app.ai_technical import TechnicalAIReport, get_technical_report
 
 CACHE_TTL_HOURS = 5.0  # matches technical's TTL — the more volatile of the two inputs
 
 SYSTEM_PROMPT = (
-    "Sen Borocean uygulaması için çalışan bir finansal analistsin. Sana bir hissenin temel "
-    "analiz raporu ile grafik örüntü modelinin (teknik) okuması verilecek. Bu ikisini "
-    "birleştirerek, Türkçe, 2-3 paragraflık kısa bir özet değerlendirme yaz: temel ve "
-    "teknik görünüm aynı yönü mü işaret ediyor yoksa çelişiyor mu, kullanıcının nelere "
-    "dikkat etmesi gerektiğini vurgula. Yalnızca sana verilen iki rapora dayan, yeni bir "
-    "sayı veya veri uydurma. Raporun sonunda ayrı bir satırda mutlaka şunu yaz: "
-    "'Bu rapor yapay zeka tarafından üretilmiştir, yatırım tavsiyesi değildir.'"
+    "Sen Borocean uygulaması için kamuya açık verileri özetleyen bir analiz aracısın. "
+    "Sana bir şirketin temel analiz raporu ile bir grafik örüntü modelinin (teknik) "
+    "okuması verilecek. Bu ikisini birleştirerek Türkçe, bilgilendirme amaçlı, 2-3 "
+    "paragraflık kısa bir özet yaz: finansal veriler ile grafik modelinin okuması "
+    "birbiriyle örtüşüyor mu yoksa farklı bir tablo mu çiziyor, objektif olarak açıkla; "
+    "iki kaynağın da sınırlarını ve öne çıkan riskleri belirt. Bir sonuç, karar veya "
+    "hüküm cümlesi kurma. Yalnızca sana verilen iki rapora dayan. "
+    + COMPLIANCE_RULES
+    + f" Raporun sonunda ayrı bir satırda mutlaka şunu yaz: '{DISCLAIMER_LINE}'"
 )
 
 
@@ -66,7 +75,7 @@ async def get_combined_report(symbol: str, exchange: str) -> CombinedAIReport:
     )
 
     user_prompt = _build_user_prompt(fundamental, technical)
-    report_text = await call_gemini(SYSTEM_PROMPT, user_prompt)
+    report_text = ensure_disclaimer(await call_gemini(SYSTEM_PROMPT, user_prompt))
 
     generated_at = save_report(symbol, exchange_filter, "combined", {"report": report_text})
     return CombinedAIReport(

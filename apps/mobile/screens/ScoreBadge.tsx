@@ -16,9 +16,16 @@ type TechnicalConsensus = {
   total: number;
 };
 
+type ScoreCategory = {
+  key: "valuation" | "profitability" | "leverage" | "growth" | "technical";
+  points: number;
+  max_points: number;
+  score: number;
+};
+
 type StockScore = {
   value: number;
-  label: string;
+  categories: ScoreCategory[];
   factors: ScoreFactor[];
   consensus: TechnicalConsensus;
   rationale: string;
@@ -43,11 +50,6 @@ export function ScoreBadge({ symbol, exchange }: { symbol: string; exchange: str
   const { messages } = useLocale();
   const { colors } = useTheme();
   const styles = makeStyles(colors);
-  const labelTone: Record<string, { bg: string; fg: string }> = {
-    Al: { bg: colors.positive + "26", fg: colors.positive },
-    Sat: { bg: colors.negative + "26", fg: colors.negative },
-    Nötr: { bg: colors.warning + "26", fg: colors.warning },
-  };
   const [data, setData] = useState<ScoreResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [fetchFailed, setFetchFailed] = useState(false);
@@ -90,7 +92,6 @@ export function ScoreBadge({ symbol, exchange }: { symbol: string; exchange: str
   }
 
   const score = data?.score ?? null;
-  const tone = score ? labelTone[score.label] : undefined;
 
   return (
     <View style={styles.card}>
@@ -99,20 +100,28 @@ export function ScoreBadge({ symbol, exchange }: { symbol: string; exchange: str
         <Text style={styles.noData}>{messages.score.noData}</Text>
       ) : (
         <>
-          <View style={styles.scoreRow}>
-            <Text style={styles.scoreValue}>
-              {score.value}
-              <Text style={styles.scoreOutOf}> {messages.score.outOf}</Text>
-            </Text>
-            <View style={[styles.badge, tone && { backgroundColor: tone.bg }]}>
-              <Text style={[styles.badgeText, tone && { color: tone.fg }]}>{score.label}</Text>
-            </View>
-          </View>
+          <Text style={styles.scoreValue}>
+            {score.value}
+            <Text style={styles.scoreOutOf}> {messages.score.outOf}</Text>
+          </Text>
           <Text style={styles.rationale}>{score.rationale}</Text>
+          <Text style={styles.sectionLabel}>{messages.score.categoriesLabel}</Text>
+          <View style={styles.factors}>
+            {score.categories.map((category) => (
+              <View key={category.key} style={styles.factorRow}>
+                <View style={styles.factorHeader}>
+                  <Text style={styles.factorName}>{messages.score.categories[category.key]}</Text>
+                  <Text style={styles.factorPoints}>{category.score} / 100</Text>
+                </View>
+                <ProgressBar value={category.score} max={100} colors={colors} />
+              </View>
+            ))}
+          </View>
           <Text style={styles.consensus}>
             {messages.score.consensusLabel}: {score.consensus.bullish}/{score.consensus.total}{" "}
             {messages.score.consensusOutOf}
           </Text>
+          <Text style={styles.consensus}>{messages.score.basisNote}</Text>
           <TouchableOpacity onPress={() => setShowExplanation((v) => !v)}>
             <Text style={styles.toggle}>{messages.score.explanationToggle}</Text>
           </TouchableOpacity>
@@ -156,11 +165,6 @@ function makeStyles(colors: ThemeColors) {
       color: colors.textTertiary,
       marginBottom: spacing[1],
     },
-    scoreRow: {
-      flexDirection: "row",
-      alignItems: "center",
-      gap: spacing[3],
-    },
     scoreValue: {
       fontSize: 30,
       fontWeight: "700",
@@ -171,16 +175,11 @@ function makeStyles(colors: ThemeColors) {
       fontWeight: "400",
       color: colors.textTertiary,
     },
-    badge: {
-      paddingHorizontal: spacing[3],
-      paddingVertical: spacing[1],
-      borderRadius: radius.full,
-      backgroundColor: colors.surfaceHover,
-    },
-    badgeText: {
+    sectionLabel: {
       fontSize: 12,
-      fontWeight: "700",
-      color: colors.textSecondary,
+      fontWeight: "600",
+      color: colors.textTertiary,
+      marginTop: spacing[3],
     },
     rationale: {
       color: colors.textSecondary,

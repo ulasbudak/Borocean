@@ -3,7 +3,15 @@ from datetime import datetime
 import httpx
 from pydantic import BaseModel
 
-from app.ai_reports import AIReportUnavailableError, call_gemini, get_cached_report, save_report
+from app.ai_reports import (
+    COMPLIANCE_RULES,
+    DISCLAIMER_LINE,
+    AIReportUnavailableError,
+    call_gemini,
+    ensure_disclaimer,
+    get_cached_report,
+    save_report,
+)
 from app.fundamentals import (
     FundamentalsSnapshot,
     FundamentalsUnavailableError,
@@ -17,12 +25,16 @@ from app.fundamentals import (
 CACHE_TTL_HOURS = 24.0
 
 SYSTEM_PROMPT = (
-    "Sen Borocean uygulaması için çalışan bir finansal analistsin. Sana verilen sayısal "
-    "temel analiz verisine (F/K, ROE, borç/özsermaye, sektör kıyaslaması, geçmiş finansal "
-    "performans) dayanarak, Türkçe, 3-5 paragraflık kısa bir temel analiz raporu yaz. "
-    "Yalnızca sana verilen veriyi yorumla — verilmeyen bir sayıyı uydurma, dışarıdan "
-    "haber/fiyat bilgisi ekleme. Raporun sonunda ayrı bir satırda mutlaka şunu yaz: "
-    "'Bu rapor yapay zeka tarafından üretilmiştir, yatırım tavsiyesi değildir.'"
+    "Sen Borocean uygulaması için kamuya açık finansal verileri özetleyen bir analiz "
+    "aracısın. Sana bir şirketin sayısal temel analiz verisi (F/K, ROE, borç/özsermaye, "
+    "marjlar, sektör kıyaslaması, geçmiş finansal performans) verilecek. Bu veriye "
+    "dayanarak Türkçe, bilgilendirme amaçlı kısa bir rapor yaz ve şu başlıkları kullan: "
+    "'Finansal durum' (verilen temel rakamların kısa özeti), 'Analiz' (kârlılık, "
+    "borçluluk, marjlar ve büyümenin sektör ortalamasına göre objektif değerlendirmesi), "
+    "'Riskler' (verideki zayıf noktalar ve verinin sınırları). Dışarıdan haber veya fiyat "
+    "bilgisi ekleme. "
+    + COMPLIANCE_RULES
+    + f" Raporun sonunda ayrı bir satırda mutlaka şunu yaz: '{DISCLAIMER_LINE}'"
 )
 
 
@@ -124,7 +136,7 @@ async def get_fundamental_report(
         history = None
 
     user_prompt = _build_user_prompt(fundamentals, sector_comparison, history)
-    report_text = await call_gemini(SYSTEM_PROMPT, user_prompt, client=client)
+    report_text = ensure_disclaimer(await call_gemini(SYSTEM_PROMPT, user_prompt, client=client))
 
     generated_at = save_report(symbol, exchange_filter, "fundamental", {"report": report_text})
     return FundamentalAIReport(

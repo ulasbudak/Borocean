@@ -3,8 +3,7 @@ import { supabase } from "./supabase";
 export type Pick = {
   symbol: string;
   name: string;
-  score: number;
-  label: string;
+  market_cap: number | null;
 };
 
 export type Bulletin = {

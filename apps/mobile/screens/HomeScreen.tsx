@@ -44,6 +44,10 @@ export function HomeScreen({ session }: { session: Session }) {
           symbol={selectedStock.symbol}
           exchange={selectedStock.exchange}
           onBack={() => setSelectedStock(null)}
+          onOpenSimulation={() => {
+            setSelectedStock(null);
+            setShowSimulation(true);
+          }}
         />
       </SafeAreaView>
     );

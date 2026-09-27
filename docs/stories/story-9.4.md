@@ -4,13 +4,15 @@ epic: "Epic 9 — AI Destekli Yorum ve Örüntü Tanıma"
 story_id: "9.4"
 status: done
 created: 2026-09-20
-updated: 2026-09-20
+updated: 2026-09-28
 author: "Claude (retroaktif olarak belgelendi — kod 2026-09-19'da, bu story dosyası açılmadan yazılmıştı; mobil görev #7 aynı gün, bu dosya açıldıktan sonra tamamlandı)"
 based_on: ["docs/stories/story-9.1.md", "docs/stories/story-9.2.md", "commit 8244f9d", "commit 352bea3"]
 depends_on: ["9.1", "9.2"]
 ---
 
 # Story 9.4: Birleşik Değerlendirme AI Raporu
+
+> **Güncelleme (2026-09-28, Story 12.1):** Birleşik rapor artık bir "hüküm" cümlesi kurmuyor. İki kaynağın örtüşüp örtüşmediğini ve sınırlarını objektif olarak anlatıyor; bkz. `docs/stories/story-12.1.md`.
 
 ## Kullanıcı Hikayesi
 

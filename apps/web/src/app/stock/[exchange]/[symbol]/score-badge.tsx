@@ -19,9 +19,16 @@ type TechnicalConsensus = {
   total: number;
 };
 
+type ScoreCategory = {
+  key: "valuation" | "profitability" | "leverage" | "growth" | "technical";
+  points: number;
+  max_points: number;
+  score: number;
+};
+
 type StockScore = {
   value: number;
-  label: string;
+  categories: ScoreCategory[];
   factors: ScoreFactor[];
   consensus: TechnicalConsensus;
   rationale: string;
@@ -30,12 +37,6 @@ type StockScore = {
 type ScoreResponse = {
   score: StockScore | null;
   warnings: string[];
-};
-
-const labelTone: Record<string, string> = {
-  Al: "bg-positive/15 text-positive",
-  Sat: "bg-negative/15 text-negative",
-  Nötr: "bg-warning/15 text-warning",
 };
 
 export function ScoreBadge({
@@ -85,10 +86,7 @@ export function ScoreBadge({
     return (
       <Card>
         <Skeleton className="mb-3 h-3 w-20" />
-        <div className="flex items-center gap-3">
-          <Skeleton className="h-9 w-16" />
-          <Skeleton className="h-6 w-14 rounded-full" />
-        </div>
+        <Skeleton className="h-9 w-16" />
         <Skeleton className="mt-3 h-4 w-full" />
         <Skeleton className="mt-2 h-4 w-2/3" />
       </Card>
@@ -106,21 +104,29 @@ export function ScoreBadge({
         <p className="text-sm text-text-tertiary">{t.score.noData}</p>
       ) : (
         <>
-          <div className="flex items-center gap-3">
-            <span className="text-3xl font-semibold tabular-nums text-text-primary">
-              {score.value}
-              <span className="text-base font-normal text-text-tertiary"> / 100</span>
-            </span>
-            <span
-              className={`rounded-full px-2.5 py-1 text-xs font-semibold ${labelTone[score.label] ?? "bg-surface-hover text-text-secondary"}`}
-            >
-              {score.label}
-            </span>
-          </div>
+          <span className="text-3xl font-semibold tabular-nums text-text-primary">
+            {score.value}
+            <span className="text-base font-normal text-text-tertiary"> / 100</span>
+          </span>
           <p className="mt-2 text-sm text-text-secondary">{score.rationale}</p>
+
+          <p className="mt-4 text-xs font-medium text-text-tertiary">{t.score.categoriesLabel}</p>
+          <ul className="mt-2 flex flex-col gap-2.5">
+            {score.categories.map((category) => (
+              <li key={category.key} className="flex flex-col gap-1">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-text-secondary">{t.score.categories[category.key]}</span>
+                  <span className="tabular-nums text-text-primary">{category.score} / 100</span>
+                </div>
+                <ProgressBar value={category.score} max={100} />
+              </li>
+            ))}
+          </ul>
+
           <p className="mt-3 text-xs text-text-tertiary">
             {t.score.consensusLabel}: {score.consensus.bullish}/{score.consensus.total} {t.score.consensusOutOf}
           </p>
+          <p className="mt-2 text-xs text-text-tertiary">{t.score.basisNote}</p>
 
           <details className="mt-4 group">
             <summary className="cursor-pointer text-xs font-medium text-accent">

@@ -11,6 +11,7 @@ import { authErrorKey } from "@borocean/shared";
 import { supabase } from "../lib/supabase";
 import { useLocale } from "../lib/locale-context";
 import { useTheme, radius, spacing, type ThemeColors } from "../lib/theme";
+import { openWebPage } from "../lib/web-links";
 
 export function AuthScreen() {
   const { messages } = useLocale();
@@ -21,6 +22,12 @@ export function AuthScreen() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
+  const [showResetHint, setShowResetHint] = useState(false);
+
+  function openPasswordReset() {
+    setShowResetHint(true);
+    openWebPage("forgot-password").catch(() => setError(messages.common.dataUnavailable));
+  }
 
   async function signInWithEmail() {
     setLoading(true);
@@ -91,6 +98,19 @@ export function AuthScreen() {
             </TouchableOpacity>
           </View>
         )}
+        <TouchableOpacity onPress={openPasswordReset}>
+          <Text style={styles.link}>{messages.auth.forgotPassword}</Text>
+        </TouchableOpacity>
+        {showResetHint && <Text style={styles.hint}>{messages.auth.forgotPasswordBrowserHint}</Text>}
+        <Text style={styles.hint}>{messages.legal.signupNotice}</Text>
+        <View style={styles.legalRow}>
+          <TouchableOpacity onPress={() => openWebPage("terms")}>
+            <Text style={styles.legalLink}>{messages.legal.termsTitle}</Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => openWebPage("kvkk")}>
+            <Text style={styles.legalLink}>{messages.legal.kvkkTitle}</Text>
+          </TouchableOpacity>
+        </View>
       </View>
     </View>
   );
@@ -159,6 +179,29 @@ function makeStyles(colors: ThemeColors) {
     notice: {
       color: colors.positive,
       fontSize: 13,
+    },
+    link: {
+      color: colors.accent,
+      fontSize: 13,
+      fontWeight: "600",
+      textAlign: "center",
+      marginTop: spacing[1],
+    },
+    hint: {
+      color: colors.textTertiary,
+      fontSize: 12,
+      textAlign: "center",
+    },
+    legalRow: {
+      flexDirection: "row",
+      justifyContent: "center",
+      flexWrap: "wrap",
+      gap: spacing[4],
+    },
+    legalLink: {
+      color: colors.textSecondary,
+      fontSize: 12,
+      textDecorationLine: "underline",
     },
   });
 }

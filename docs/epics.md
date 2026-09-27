@@ -2,7 +2,7 @@
 title: "Borocean (Borsa Takip Uygulaması) - Epic ve Story Backlog"
 status: active
 created: 2026-09-15
-updated: 2026-09-26
+updated: 2026-09-28
 author: Bob (BMAD Scrum Master)
 inputDocuments: ["docs/PRD.md", "docs/architecture.md"]
 ---
@@ -60,6 +60,7 @@ NFR-1 Performans (arama <1sn, gerçek-zamanlı veri birkaç sn içinde), NFR-2 G
 | FR-100, FR-101 | Epic 9 |
 | FR-110, FR-111, FR-112 | Epic 10 |
 | FR-120 – FR-126 | Epic 11 |
+| FR-130, FR-131 | Epic 12 |
 
 ## 4. Epic Listesi
 
@@ -106,6 +107,10 @@ Kullanıcı sanal bir bütçeyle simülasyon oluşturup ABD hisselerini o anki g
 ### Epic 11: Kripto Para Piyasası (Backlog — başlamadı)
 Kullanıcı kripto varlıkları arayıp detay sayfasında fiyat, grafik ve piyasa bilgilerini görebilir; bunları izleme listesi, alarm, portföy, simülasyon ve taramada hisselerle aynı akışlarla kullanabilir. Yalnızca veri, analiz ve sanal işlem — gerçek kripto alım-satımı veya cüzdan bağlantısı yok.
 **FRs covered:** FR-120, FR-121, FR-122, FR-123, FR-124, FR-125, FR-126
+
+### Epic 12: Hukuki Uyum (SPK ve KVKK)
+Uygulama, kişiye yönelik al/sat/tut yönlendirmesi üretmeden bir analiz ve bilgilendirme aracı olarak kalır (SPK yatırım danışmanlığı sınırı); kullanıcı kişisel verilerinin nasıl işlendiğini okuyabilir ve hesabını tüm verileriyle kendisi silebilir (KVKK). Kullanıcının 2026-09-28'de paylaştığı hukuki değerlendirmeye dayanır; bkz. `docs/compliance.md`.
+**FRs covered:** FR-130, FR-131
 
 **Epic bağımsızlığı notu:** Her epic bir öncekinin çıktısını kullanabilir (örn. Epic 3, Epic 2'nin ürettiği temel veri modelini kullanır) ama hiçbir epic sonraki bir epiğin tamamlanmasını beklemez. Epic 8 (Abonelik), Epic 1-7'de üretilen özellik sınırlarını freemium kapıları arkasına yerleştirir ama bu epiklerin fonksiyonelliğini değiştirmez.
 
@@ -182,7 +187,7 @@ So that hisse hakkında hızlı bir ilk izlenim edinebileyim.
 
 ### Story 1.7: Satır İçi Giriş Hataları, E-posta Onay Bildirimi ve Şifre Sıfırlama
 
-- [x] **Tamamlandı (geriye dönük dokümante edildi)** — Detaylı kabul kriterleri ve görev tanımı için bkz. **`docs/stories/story-1.7.md`**. Kod 2026-09-26'da story dokümanı olmadan `5e29760` commit'iyle yayımlandı. Giriş/kayıt hataları formda satır içi ve çevrilmiş olarak gösterilir (`authErrorKey`, web + mobil); canlıda "Confirm email" açık olduğundan kayıt sonrası "e-postanı doğrula" ekranı gösterilir; web'e `/forgot-password` → `/reset-password` akışı ve tasarlanmış `/error` sayfası eklendi. **Açık kalan:** mobilde şifre sıfırlama ve doğrulama ekranı yok.
+- [x] **Tamamlandı (geriye dönük dokümante edildi)** — Detaylı kabul kriterleri ve görev tanımı için bkz. **`docs/stories/story-1.7.md`**. Kod 2026-09-26'da story dokümanı olmadan `5e29760` commit'iyle yayımlandı. Giriş/kayıt hataları formda satır içi ve çevrilmiş olarak gösterilir (`authErrorKey`, web + mobil); canlıda "Confirm email" açık olduğundan kayıt sonrası "e-postanı doğrula" ekranı gösterilir; web'e `/forgot-password` → `/reset-password` akışı ve tasarlanmış `/error` sayfası eklendi. **Mobil (2026-09-28):** "Şifremi unuttum" bağlantısı web sıfırlama akışını cihaz tarayıcısında açıyor (PKCE doğrulayıcısı tarayıcıda olduğu için); doğrulama bildirimi zaten vardı.
 
 ---
 
@@ -304,6 +309,7 @@ So that manuel taramaya gerek kalmadan potansiyel fırsatları fark edebileyim.
 ### Story 3.6: Özet Değerlendirme Skoru
 
 - [x] **Tamamlandı** — Detaylı kabul kriterleri, puanlama modeli ve görev tanımı için bkz. **`docs/stories/story-3.6.md`**. Yeni backend `app/scoring.py`: temel (F/K, ROE, borç/özsermaye, net marj, EPS büyümesi — 50p) + teknik (trend, RSI, son 90 günün sinyal eğilimi — 50p) kural bazlı puanlama; `GET /symbols/score`. Web ve mobilde "Genel Bakış" sekmesine skor rozeti + faktör dökümü (açılır bilgi paneli) eklendi; veri yetersizse "yeterli veri yok". **Epic 3 ve PRD Faz 1/MVP'nin Epic 1-3 kapsamı bu story ile tamamlandı.**
+- **Güncelleme (2026-09-28, Story 12.1):** Al/Nötr/Sat etiketi SPK yatırım danışmanlığı sınırı nedeniyle kaldırıldı. Skor artık "Metrik Puanı" adıyla, beş objektif kategoriye (Değerleme, Kârlılık, Borçluluk, Büyüme, Teknik görünüm) ayrılmış olarak gösteriliyor. Aşağıdaki AC'lerdeki etiket ifadesi tarihsel kayıttır.
 
 As a **yeni/amatör yatırımcı**,
 I want karmaşık metriklere girmeden hissenin genel durumunu özetleyen basit bir skor/etiket görmek,
@@ -320,6 +326,7 @@ So that hızlıca "bu hisseye bakmaya değer mi" sorusuna yanıt alabileyim.
 ### Story 3.7: Gelişmiş Al/Sat Önerisi Motoru
 
 - [x] **Tamamlandı** — Detaylı kabul kriterleri ve görev tanımı için bkz. **`docs/stories/story-3.7.md`**. Kullanıcı isteği üzerine Story 3.5/3.6 güçlendirildi (yeni backend altyapısı kurmadan): `app/technical.py`'ye 6 yeni kural (Bollinger kırılımı, Stokastik aşırı bölge kesişimi, SMA20/50 kısa kesişim — toplam 12 kural); `app/scoring.py`'ye 6 göstergenin anlık yönünü ölçen bir "Teknik Konsensüs" faktörü (25/100, skorun en büyük tekil faktörü) ve şablon tabanlı, deterministik bir `rationale` (gerekçe) cümlesi eklendi. Web/mobilde skor rozetine gerekçe metni + konsensüs oranı gösterimi eklendi.
+- **Güncelleme (2026-09-28, Story 12.1):** Gerekçe cümlesi artık etiket veya öneri içermiyor; yalnızca en yüksek/en düşük kategoriyi ve yukarı yönlü gösterge sayısını anlatıyor.
 
 As a **kullanıcı**,
 I want özet skorun yalnızca bir sayı değil, kaç göstergenin hangi yönde olduğunu ve bunun okunabilir bir gerekçesini de görmek,
@@ -569,6 +576,7 @@ So that sayıları tek tek yorumlamadan hissenin temel görünümünü hızlıca
 ### Story 9.2: Teknik Analiz AI Raporu — CV Modeli
 
 - [x] **Tamamlandı** — Detaylı kabul kriterleri ve görev tanımı için bkz. **`docs/stories/story-9.2.md`**. PDF karşılaştırma raporundaki 4 adaydan ChartScanAI'nin YOLOv8 modeli seçildi (MIT lisans + mplfinance eğitim verisi uyumu, GitHub API/LICENSE ile canlı doğrulandı); backend (`app/ai_technical.py` — mplfinance ile grafik görüntüsü üretimi, lazy-loaded model, `GET /symbols/ai-report/technical`), web/mobil (AI Analiz sekmesi, mevcut deterministik skorla birlikte üç panel) uygulandı ve doğrulandı. **Gerçek AAPL/MSFT verisiyle canlı uçtan uca doğrulandı** (gerçek model ağırlığı, gerçek mum verisi, önbellek ve ücretsiz katman 403'ü dahil).
+- **Güncelleme (2026-09-28, Story 12.1):** Modelin "Buy"/"Sell" sınıfları "yukarı/aşağı yönlü örüntü" olarak sunuluyor; rapor bunun geçmiş grafiğin okuması olduğunu, tahmin olmadığını belirtiyor.
 
 As a **aktif trader**,
 I want fiyat grafiğimin bir görüntü-tanıma modeliyle okunduğu bir teknik AI raporu görmek,
@@ -584,6 +592,7 @@ So that grafiği manuel yorumlamadan modelin "okumasını" diğer görüşlerle 
 ### Story 9.3: Günlük Sektör Bülteni
 
 - [x] **Tamamlandı** — Detaylı kabul kriterleri ve görev tanımı için bkz. **`docs/stories/story-9.3.md`**. Kullanıcı isteği (2026-09-19): ana ekranda her gün üstüne yeni bir tane eklenen, hiç silinmeyen bir AI sektör bülteni. Zamanlama kararı: proje boyunca hiç kurulmayan bir cron/Celery altyapısı yerine, istek-anında üretim + append-only arşiv (`sector_bulletins` tablosu, `bulletin_date unique`) — kullanıcı bu tercihi bilerek onayladı. Sektör seçimi `day_of_year % 11` deterministik rotasyonla, hisse seçimi mevcut skor motoruyla (Story 3.6/3.7), anlatı Story 9.1'in artık paylaşılan hale getirilmiş (`app/ai_reports.py::call_gemini()`) Gemini entegrasyonuyla. Backend (`app/bulletins.py` + `GET /bulletins`) ve web/mobil (dashboard'da "Bülten" bölümü) uygulandı, testler (290/290) yeşil, ücretsiz katman 403'ü ve sektör-seçim/skorlama boru hattı canlı doğrulandı. **Gerçek Gemini API anahtarıyla tam uçtan uca doğrulandı** (2026-09-20 — günün bülteni üretimi + ikinci istekte aynı `bulletin_date`'in tekrar üretilmediği).
+- **Güncelleme (2026-09-28, Story 12.1):** Bülten artık en yüksek skorlu hisseleri değil, sektörün piyasa değerine göre en büyük 5 şirketini puan/etiket vermeden ele alıyor ("bugün alınabilecek 5 hisse" izlenimini önlemek için). Eski formattaki bültenler listeden gizlendi.
 
 As a **kullanıcı (premium)**,
 I want ana ekranda her gün yeni eklenen, geçmişi silinmeyen bir AI sektör bülteni görmek,
@@ -647,7 +656,7 @@ So that tam sembol kodunu ezbere bilmeden doğru sembolü ve borsayı seçebiley
 
 ### Story 10.3: Hisse Sayfasından Simülasyonda Alım
 
-- [x] **Tamamlandı** — Detaylı kabul kriterleri ve görev tanımı için bkz. **`docs/stories/story-10.3.md`**. Kullanıcı isteği (2026-09-26). Hisse detay sayfasının başlığına "Simülasyonda al" butonu eklendi (web); simülasyon seçimi, kullanılabilir nakit, adet ve anlık fiyattan tahmini tutar gösterilir. Hiç simülasyonu olmayan kullanıcı sayfadan ayrılmadan tek tıkla simülasyon oluşturabilir. Backend değişikliği yok — Story 10.1'in `GET /simulations` ve `POST /simulations/{id}/orders` uç noktaları kullanıldı.
+- [x] **Tamamlandı** — Detaylı kabul kriterleri ve görev tanımı için bkz. **`docs/stories/story-10.3.md`**. Kullanıcı isteği (2026-09-26). Hisse detay sayfasının başlığına "Simülasyonda al" butonu eklendi (web); simülasyon seçimi, kullanılabilir nakit, adet ve anlık fiyattan tahmini tutar gösterilir. Hiç simülasyonu olmayan kullanıcı sayfadan ayrılmadan tek tıkla simülasyon oluşturabilir. Backend değişikliği yok — Story 10.1'in `GET /simulations` ve `POST /simulations/{id}/orders` uç noktaları kullanıldı. **Mobil (2026-09-28):** `SimulateBuyButton` mobil hisse ekranına eklendi; başarıda simülasyon ekranına geçiş.
 
 As a **kullanıcı**,
 I want incelediğim bir hisseyi, sayfadan ayrılmadan simülasyonuma almak,
@@ -772,15 +781,47 @@ So that yanlış bağlamda (hisse varsayımlarıyla) üretilmiş yanıltıcı bi
 
 ---
 
-## 16. Sonraki Adımlar
+## 16. Epic 12: Hukuki Uyum (SPK ve KVKK)
 
-*(2026-09-26'da güncellendi — önceki sürüm projenin başlangıç durumunu, "Story 1.1'den başla"yı anlatıyordu.)*
+> Kullanıcının 2026-09-28'de paylaştığı hukuki değerlendirmeye dayanır. Özeti, ürüne nasıl uygulandığı ve açık maddeler için bkz. **`docs/compliance.md`**. Temel ilke: belirleyici olan AI kullanılması değil, uygulamanın kullanıcıya ne tür hizmet sunduğudur. Kişiye yönelik al/sat/tut yönlendirmesi SPK iznine tabi yatırım danışmanlığıdır ve uyarı metni tek başına faaliyetin niteliğini değiştirmez.
 
-**Durum:** Epic 1–7, 9 ve 10 tamamlandı; Story 8.1 tamamlandı. Web ve API 2026-09-21'den beri canlıda. Story 8.2 bilinçli olarak ertelendi (`ALL_FEATURES_FREE`). Sıradaki geliştirme epiği Epic 11'dir.
+### Story 12.1: Yönlendirici Çıktıların Kaldırılması (SPK — Yatırım Danışmanlığı Sınırı)
 
-1. **Epic 11'e başlamadan önce §15'teki açık sorular kullanıcıyla netleştirilmeli:** veri kaynağı (Twelve Data kotası mı, CoinGecko mu), başlangıç evreni (ilk ~100 varlık, USD pariteleri, stablecoin'ler) ve freemium sınırlarının hisse+kripto için ortak olup olmadığı.
+- [x] **Tamamlandı** — Detaylı kabul kriterleri ve görev tanımı için bkz. **`docs/stories/story-12.1.md`**. Skorun Al/Nötr/Sat etiketi kaldırıldı ve skor beş objektif kategoriye ayrıldı. Bülten şirketleri piyasa değerine göre, puansız ele alıyor. Tüm AI prompt'larına ortak uyum kuralları eklendi: al/sat/tut, hedef fiyat ve kişisel tavsiye yok, riskler zorunlu. Eski prompt'la üretilmiş raporlar `PROMPT_VERSION` ile yeniden üretiliyor. Grafik modeli "yukarı/aşağı yönlü örüntü" dili kullanıyor. Uyarı metni ve pazarlama dili (giriş alt başlığı, sunum) düzeltildi. Gerçek Gemini/Finnhub verisiyle ve gerçek tarayıcıda doğrulandı.
+
+As a **ürün sahibi**,
+I want uygulamanın hiçbir yerde bir hisse için "al/sat/tut" yönlendirmesi, hedef fiyat veya kişiye özel öneri üretmemesini,
+So that Borocean, SPK izni gerektiren yatırım danışmanlığı alanına girmeden bir analiz ve bilgilendirme aracı olarak kalsın.
+
+**Acceptance Criteria:**
+
+- **Given** herhangi bir hisse, **When** metrik puanı gösterilirse, **Then** Al/Nötr/Sat gibi bir yönlendirme etiketi yoktur; puan objektif kategorilere ayrılmış olarak gösterilir (FR-130).
+- **Given** günlük bülten, **When** şirketler seçilirse, **Then** seçim değerlendirme içermeyen bir ölçüte (piyasa değeri) göre yapılır ve şirketlere puan/etiket verilmez.
+- **Given** bir AI raporu, **When** üretilirse, **Then** al/sat/tut yönlendirmesi, hedef fiyat, getiri tahmini ve kişisel tavsiye içermez; riskleri belirtir ve "yatırım tavsiyesi değildir" satırıyla biter.
+
+### Story 12.2: KVKK — Aydınlatma, Kullanım Koşulları ve Hesap Silme
+
+- [x] **Tamamlandı** — Detaylı kabul kriterleri ve görev tanımı için bkz. **`docs/stories/story-12.2.md`**. `/kvkk` (aydınlatma metni), `/terms` (kullanım koşulları; yatırım danışmanlığı olmadığı) ve güncellenmiş `/privacy`; kayıt ekranında (web + mobil) bilgilendirme ve bağlantılar. Ayarlar → "Hesabı sil" (web + mobil): `DELETE /me` `auth.users` satırını siler, tüm kullanıcı tabloları `ON DELETE CASCADE` ile silinir. Gerçek tarayıcıda ve veritabanında doğrulandı. **Açık kalan:** avukat incelemesi, veri sorumlusu posta adresi, yurt dışı aktarım aracı (`docs/compliance.md` §4).
+
+As a **kullanıcı**,
+I want hangi kişisel verilerimin neden ve nerede işlendiğini okuyabilmek ve hesabımı tüm verilerimle birlikte kendim silebilmek,
+So that verilerim üzerindeki KVKK haklarımı destek beklemeden kullanabileyim.
+
+**Acceptance Criteria:**
+
+- **Given** herhangi bir ziyaretçi, **When** aydınlatma metni, kullanım koşulları veya gizlilik politikası açılırsa, **Then** oturum gerekmeden görüntülenir; kayıt ekranında bu metinlere bağlantı vardır (FR-131).
+- **Given** giriş yapmış bir kullanıcı, **When** ayarlardan onay kelimesini yazıp hesabını silerse, **Then** hesabı ve ona bağlı tüm veriler kalıcı olarak silinir ve oturumu kapanır.
+
+---
+
+## 17. Sonraki Adımlar
+
+*(2026-09-28'de güncellendi.)*
+
+**Durum:** Epic 1–7, 9, 10 ve 12 tamamlandı; Story 8.1 tamamlandı. Mobil eşitlik açıkları kapandı: mobil şifre sıfırlama ve "Simülasyonda al". Web ve API 2026-09-21'den beri canlıda. Story 8.2 bilinçli olarak ertelendi (`ALL_FEATURES_FREE`). Sıradaki geliştirme epiği Epic 11'dir.
+
+1. **Epic 11'e başlamadan önce §15'teki açık sorular kullanıcıyla netleştirilmeli:** veri kaynağı (Twelve Data kotası mı, CoinGecko mu), başlangıç evreni (ilk ~100 varlık, USD pariteleri, stablecoin'ler) ve freemium sınırlarının hisse+kripto için ortak olup olmadığı. Epic 11 story'leri `docs/compliance.md`'deki kurallara uymalı (kripto için de al/sat yönlendirmesi yok).
 2. **Önerilen Epic 11 sırası:** Sprint 1 — 11.1 (veri adaptörü) + 11.2 (arama ve detay); Sprint 2 — 11.3 (göstergeler/sinyaller) + 11.4 (izleme listesi, alarm, portföy; kesirli miktar); Sprint 3 — 11.5 (simülasyon) + 11.6 (tarama/karşılaştırma) + 11.7 (AI raporları kapsam kararı).
-3. **Mobil eşitlik (küçük, paralel):** mobilde şifre sıfırlama ve doğrulama ekranı (Story 1.7'nin açık maddesi), mobilde "Simülasyonda al" (Story 10.3'ün mobil karşılığı).
+3. **Hukuki açık maddeler** (`docs/compliance.md` §4): avukat incelemesi, veri sorumlusu posta adresi, KVKK m.9 yurt dışı aktarım aracı, veri sağlayıcılarının ticari/yeniden dağıtım lisansları (ücretli katman açılmadan önce).
 4. **Özel alan adı alındığında birlikte açılacaklar:** Google OAuth (consent ekranı `vercel.app`'i kabul etmiyor), Apple Sign-In (ayrıca Apple Developer Program üyeliği gerekiyor), Supabase özel SMTP'si (Brevo) ve e-posta alarm bildirimleri için Render'da `RESEND_API_KEY`/`NOTIFICATION_FROM_EMAIL`.
-5. **Hukuki teyit:** Story 9.1'deki regülasyon riski (bkz. `docs/product-brief-epic9-ai.md`) yatırımcı sunumundan önce kapatılmalı; Epic 11'in kripto metinleri için de aynı görüş alınmalı (§15, açık soru 2).
-6. **Mobil cihaz doğrulaması:** Çoğu story'nin DoD'sinde açık kalan "mobil cihaz/simülatör doğrulaması" maddeleri bu geliştirme ortamında yapılamıyor; kullanıcının gerçek cihazda (veya EAS development build ile) toplu bir tur yapması gerekiyor. Cihazda push bildirimi (Story 5.4) de `eas init` + development build bekliyor.
+5. **Mobil cihaz doğrulaması:** Çoğu story'nin DoD'sinde açık kalan "mobil cihaz/simülatör doğrulaması" maddeleri bu geliştirme ortamında yapılamıyor; kullanıcının gerçek cihazda (veya EAS development build ile) toplu bir tur yapması gerekiyor. Cihazda push bildirimi (Story 5.4) de `eas init` + development build bekliyor.

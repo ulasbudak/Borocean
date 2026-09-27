@@ -115,10 +115,12 @@ async def test_generates_and_saves_report_on_cache_miss(monkeypatch):
         report = await get_fundamental_report("AAPL", "US", client=http_client)
 
     assert report.cached is False
-    assert report.report == "Test temel analiz raporu."
+    assert report.report.startswith("Test temel analiz raporu.")
+    # The model left out the disclaimer, so ensure_disclaimer appended it (Story 12.1).
+    assert report.report.endswith("bilgilendirme amacı taşır.")
     assert saved["symbol"] == "AAPL"
     assert saved["report_type"] == "fundamental"
-    assert saved["content"]["report"] == "Test temel analiz raporu."
+    assert saved["content"]["report"] == report.report
 
 
 @pytest.mark.anyio
@@ -222,3 +224,13 @@ def test_get_cached_report_ignores_stale_rows(monkeypatch):
     result = ai_reports.get_cached_report("AAPL", "US", "fundamental", ttl_hours=24.0)
 
     assert result is None
+
+
+def test_system_prompt_forbids_buy_sell_direction_and_price_targets():
+    """Story 12.1 — SPK: the report is analysis, never a personal buy/sell/hold call."""
+    from app.ai_fundamental import SYSTEM_PROMPT
+
+    assert "al, sat, tut" in SYSTEM_PROMPT
+    assert "Hedef fiyat" in SYSTEM_PROMPT
+    assert "risk profiline" in SYSTEM_PROMPT
+    assert "'Riskler'" in SYSTEM_PROMPT

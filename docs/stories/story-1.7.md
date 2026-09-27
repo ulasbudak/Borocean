@@ -4,7 +4,7 @@ epic: "Epic 1 — Kimlik Doğrulama, Hisse Keşfi ve Temel Altyapı"
 story_id: "1.7"
 status: done
 created: 2026-09-26
-updated: 2026-09-26
+updated: 2026-09-28
 author: Claude (geriye dönük dokümante edildi, 2026-09-26 — kod `5e29760` commit'inde yayımlandı)
 based_on: ["docs/stories/story-1.2.md", "commit 5e29760"]
 depends_on: ["1.2"]
@@ -36,9 +36,10 @@ Story 1.2, şifre sıfırlamayı "ayrı bir story'ye bırakılabilir" diyerek ka
 - **Web — altyapı:** `components/auth/` (`auth-shell`, `notice`, `button-styles`), `lib/site-origin.ts`; `/auth/oauth` yönlendirilen protokolü korur (https'i zorlamaz — yerel `next start` için).
 - **Mobil:** `AuthScreen`, ham Supabase metni yerine `authErrorKey` ile çevrilmiş mesajı gösterir.
 
+- **Mobil — şifre sıfırlama (2026-09-28, mobil eşitlik):** `AuthScreen`'e "Şifremi unuttum" bağlantısı eklendi. Bağlantı web'deki `/forgot-password` akışını cihaz tarayıcısında açıyor (`lib/web-links.ts`, `EXPO_PUBLIC_WEB_URL`) ve altında "tarayıcında açılır, sonra uygulamaya dönüp giriş yap" ipucu gösteriliyor. Uygulama içinde yapılmamasının sebebi: Supabase kurtarma bağlantısı PKCE kullanıyor ve doğrulayıcı çerez yalnızca isteği yapan tarayıcıda var. Uygulama içi akış, derin bağlantı (deep link) ve EAS development build gerektirir. Mobilde e-posta doğrulama bildirimi (`checkEmailBody` + `checkEmailHint`) zaten `5e29760`'ta eklenmişti.
+
 **Kapsam dışı (takip görevleri):**
-- **Mobilde şifremi unuttum / şifre sıfırlama akışı** — yalnızca web'de var. Mobilde derin bağlantı (deep link) ile kurtarma oturumu gerektirir.
-- Mobilde "e-postanı doğrula" ekranı.
+- Mobilde uygulama içi (derin bağlantılı) şifre sıfırlama.
 - Canlıdaki e-posta gönderim sınırı (Supabase yerleşik SMTP'si, saatte ~2 e-posta): sınır aşılınca kayıt ve sıfırlama istekleri `over_email_send_rate_limit` ile reddedilir; UI "Çok fazla deneme yapıldı" gösterir. Kalıcı çözüm özel SMTP'dir (Brevo) ve özel alan adı alınmasını bekliyor.
 
 ## Görevler
@@ -48,7 +49,7 @@ Story 1.2, şifre sıfırlamayı "ayrı bir story'ye bırakılabilir" diyerek ka
 3. **[Web]** `/forgot-password` ve `/reset-password` sayfaları + server action'lar. ✅
 4. **[Web]** Tasarlanmış `/error` sayfası (süresi dolmuş / başka tarayıcıda açılmış bağlantılar), `/auth/confirm` ve `/auth/oauth` düzeltmeleri. ✅
 5. **[Mobil]** `AuthScreen`'de çevrilmiş hata mesajları. ✅
-6. **[Mobil]** Şifre sıfırlama ve e-posta doğrulama ekranı. ☐ (kapsam dışı, yukarıya bkz.)
+6. **[Mobil]** Şifre sıfırlama (tarayıcıdaki web akışına yönlendirme) ve e-posta doğrulama bildirimi. ✅ (2026-09-28)
 
 ## Kabul Kriterleri
 

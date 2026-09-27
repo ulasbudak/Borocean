@@ -2,7 +2,7 @@
 title: "Borocean (Stock Tracking App) - Epic & Story Backlog"
 status: active
 created: 2026-09-15
-updated: 2026-09-26
+updated: 2026-09-28
 author: Bob (BMAD Scrum Master)
 inputDocuments: ["docs/PRD.md", "docs/architecture.md"]
 language: en
@@ -11,7 +11,7 @@ translationOf: docs/epics.md
 
 # Borocean — Epic & Story Backlog
 
-*This is the English translation of [`docs/epics.md`](epics.md), which remains the source of truth. If the two ever disagree, the Turkish version wins until this file is re-synced. Last re-synced: 2026-09-26.*
+*This is the English translation of [`docs/epics.md`](epics.md), which remains the source of truth. If the two ever disagree, the Turkish version wins until this file is re-synced. Last re-synced: 2026-09-28.*
 
 ## 1. Overview
 
@@ -62,6 +62,7 @@ NFR-1 Performance (search <1s, real-time data within a few seconds), NFR-2 Relia
 | FR-100, FR-101 | Epic 9 |
 | FR-110, FR-111, FR-112 | Epic 10 |
 | FR-120 – FR-126 | Epic 11 |
+| FR-130, FR-131 | Epic 12 |
 
 ## 4. Epic List
 
@@ -108,6 +109,10 @@ Users can create a simulation with a virtual budget, buy and sell US stocks at t
 ### Epic 11: Cryptocurrency Market (Backlog — not started)
 Users can search crypto assets and see price, chart and market information on a detail page; they can use them in watchlists, alerts, portfolios, simulations and screening through the same flows as stocks. Data, analysis and virtual trading only — no real crypto trading or wallet connection.
 **FRs covered:** FR-120, FR-121, FR-122, FR-123, FR-124, FR-125, FR-126
+
+### Epic 12: Legal Compliance (SPK and KVKK)
+The app stays an analysis and information tool without producing personal buy/sell/hold direction (the SPK investment-advice boundary); users can read how their personal data is processed and delete their account with all of its data themselves (KVKK). Based on a legal assessment the user shared on 2026-09-28; see `docs/compliance.md`.
+**FRs covered:** FR-130, FR-131
 
 **Epic independence note:** Each epic may use the output of an earlier one (e.g. Epic 3 uses the fundamental data model produced by Epic 2), but no epic waits on a later epic to be completed. Epic 8 (Subscription) places the feature limits produced in Epic 1–7 behind freemium gates but does not change those epics' functionality.
 
@@ -184,7 +189,7 @@ So that I can get a quick first impression of the stock.
 
 ### Story 1.7: Inline Sign-In Errors, Email-Confirmation Notice, and Password Reset
 
-- [x] **Done (documented retroactively)** — For detailed acceptance criteria and the task breakdown see **`docs/stories/story-1.7.md`**. The code shipped on 2026-09-26 in commit `5e29760` without a story document. Sign-in/sign-up errors are shown inline on the form and translated (`authErrorKey`, web + mobile); since "Confirm email" is on in production, a "verify your email" screen is shown after sign-up; the web gained a `/forgot-password` → `/reset-password` flow and a designed `/error` page. **Still open:** mobile has no password reset or verification screen.
+- [x] **Done (documented retroactively)** — For detailed acceptance criteria and the task breakdown see **`docs/stories/story-1.7.md`**. The code shipped on 2026-09-26 in commit `5e29760` without a story document. Sign-in/sign-up errors are shown inline on the form and translated (`authErrorKey`, web + mobile); since "Confirm email" is on in production, a "verify your email" screen is shown after sign-up; the web gained a `/forgot-password` → `/reset-password` flow and a designed `/error` page. **Mobile (2026-09-28):** a "Forgot password?" link opens the web reset flow in the device browser (the PKCE verifier lives in the browser); the verification notice already existed.
 
 ---
 
@@ -306,6 +311,7 @@ So that I can spot potential opportunities without manual screening.
 ### Story 3.6: Summary Rating Score
 
 - [x] **Done** — For detailed acceptance criteria, the scoring model and the task breakdown see **`docs/stories/story-3.6.md`**. A new backend `app/scoring.py`: rule-based scoring from fundamentals (P/E, ROE, debt-to-equity, net margin, EPS growth — 50 pts) + technicals (trend, RSI, the signal tendency of the last 90 days — 50 pts); `GET /symbols/score`. A score badge + factor breakdown (an expandable info panel) was added to the "Overview" tab on web and mobile; with insufficient data it shows "not enough data." **Epic 3, and the Epic 1–3 part of the PRD's Phase 1/MVP, were completed with this story.**
+- **Update (2026-09-28, Story 12.1):** The Buy/Neutral/Sell label was removed because of the SPK investment-advice boundary. The score is now shown as the "Metric Score," broken into five objective categories (Valuation, Profitability, Leverage, Growth, Technical picture). The label wording in the ACs below is a historical record.
 
 As a **new/amateur investor**,
 I want to see a simple score/label summarizing the stock's overall condition without digging into complex metrics,
@@ -322,6 +328,7 @@ So that I can quickly answer "is this stock worth a look?"
 ### Story 3.7: Advanced Buy/Sell Recommendation Engine
 
 - [x] **Done** — For detailed acceptance criteria and the task breakdown see **`docs/stories/story-3.7.md`**. At the user's request Stories 3.5/3.6 were strengthened (without new backend infrastructure): 6 new rules in `app/technical.py` (Bollinger breakout, Stochastic overbought/oversold crossover, short SMA20/50 crossover — 12 rules in total); a "Technical Consensus" factor in `app/scoring.py` that measures the current direction of 6 indicators (25/100, the score's largest single factor) and a template-based, deterministic `rationale` sentence. The score badge on web/mobile gained the rationale text + the consensus ratio.
+- **Update (2026-09-28, Story 12.1):** The rationale no longer contains a label or recommendation; it only describes the highest/lowest category and the number of upward-pointing indicators.
 
 As a **user**,
 I want the summary score to be not just a number but also show how many indicators point in which direction, with a readable rationale,
@@ -571,6 +578,7 @@ So that I can quickly understand the stock's fundamental picture without interpr
 ### Story 9.2: Technical Analysis AI Report — CV Model
 
 - [x] **Done** — For detailed acceptance criteria and the task breakdown see **`docs/stories/story-9.2.md`**. Of the 4 candidates in the PDF comparison report, ChartScanAI's YOLOv8 model was chosen (MIT license + a match with its mplfinance training data, verified live via the GitHub API/LICENSE); backend (`app/ai_technical.py` — chart image rendering with mplfinance, a lazy-loaded model, `GET /symbols/ai-report/technical`), web/mobile (the AI Analysis tab, three panels together with the existing deterministic score) were implemented and verified. **Verified live end-to-end with real AAPL/MSFT data** (real model weights, real candle data, including the cache and the free-tier 403).
+- **Update (2026-09-28, Story 12.1):** The model's "Buy"/"Sell" classes are presented as "upward/downward patterns"; the report states that this is a reading of the past chart, not a forecast.
 
 As an **active trader**,
 I want to see a technical AI report in which my price chart is read by an image-recognition model,
@@ -586,6 +594,7 @@ So that I can compare the model's "reading" with the other views (fundamental AI
 ### Story 9.3: Daily Sector Bulletin
 
 - [x] **Done** — For detailed acceptance criteria and the task breakdown see **`docs/stories/story-9.3.md`**. User request (2026-09-19): an AI sector bulletin on the home screen, with a new one added on top every day and none ever deleted. Scheduling decision: instead of a cron/Celery infrastructure never set up in this project, generate-on-request + an append-only archive (`sector_bulletins` table, `bulletin_date unique`) — the user knowingly approved this choice. The sector is picked by a deterministic `day_of_year % 11` rotation, the stocks by the existing scoring engine (Story 3.6/3.7), and the narrative by Story 9.1's Gemini integration, now shared (`app/ai_reports.py::call_gemini()`). Backend (`app/bulletins.py` + `GET /bulletins`) and web/mobile (a "Bulletin" section on the dashboard) were implemented, tests (290/290) are green, and the free-tier 403 and the sector-selection/scoring pipeline were verified live. **Fully verified end-to-end with a real Gemini API key** (2026-09-20 — the day's bulletin was generated and the same `bulletin_date` was not regenerated on the second request).
+- **Update (2026-09-28, Story 12.1):** The bulletin no longer covers the highest-scoring stocks but the sector's five largest companies by market cap, with no score or label (to avoid a "five stocks to buy today" impression). Bulletins in the old format are hidden from the list.
 
 As a **user (premium)**,
 I want to see on the home screen an AI sector bulletin that gets a new entry every day and never loses its history,
@@ -649,7 +658,7 @@ So that I can pick the right symbol and exchange without knowing the exact ticke
 
 ### Story 10.3: Buying in a Simulation from the Stock Page
 
-- [x] **Done** — For detailed acceptance criteria and the task breakdown see **`docs/stories/story-10.3.md`**. User request (2026-09-26). A "Buy in simulation" button was added to the stock detail page header (web); it shows the simulation picker, the available cash, the quantity, and an estimated amount from the live price. A user with no simulation can create one with a single click without leaving the page. No backend change — Story 10.1's `GET /simulations` and `POST /simulations/{id}/orders` endpoints were used.
+- [x] **Done** — For detailed acceptance criteria and the task breakdown see **`docs/stories/story-10.3.md`**. User request (2026-09-26). A "Buy in simulation" button was added to the stock detail page header (web); it shows the simulation picker, the available cash, the quantity, and an estimated amount from the live price. A user with no simulation can create one with a single click without leaving the page. No backend change — Story 10.1's `GET /simulations` and `POST /simulations/{id}/orders` endpoints were used. **Mobile (2026-09-28):** `SimulateBuyButton` added to the mobile stock screen; on success it can switch to the simulation screen.
 
 As a **user**,
 I want to buy a stock I'm looking at into my simulation without leaving the page,
@@ -774,15 +783,47 @@ So that we don't serve a misleading crypto report generated in the wrong context
 
 ---
 
-## 16. Next Steps
+## 16. Epic 12: Legal Compliance (SPK and KVKK)
 
-*(Updated 2026-09-26 — the previous version described the project's starting state, "start with Story 1.1.")*
+> Based on a legal assessment the user shared on 2026-09-28. For the summary, how it was applied to the product and the open items see **`docs/compliance.md`**. Core principle: what matters is not that AI is used but what kind of service the app provides to the user. Personal buy/sell/hold direction is investment advice requiring an SPK license, and a disclaimer alone does not change the nature of the activity.
 
-**Status:** Epics 1–7, 9 and 10 are complete; Story 8.1 is complete. Web and API have been live since 2026-09-21. Story 8.2 is deliberately deferred (`ALL_FEATURES_FREE`). The next development epic is Epic 11.
+### Story 12.1: Removing Directive Outputs (SPK — Investment-Advice Boundary)
 
-1. **Before starting Epic 11, the open questions in §15 must be settled with the user:** the data source (Twelve Data quota or CoinGecko), the starting universe (top ~100 assets, USD pairs, stablecoins), and whether freemium limits are shared between stocks and crypto.
+- [x] **Done** — For detailed acceptance criteria and the task breakdown see **`docs/stories/story-12.1.md`**. The score's Buy/Neutral/Sell label was removed and the score was broken into five objective categories. The bulletin covers companies by market cap, without scores. Every AI prompt got shared compliance rules: no buy/sell/hold, no price targets, no personal advice, risks required. Reports generated under the old prompts are regenerated via `PROMPT_VERSION`. The chart model uses "upward/downward pattern" language. The disclaimer and marketing wording (login subtitle, deck) were fixed. Verified with real Gemini/Finnhub data and in a real browser.
+
+As a **product owner**,
+I want the app never to produce buy/sell/hold direction, a price target or a personal recommendation for a stock anywhere,
+So that Borocean stays an analysis and information tool without entering investment advice, which requires an SPK license.
+
+**Acceptance Criteria:**
+
+- **Given** any stock, **When** the metric score is shown, **Then** there is no directive label such as Buy/Neutral/Sell; the score is shown broken into objective categories (FR-130).
+- **Given** the daily bulletin, **When** companies are selected, **Then** the selection uses a non-evaluative criterion (market cap) and companies get no score or label.
+- **Given** an AI report, **When** it is generated, **Then** it contains no buy/sell/hold direction, price target, return forecast or personal advice; it states the risks and ends with the "not investment advice" line.
+
+### Story 12.2: KVKK — Privacy Notice, Terms of Use, and Account Deletion
+
+- [x] **Done** — For detailed acceptance criteria and the task breakdown see **`docs/stories/story-12.2.md`**. `/kvkk` (privacy notice), `/terms` (terms of use; not investment advice) and an updated `/privacy`; a notice with links on the sign-up screen (web + mobile). Settings → "Delete account" (web + mobile): `DELETE /me` deletes the `auth.users` row, and every user table is removed via `ON DELETE CASCADE`. Verified in a real browser and in the database. **Still open:** lawyer review, the data controller's postal address, the cross-border transfer mechanism (`docs/compliance.md` §4).
+
+As a **user**,
+I want to read which of my personal data is processed, why and where, and to delete my account with all of my data myself,
+So that I can exercise my KVKK rights over my data without waiting for support.
+
+**Acceptance Criteria:**
+
+- **Given** any visitor, **When** the privacy notice, terms of use or privacy policy is opened, **Then** it is shown without a session; the sign-up screen links to these texts (FR-131).
+- **Given** a signed-in user, **When** they type the confirmation word in settings and delete their account, **Then** the account and all data linked to it are permanently deleted and the session ends.
+
+---
+
+## 17. Next Steps
+
+*(Updated 2026-09-28.)*
+
+**Status:** Epics 1–7, 9, 10 and 12 are complete; Story 8.1 is complete. The mobile parity gaps are closed: mobile password reset and "Buy in simulation". Web and API have been live since 2026-09-21. Story 8.2 is deliberately deferred (`ALL_FEATURES_FREE`). The next development epic is Epic 11.
+
+1. **Before starting Epic 11, the open questions in §15 must be settled with the user:** the data source (Twelve Data quota or CoinGecko), the starting universe (top ~100 assets, USD pairs, stablecoins), and whether freemium limits are shared between stocks and crypto. Epic 11 stories must follow `docs/compliance.md` (no buy/sell direction for crypto either).
 2. **Suggested Epic 11 order:** Sprint 1 — 11.1 (data adapter) + 11.2 (search and detail); Sprint 2 — 11.3 (indicators/signals) + 11.4 (watchlist, alerts, portfolio; fractional quantities); Sprint 3 — 11.5 (simulation) + 11.6 (screening/comparison) + 11.7 (AI reports scope decision).
-3. **Mobile parity (small, in parallel):** password reset and a verification screen on mobile (Story 1.7's open item), "Buy in simulation" on mobile (the mobile counterpart of Story 10.3).
+3. **Open legal items** (`docs/compliance.md` §4): lawyer review, the data controller's postal address, the KVKK art. 9 cross-border transfer mechanism, commercial/redistribution licenses from the data providers (before a paid tier opens).
 4. **Unlocked together once a custom domain is bought:** Google OAuth (the consent screen rejects `vercel.app`), Apple Sign-In (also needs an Apple Developer Program membership), Supabase custom SMTP (Brevo), and `RESEND_API_KEY`/`NOTIFICATION_FROM_EMAIL` on Render for email alert notifications.
-5. **Legal confirmation:** the regulatory risk in Story 9.1 (see `docs/product-brief-epic9-ai.md`) must be closed before any investor pitch; the same opinion should cover Epic 11's crypto copy (§15, open question 2).
-6. **Mobile device verification:** the "mobile device/simulator verification" items left open in most stories' DoD can't be done in this development environment; the user needs to do one batch pass on a real device (or with an EAS development build). On-device push notifications (Story 5.4) also wait on `eas init` + a development build.
+5. **Mobile device verification:** the "mobile device/simulator verification" items left open in most stories' DoD can't be done in this development environment; the user needs to do one batch pass on a real device (or with an EAS development build). On-device push notifications (Story 5.4) also wait on `eas init` + a development build.
