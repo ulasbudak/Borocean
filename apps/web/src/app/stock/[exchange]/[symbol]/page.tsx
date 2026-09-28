@@ -13,6 +13,7 @@ import { CreateSignalAlertButton } from "./create-signal-alert-button";
 import { SimulateBuyButton } from "./simulate-buy-button";
 import { StockNoteCard } from "./stock-note-card";
 import { DataDelayDisclosure } from "./data-delay-disclosure";
+import { SymbolInsights } from "./symbol-insights";
 
 type StockOverview = {
   symbol: string;
@@ -123,6 +124,12 @@ export default async function StockDetailPage({
       {!fetchFailed && <StatTable rows={statRows} />}
 
       <StockNoteCard symbol={symbol.toUpperCase()} exchange={exchange.toUpperCase()} messages={t.notes} />
+      <SymbolInsights
+        symbol={symbol.toUpperCase()}
+        exchange={exchange.toUpperCase()}
+        messages={t.insights}
+        locale={locale}
+      />
     </div>
   );
 

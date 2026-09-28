@@ -61,14 +61,19 @@ def upsert_settings_for_user(
 
 
 async def send_expo_push(
-    token: str, title: str, body: str, *, client: httpx.AsyncClient | None = None
+    token: str,
+    title: str,
+    body: str,
+    *,
+    data: dict | None = None,
+    client: httpx.AsyncClient | None = None,
 ) -> bool:
     owns_client = client is None
     http_client = client or httpx.AsyncClient(timeout=NOTIFICATION_TIMEOUT_SECONDS)
     try:
         response = await http_client.post(
             EXPO_PUSH_URL,
-            json={"to": token, "title": title, "body": body},
+            json={"to": token, "title": title, "body": body, **({"data": data} if data else {})},
             headers={"Content-Type": "application/json"},
         )
         return response.status_code == 200

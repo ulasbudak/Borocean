@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import * as Notifications from "expo-notifications";
 import type { Session } from "@supabase/supabase-js";
 import { SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { supabase } from "../lib/supabase";
@@ -16,6 +17,7 @@ import { CompareScreen } from "./CompareScreen";
 import { SimulationScreen } from "./SimulationScreen";
 import { Highlights } from "./Highlights";
 import { BulletinSection } from "./BulletinSection";
+import { PortfolioInsightsCard } from "./PortfolioInsightsCard";
 
 type SymbolResult = {
   symbol: string;
@@ -36,6 +38,17 @@ export function HomeScreen({ session }: { session: Session }) {
   const [showSignalAlerts, setShowSignalAlerts] = useState(false);
   const [showCompare, setShowCompare] = useState(false);
   const [showSimulation, setShowSimulation] = useState(false);
+
+  // Story 13.6 — tapping the morning "updates in your portfolio" push opens the portfolio.
+  useEffect(() => {
+    const subscription = Notifications.addNotificationResponseReceivedListener((response) => {
+      if (response.notification.request.content.data?.type === "portfolio_insights") {
+        setSelectedStock(null);
+        setShowPortfolio(true);
+      }
+    });
+    return () => subscription.remove();
+  }, []);
 
   if (selectedStock) {
     return (
@@ -136,6 +149,8 @@ export function HomeScreen({ session }: { session: Session }) {
         <View style={styles.card}>
           <SearchBox onSelectResult={setSelectedStock} />
         </View>
+
+        <PortfolioInsightsCard onOpenPortfolio={() => setShowPortfolio(true)} />
 
         <Text style={styles.sectionLabel}>{messages.highlights.title}</Text>
         <Highlights onSelectResult={setSelectedStock} />

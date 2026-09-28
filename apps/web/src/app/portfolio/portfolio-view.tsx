@@ -1,14 +1,24 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState, type FormEvent } from "react";
-import { Plus, Trash2 } from "lucide-react";
-import { BIST_ENABLED, formatPrice, formatSignedPercent, type Locale, type Messages } from "@borocean/shared";
+import { Fragment, useEffect, useState, type FormEvent } from "react";
+import { Plus, Sparkles, Trash2 } from "lucide-react";
+import {
+  BIST_ENABLED,
+  formatPrice,
+  formatSignedPercent,
+  type Insight,
+  type Locale,
+  type Messages,
+} from "@borocean/shared";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle } from "@/components/ui/card";
 import { Field, Input, Label, Select } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge, ChangeValue } from "@/components/ui/change-value";
+import { InsightCard } from "@/components/insights/insight-card";
+import { InsightList } from "@/components/insights/insight-list";
+import { fetchPortfolioInsights, markInsightsRead } from "@/lib/insights-client";
 import {
   addTransaction,
   createPortfolio,
@@ -20,12 +30,17 @@ import {
 
 export function PortfolioView({
   messages,
+  insightMessages,
   locale,
 }: {
   messages: Messages["portfolio"];
+  insightMessages: Messages["insights"];
   locale: Locale;
 }) {
   const t = messages;
+  const [insights, setInsights] = useState<Insight[]>([]);
+  const [insightWarnings, setInsightWarnings] = useState<string[]>([]);
+  const [openInsightFor, setOpenInsightFor] = useState<string | null>(null);
   const [portfolios, setPortfolios] = useState<Portfolio[] | null>(null);
   const [warnings, setWarnings] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -65,6 +80,42 @@ export function PortfolioView({
       cancelled = true;
     };
   }, [t.loadError]);
+
+  // Story 13.4 — morning-scan updates for the symbols held here. Best-effort: a failure
+  // only hides the badges, the portfolio itself still loads.
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadInsights() {
+      try {
+        const data = await fetchPortfolioInsights();
+        if (!cancelled) {
+          setInsights(data.insights);
+          setInsightWarnings(data.warnings);
+        }
+      } catch {
+        // No badges.
+      }
+    }
+
+    loadInsights();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  function markInsightRead(insight: Insight) {
+    if (insight.read) return;
+    markInsightsRead([insight.id]).catch(() => {});
+    setInsights((prev) => prev.map((i) => (i.id === insight.id ? { ...i, read: true } : i)));
+  }
+
+  // Newest update per symbol (the list is sorted newest first).
+  const latestInsight = new Map<string, Insight>();
+  for (const insight of insights) {
+    const key = `${insight.exchange}:${insight.symbol}`;
+    if (!latestInsight.has(key)) latestInsight.set(key, insight);
+  }
 
   async function handleCreate(e: FormEvent) {
     e.preventDefault();
@@ -127,6 +178,26 @@ export function PortfolioView({
           </Button>
         </form>
       </Card>
+
+      {(insights.length > 0 || insightWarnings.length > 0) && (
+        <Card>
+          <p className="mb-1 text-xs font-medium uppercase tracking-wide text-text-tertiary">
+            {insightMessages.portfolioStripTitle}
+          </p>
+          {insightWarnings.map((warning) => (
+            <p key={warning} className="mb-1 text-xs text-warning">
+              {warning}
+            </p>
+          ))}
+          <InsightList
+            items={insights}
+            messages={insightMessages}
+            locale={locale}
+            onOpen={markInsightRead}
+          />
+          <p className="mt-2 text-xs text-text-tertiary">{insightMessages.disclaimer}</p>
+        </Card>
+      )}
 
       {error && (
         <p role="alert" className="rounded-md border border-negative/30 bg-negative/10 px-3 py-2 text-sm text-negative">
@@ -206,60 +277,96 @@ export function PortfolioView({
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border-subtle">
-                  {portfolio.positions.map((position) => (
-                    <tr key={position.id}>
-                      <td className="py-2.5 pr-3">
-                        <div className="flex items-center gap-2">
-                          <Badge>{position.exchange}</Badge>
-                          <Link
-                            href={`/stock/${position.exchange}/${position.symbol}`}
-                            className="font-semibold text-text-primary hover:text-accent"
-                          >
-                            {position.symbol}
-                          </Link>
-                        </div>
-                        {position.price_unavailable && position.exchange === "BIST" && (
-                          <p className="mt-0.5 text-xs text-text-tertiary">{t.bistUnavailableHint}</p>
+                  {portfolio.positions.map((position) => {
+                    const insight = latestInsight.get(`${position.exchange}:${position.symbol}`);
+                    const rowKey = `${portfolio.id}:${position.id}`;
+                    return (
+                      <Fragment key={position.id}>
+                        <tr>
+                          <td className="py-2.5 pr-3">
+                            <div className="flex items-center gap-2">
+                              <Badge>{position.exchange}</Badge>
+                              <Link
+                                href={`/stock/${position.exchange}/${position.symbol}`}
+                                className="font-semibold text-text-primary hover:text-accent"
+                              >
+                                {position.symbol}
+                              </Link>
+                              {insight && (
+                                <button
+                                  type="button"
+                                  aria-expanded={openInsightFor === rowKey}
+                                  onClick={() => {
+                                    setOpenInsightFor((current) => (current === rowKey ? null : rowKey));
+                                    markInsightRead(insight);
+                                  }}
+                                  className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium ${
+                                    insight.read
+                                      ? "bg-surface-hover text-text-secondary"
+                                      : "bg-accent/15 text-accent"
+                                  }`}
+                                >
+                                  <Sparkles size={12} />
+                                  {insightMessages.newBadge}
+                                </button>
+                              )}
+                            </div>
+                            {position.price_unavailable && position.exchange === "BIST" && (
+                              <p className="mt-0.5 text-xs text-text-tertiary">{t.bistUnavailableHint}</p>
+                            )}
+                          </td>
+                          <td className="px-3 py-2.5 text-right tabular-nums text-text-primary">
+                            {position.quantity}
+                          </td>
+                          <td className="px-3 py-2.5 text-right tabular-nums text-text-primary">
+                            {formatPrice(position.avg_cost, "USD", locale)}
+                          </td>
+                          <td className="px-3 py-2.5 text-right tabular-nums text-text-primary">
+                            {position.current_price !== null
+                              ? formatPrice(position.current_price, "USD", locale)
+                              : t.priceUnavailable}
+                          </td>
+                          <td className="px-3 py-2.5 text-right tabular-nums text-text-primary">
+                            {position.market_value !== null
+                              ? formatPrice(position.market_value, "USD", locale)
+                              : "—"}
+                          </td>
+                          <td className="px-3 py-2.5 text-right">
+                            {position.pnl_abs !== null && position.pnl_pct !== null ? (
+                              <ChangeValue value={position.pnl_abs}>
+                                {formatPrice(position.pnl_abs, "USD", locale)} (
+                                {formatSignedPercent(position.pnl_pct, locale)})
+                              </ChangeValue>
+                            ) : (
+                              "—"
+                            )}
+                          </td>
+                          <td className="py-2.5 pl-3 text-right">
+                            <button
+                              type="button"
+                              aria-label={t.deletePositionButton}
+                              onClick={() => handleDeletePosition(portfolio.id, position.id)}
+                              className="rounded-full p-1 text-text-tertiary transition-colors hover:bg-surface-hover hover:text-negative"
+                            >
+                              <Trash2 size={14} />
+                            </button>
+                          </td>
+                        </tr>
+                        {insight && openInsightFor === rowKey && (
+                          <tr>
+                            <td colSpan={7} className="bg-surface-hover/40 px-3 py-3">
+                              <InsightCard
+                                insight={insight}
+                                messages={insightMessages}
+                                locale={locale}
+                                showSymbol={false}
+                              />
+                            </td>
+                          </tr>
                         )}
-                      </td>
-                      <td className="px-3 py-2.5 text-right tabular-nums text-text-primary">
-                        {position.quantity}
-                      </td>
-                      <td className="px-3 py-2.5 text-right tabular-nums text-text-primary">
-                        {formatPrice(position.avg_cost, "USD", locale)}
-                      </td>
-                      <td className="px-3 py-2.5 text-right tabular-nums text-text-primary">
-                        {position.current_price !== null
-                          ? formatPrice(position.current_price, "USD", locale)
-                          : t.priceUnavailable}
-                      </td>
-                      <td className="px-3 py-2.5 text-right tabular-nums text-text-primary">
-                        {position.market_value !== null
-                          ? formatPrice(position.market_value, "USD", locale)
-                          : "—"}
-                      </td>
-                      <td className="px-3 py-2.5 text-right">
-                        {position.pnl_abs !== null && position.pnl_pct !== null ? (
-                          <ChangeValue value={position.pnl_abs}>
-                            {formatPrice(position.pnl_abs, "USD", locale)} (
-                            {formatSignedPercent(position.pnl_pct, locale)})
-                          </ChangeValue>
-                        ) : (
-                          "—"
-                        )}
-                      </td>
-                      <td className="py-2.5 pl-3 text-right">
-                        <button
-                          type="button"
-                          aria-label={t.deletePositionButton}
-                          onClick={() => handleDeletePosition(portfolio.id, position.id)}
-                          className="rounded-full p-1 text-text-tertiary transition-colors hover:bg-surface-hover hover:text-negative"
-                        >
-                          <Trash2 size={14} />
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
+                      </Fragment>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>

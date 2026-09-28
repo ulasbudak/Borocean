@@ -17,6 +17,8 @@ class Settings(BaseSettings):
     resend_api_key: str = ""
     notification_from_email: str = "Borocean <alerts@borocean.app>"
     cors_origins: str = "http://localhost:3000,http://localhost:8081"
+    # Epic 13: shared secret pg_cron sends as X-Cron-Secret to POST /internal/insights/run.
+    cron_secret: str = ""
 
 
 @lru_cache

@@ -154,6 +154,18 @@ Requirements are grouped by feature area and numbered globally. The **[MVP]** ta
 - **FR-130** The system must not produce, on any screen or in any AI output, buy/sell/hold direction for a specific capital-markets instrument, price targets, return forecasts, advice based on the user's personal situation, or portfolio allocation suggestions. Scores must be shown broken down into categories that show which objective metrics they come from; stock lists (e.g. the bulletin) must be built by non-evaluative criteria; AI outputs must stay within a "financial position / analysis / risks" frame and carry the notice "This content is not investment advice; it is an analysis of publicly available data for information purposes only."
 - **FR-131** The system must provide a KVKK privacy notice, terms of use and a privacy policy; link to them on the sign-up screen; and let users permanently delete their account and all personal data linked to it from within the app.
 
+### 5.15 Portfolio Insight Tracking (Background AI Scan)
+
+> **Analyst note (2026-09-28):** Added at the user's request; Epic 13. For the decision rationale, research and alternatives see `docs/product-brief-epic13-portfolio-insights.md`. It is the project's first scheduled job (Supabase `pg_cron` + `pg_net`). It is subject to the Epic 12 rules (`docs/compliance.md`): the update card says what happened, never what to do.
+
+- **FR-140** At the end of every trading day, the system must scan all distinct symbols in users' portfolios without any user interaction (in the background). The scan must be idempotent, must protect data-provider quotas for live users, and must be able to resume where it left off if interrupted.
+- **FR-141** The system must detect "important updates" with deterministic, explainable rules: sharp price move, unusual volume, 52-week high/low, major technical event, earnings reported and its surprise, upcoming earnings, important SEC filing, fundamental metric change. Every event must have an importance score; analysts' buy/sell recommendation data must not be used.
+- **FR-142** For symbols with an important event, the system must generate a short AI note based on publicly available data ("What happened / What it changes in the data / Risks"). The note must be generated once per symbol (not per user), must comply with FR-130, and must be capped by a daily LLM budget. If the budget is exceeded, the event must be shown without a note.
+- **FR-143** On the portfolio screen, positions with an update must be flagged and the update's details (events, AI note, date, stock page link) must be expandable; the last 7 days' updates must be listed at the top of the portfolio.
+- **FR-144** The user's home page (dashboard) must show the latest updates in their portfolio along with the unread count; read state must be stored per user.
+- **FR-145** The deterministic event list must be open to all users; the AI note must be open to users entitled to AI reports (FR-080 – FR-083).
+- **FR-146** Users with the mobile push preference on must receive at most one summary push notification on days with important updates on stocks in their portfolio. No email is sent for this feature. Update cards may show related news headlines with the source name and a link to the original article; article text is not copied.
+
 ## 6. Non-Functional Requirements (NFR)
 
 | Category | Requirement |
@@ -185,7 +197,8 @@ Requirements are grouped by feature area and numbered globally. The **[MVP]** ta
   2. **FR-110, FR-111, FR-112** (Trading simulation / paper trading) — user request (2026-09-19), in parallel with Epic 9, added to the backlog as Epic 10.
   3. **FR-120 – FR-126** (Cryptocurrency market — data, analysis and virtual trading) — user request (2026-09-26), added to the backlog as Epic 11.
   4. **FR-130, FR-131** (Legal compliance — SPK and KVKK) — based on the legal assessment the user shared (2026-09-28), added and completed as Epic 12.
-  5. **FR-102** (ML-based pattern recognition — the expanded form of FR-025), FR-012 (customizable score weighting), FR-033 (screen notifications), FR-053 (portfolio risk analysis), FR-063 (advanced personalization), FR-071 (SMS) — no firm priority order has been set among these yet.
+  5. **FR-140 – FR-146** (Portfolio insight tracking — background AI scan) — user request (2026-09-28), added to the backlog as Epic 13.
+  6. **FR-102** (ML-based pattern recognition — the expanded form of FR-025), FR-012 (customizable score weighting), FR-033 (screen notifications), FR-053 (portfolio risk analysis), FR-063 (advanced personalization), FR-071 (SMS) — no firm priority order has been set among these yet.
 - **Out of scope (for now):** The forex asset class (crypto was brought into scope as Epic 11 on 2026-09-26 — data/analysis/virtual trading only), social/community features, actual order routing (brokerage/crypto-exchange integration).
 
 ## 9. Open Questions and Assumptions

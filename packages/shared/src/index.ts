@@ -6,3 +6,4 @@ export * from "./drawings";
 export * from "./theme/tokens";
 export * from "./auth/errors";
 export * from "./exchanges";
+export * from "./insights";

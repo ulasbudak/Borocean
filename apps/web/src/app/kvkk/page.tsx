@@ -38,6 +38,10 @@ export default function KvkkPage() {
           taramalar, dil tercihi ve seçtiğiniz ilgi sektörleri.
         </li>
         <li>
+          <strong>Portföy gelişmeleri:</strong> hangi gelişme kartlarını açtığınız (okundu
+          durumu) ve size hangi gün özet bildirim gönderildiği.
+        </li>
+        <li>
           <strong>Bildirim:</strong> e-posta bildirim tercihi ve mobil cihazınızın anlık
           bildirim (push) anahtarı.
         </li>
@@ -62,6 +66,12 @@ export default function KvkkPage() {
         <li>
           Talep ettiğiniz alarm bildirimlerini e-posta veya anlık bildirim olarak göndermek —{" "}
           <em>sözleşmenin ifası</em> (m.5/2-c).
+        </li>
+        <li>
+          Portföyünüzdeki hisselere ait, her sabah kamuya açık verilerden tespit edilen
+          gelişmeleri size göstermek ve anlık bildirim tercihiniz açıksa günde en fazla bir özet
+          bildirim göndermek — <em>sözleşmenin ifası</em> (m.5/2-c). Bu gelişmeler
+          portföyünüze göre seçilir ancak size kişisel bir yatırım önerisi üretmez.
         </li>
         <li>
           Hizmetin güvenliğini sağlamak, kötüye kullanımı ve hataları tespit etmek —{" "}

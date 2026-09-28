@@ -25,6 +25,7 @@ import { CreatePriceAlertButton } from "./CreatePriceAlertButton";
 import { CreateSignalAlertButton } from "./CreateSignalAlertButton";
 import { StockNoteCard } from "./StockNoteCard";
 import { SimulateBuyButton } from "./SimulateBuyButton";
+import { SymbolInsights } from "./SymbolInsights";
 import { fetchEntitlement } from "../lib/entitlements-client";
 
 type StockOverview = {
@@ -246,6 +247,7 @@ export function StockOverviewScreen({
           )}
 
           <StockNoteCard symbol={symbol.toUpperCase()} exchange={exchange.toUpperCase()} />
+          <SymbolInsights symbol={symbol.toUpperCase()} exchange={exchange.toUpperCase()} />
         </>
       )}
 

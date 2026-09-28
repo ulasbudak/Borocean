@@ -11,7 +11,7 @@ translationOf: docs/epics.md
 
 # Borocean — Epic & Story Backlog
 
-*This is the English translation of [`docs/epics.md`](epics.md), which remains the source of truth. If the two ever disagree, the Turkish version wins until this file is re-synced. Last re-synced: 2026-09-28.*
+*This is the English translation of [`docs/epics.md`](epics.md), which remains the source of truth. If the two ever disagree, the Turkish version wins until this file is re-synced. Last re-synced: 2026-09-28 (Epic 13 added).*
 
 ## 1. Overview
 
@@ -63,6 +63,7 @@ NFR-1 Performance (search <1s, real-time data within a few seconds), NFR-2 Relia
 | FR-110, FR-111, FR-112 | Epic 10 |
 | FR-120 – FR-126 | Epic 11 |
 | FR-130, FR-131 | Epic 12 |
+| FR-140 – FR-146 | Epic 13 |
 
 ## 4. Epic List
 
@@ -113,6 +114,10 @@ Users can search crypto assets and see price, chart and market information on a 
 ### Epic 12: Legal Compliance (SPK and KVKK)
 The app stays an analysis and information tool without producing personal buy/sell/hold direction (the SPK investment-advice boundary); users can read how their personal data is processed and delete their account with all of its data themselves (KVKK). Based on a legal assessment the user shared on 2026-09-28; see `docs/compliance.md`.
 **FRs covered:** FR-130, FR-131
+
+### Epic 13: Portfolio Insight Tracking (Background AI Scan) (Done — waiting on production setup)
+Every day, without the user doing anything, the app scans the stocks in portfolios. When it catches an important update (sharp price move, earnings, important SEC filing, etc.), it shows it with a short AI note on the portfolio screen and on the dashboard. The update card says what happened, never what to do (Epic 12).
+**FRs covered:** FR-140, FR-141, FR-142, FR-143, FR-144, FR-145, FR-146
 
 **Epic independence note:** Each epic may use the output of an earlier one (e.g. Epic 3 uses the fundamental data model produced by Epic 2), but no epic waits on a later epic to be completed. Epic 8 (Subscription) places the feature limits produced in Epic 1–7 behind freemium gates but does not change those epics' functionality.
 
@@ -816,11 +821,145 @@ So that I can exercise my KVKK rights over my data without waiting for support.
 
 ---
 
-## 17. Next Steps
+## 17. Epic 13: Portfolio Insight Tracking (Background AI Scan)
+
+> User request (2026-09-28): "When the daily AI reports of the stocks in the portfolio catch an important detail in the background, it should show up in the portfolio and on the user page." For the decision rationale, alternatives, research results and cost budget see **`docs/product-brief-epic13-portfolio-insights.md`**.
+>
+> **Core design:**
+> - **Rules first, then AI.** Deterministic detectors catch "events"; Gemini writes an explanation only for symbols with events. This keeps the "important" decision explainable, reproducible and cheap.
+> - **Background:** Supabase `pg_cron` + `pg_net` triggers the API every morning before the opens (05:30 UTC, 08:30 Turkey time). This is the project's first scheduled job; it was chosen because GitHub Actions cron proved unreliable and to stay free.
+> - **Generated globally, shown personally.** Events and notes are generated once per symbol. They are filtered by the user's positions for display, and read state is per user.
+> - **Compliance:** the `docs/compliance.md` rules apply. Analysts' buy/sell recommendation data is not used; from news, only headline, source and link.
+>
+> **Data source — tried live with the existing Finnhub key on 2026-09-28:** `company-news` ✓ (245 items in one week for AAPL — noisy, can't be a trigger directly), `stock/earnings` ✓ (actual/estimated EPS and surprise %), `calendar/earnings` ✓, `stock/filings` ✓ (with SEC form type), `stock/insider-transactions` ✓, `stock/recommendation` ✓ but **not to be used** (analysts' buy/sell counts), `press-releases` ✗ (not in the plan).
+
+### Story 13.1: Event Detection Engine and Update Data Model
+
+- [x] **Done** — see **`docs/stories/story-13.1.md`**. Deterministic detectors, Finnhub sources (relevance and directive filters on headlines) and migration 0013. Calibrated on real data, 117 stocks × 150 days: on average 2.7% of symbols flagged per day (target <10%).
+
+As a **developer**,
+I want a testable engine that produces deterministic events and importance scores from a symbol's daily data, and a data model to store them,
+So that the "important update" decision is explainable, reproducible and independent of the LLM.
+
+**Acceptance Criteria:**
+
+- **Given** a symbol's candles, earnings, SEC filings and fundamentals snapshot, **When** `detect_events(symbol, date)` runs, **Then** it returns a `{type, severity, facts}` list for the event types in the decision note's table. `facts` contains only measured values (e.g. `{"change_pct": -7.2, "threshold_pct": 5.0}`) (FR-141).
+- **Given** historical data, **When** the thresholds are calibrated, **Then** fewer than about 10% of the universe's symbols come out "important" on an ordinary trading day. The calibration method and result are written into the story document. This is the story's first task.
+- **Given** a detection result, **When** it is saved, **Then** the `symbol_insights` table (global; unique on `symbol, exchange, insight_date`) stores the events, the highest importance, the AI note (may be empty), `prompt_version` and the creation time. For fundamental metric changes, the previous snapshot is kept in `symbol_fundamentals_snapshots`.
+- **And** Finnhub `stock/recommendation` is never read; detectors are verified with unit tests (on fixed data).
+
+### Story 13.2: Daily Background Runner (`pg_cron` + `pg_net`)
+
+- [x] **Done** — see **`docs/stories/story-13.2.md`**. `POST /internal/insights/run` (secret-protected); idempotent, paced and capped runner; fallback trigger; `setup_insights_cron.sql`. Verified live end to end. **Still open:** production setup (migration, cron script, `CRON_SECRET` on Render).
+
+As a **product owner**,
+I want the symbols in portfolios to be scanned every morning without anyone opening the app,
+So that users find the updates ready as they start the day.
+
+**Acceptance Criteria:**
+
+- **Given** `pg_cron` and `pg_net` are enabled in Supabase, **When** it is 05:30 UTC (08:30 Turkey time, before the opens), **Then** `POST /internal/insights/run` is called. It is called again at 06:30 and 07:30 UTC to finish any work left half-done (FR-140).
+- **Given** the endpoint, **When** the `X-Cron-Secret` header is missing or wrong, **Then** it returns 401. When correct, it returns 202 immediately and runs the work in the background.
+- **Given** a run, **When** it executes, **Then** the distinct US symbols across all portfolios are processed, starting with the symbols held by the most users. Symbols already processed that day are skipped (idempotent). At most 4 requests per minute go to Twelve Data and the daily symbol cap is respected. Every run is written to the `insight_runs` table with its start, end and processed/skipped/failed counts.
+- **Given** today's run never started, **When** a user opens their portfolio, **Then** the run is triggered and the user is told "today's scan is being prepared". No silent gap (NFR-2).
+- **And** the decision is recorded in `docs/architecture.md` as a new architecture decision (replacing AD-8), and the setup steps for the extensions and the cron entry in the production Supabase are documented.
+
+### Story 13.3: AI Note for Updates
+
+- [x] **Done** — see **`docs/stories/story-13.3.md`**. Gemini note under the compliance rules (What happened / What it changes in the data / Risks + effect tone), daily cap of 50 notes, paced retry, AI-access gate on the note.
+
+As a **user (entitled to AI reports)**,
+I want to read a short, clear explanation of a detected update,
+So that I can understand what the numbers might mean without going to the stock page.
+
+**Acceptance Criteria:**
+
+- **Given** a symbol with an important event, **When** the run processes it, **Then** Gemini receives only the events' `facts` and the symbol's fundamentals. The note follows the structure "What happened / What it changes in the data / Risks to be aware of", and the event's impact is classified as positive/negative/neutral (FR-142).
+- **Given** `COMPLIANCE_RULES`, **When** a note is generated, **Then** it contains no buy/sell/hold, "review your position", "opportunity", price target or personal advice. It ends with `DISCLAIMER_LINE` and is stored with `PROMPT_VERSION`.
+- **Given** the daily LLM cap (starting value: 50 notes), **When** it is exceeded, **Then** the remaining events are saved without a note and shown in the UI as the event list only.
+- **And** the AI note requires `Entitlement.ai_reports`; the deterministic event list is open to everyone (FR-145).
+
+### Story 13.4: Updates on the Portfolio Screen
+
+- [x] **Done** — see **`docs/stories/story-13.4.md`**. "New update" badge in the portfolio, inline card, 7-day strip (web + mobile); read state.
+
+As a **user**,
+I want to see at a glance which stocks in my portfolio have an important update,
+So that I can notice what changed without opening every stock one by one.
+
+**Acceptance Criteria:**
+
+- **Given** a position with an update in the last 7 days, **When** the user opens the portfolio screen (web + mobile), **Then** a "New update" badge appears on that position's row. Clicking the badge opens a card with the events, the AI note (if any), the date and a link to the stock page (FR-143).
+- **Given** several updates, **When** the portfolio opens, **Then** the last 7 days' updates are listed by date in a strip under the header.
+- **Given** the user opens an update, **When** the card is shown, **Then** a read record is written to the `insight_reads` table and the badge loses its "new" highlight. `insight_reads` is linked to `auth.users` with `ON DELETE CASCADE`.
+- **And** `GET /insights?scope=portfolio` returns only updates for symbols in the user's positions; the card text never says "what to do".
+
+### Story 13.5: "Updates in Your Portfolio" on the Dashboard and "Recent Updates" on the Stock Page
+
+- [x] **Done** — see **`docs/stories/story-13.5.md`**. "Updates in your portfolio" card on the dashboard (unread count), "Recent updates" on the stock page (web + mobile); KVKK notice updated.
+
+As a **user**,
+I want to see new updates in my portfolio on the home page when I open the app,
+So that I can tell whether anything important happened without going to the portfolio screen.
+
+**Acceptance Criteria:**
+
+- **Given** unread updates, **When** the user opens the dashboard (web `/dashboard`, mobile `HomeScreen`), **Then** an "Updates in your portfolio" card shows the unread count and the latest 3–5 updates; the card links to the portfolio screen and the stock page (FR-144).
+- **Given** no updates, **When** the dashboard opens, **Then** the card says "No important updates in your portfolio in the last 7 days". The card isn't shown to users with no portfolio.
+- **Given** a stock detail page, **When** that symbol has updates in the last 30 days, **Then** a "Recent updates" section lists them (even if it isn't in the portfolio).
+- **And** `docs/compliance.md` and the KVKK privacy notice are updated: the new processing purpose ("showing updates about the stocks in your portfolio") and the read data.
+
+### Story 13.6: Mobile Push Notification for Portfolio Updates
+
+- [x] **Done** — see **`docs/stories/story-13.6.md`**. At most one summary mobile push a day; tapping it opens the portfolio; no email. On-device delivery waits on an EAS development build.
+
+As a **mobile user**,
+I want a notification on my phone when there is an important update on a stock in my portfolio,
+So that I'm informed even if I don't open the app.
+
+**Acceptance Criteria:**
+
+- **Given** the push preference from Story 5.4 is on and a device token is registered, **When** the morning scan saves important updates on stocks the user holds, **Then** at most one summary push a day is sent to the user. The text only states the events ("2 updates in your portfolio: AAPL reported earnings, MSFT daily -6.1%") (FR-146).
+- **And** no email is sent (user decision, 2026-09-28). On-device delivery waits on an EAS development build, as in Story 5.4.
+
+### Story 13.7: Extending to Watchlist Stocks — Optional
+
+As a **user**,
+I want to see updates for the stocks on my watchlist too,
+So that I don't miss important events at companies I follow but haven't bought yet.
+
+**Acceptance Criteria:**
+
+- **Given** the symbols on watchlists, **When** the scan universe is computed, **Then** they are added after the portfolio symbols (at a lower priority) and the daily cap is kept.
+- **And** updates are shown on the watchlist screen and in the dashboard card with a separate label.
+
+### Epic 13 — Decisions (2026-09-28, user)
+
+1. **User page = the dashboard** (web `/dashboard`, mobile `HomeScreen`).
+2. **Portfolio first**; watchlist as Story 13.7 (later).
+3. **Notifications: mobile push only** (Story 13.6 in the first version), no email.
+4. **Scan: once a day, in the morning before the open** — 05:30 UTC (08:30 Turkey time), re-triggered at 06:30/07:30 UTC.
+5. **News headlines will be shown**, with the source name and a link. Only headlines are shown; the card of a stock with events carries at most 3 headlines from the last 48 hours.
+
+**Implementation order:** 13.1 → 13.2 → 13.3 → 13.4 → 13.5 → 13.6; 13.7 later.
+
+---
+
+## 18. Next Steps
 
 *(Updated 2026-09-28.)*
 
-**Status:** Epics 1–7, 9, 10 and 12 are complete; Story 8.1 is complete. The mobile parity gaps are closed: mobile password reset and "Buy in simulation". Web and API have been live since 2026-09-21. Story 8.2 is deliberately deferred (`ALL_FEATURES_FREE`). The next development epic is Epic 11.
+**Status:** Epics 1–7, 9, 10 and 12 are complete; Story 8.1 is complete. The mobile parity gaps are closed: mobile password reset and "Buy in simulation". Web and API have been live since 2026-09-21. Story 8.2 is deliberately deferred (`ALL_FEATURES_FREE`). Two epics are waiting in the backlog: Epic 11 (crypto) and Epic 13 (portfolio insight tracking). The user should decide which comes first.
+
+**Epic 13:** 13.1–13.6 completed on 2026-09-28 (13.7 later). To go live, in order:
+- Apply migration `0013_portfolio_insights.sql` to the production Supabase.
+- Set `CRON_SECRET` on Render.
+- Run `apps/api/scripts/setup_insights_cron.sql` in the production SQL editor.
+- Check the first morning's result in `insight_runs`.
+- **Gemini quota risk:** see Story 13.3 DoD.
+
+The items below are for Epic 11 and general work.
+
 
 1. **Before starting Epic 11, the open questions in §15 must be settled with the user:** the data source (Twelve Data quota or CoinGecko), the starting universe (top ~100 assets, USD pairs, stablecoins), and whether freemium limits are shared between stocks and crypto. Epic 11 stories must follow `docs/compliance.md` (no buy/sell direction for crypto either).
 2. **Suggested Epic 11 order:** Sprint 1 — 11.1 (data adapter) + 11.2 (search and detail); Sprint 2 — 11.3 (indicators/signals) + 11.4 (watchlist, alerts, portfolio; fractional quantities); Sprint 3 — 11.5 (simulation) + 11.6 (screening/comparison) + 11.7 (AI reports scope decision).

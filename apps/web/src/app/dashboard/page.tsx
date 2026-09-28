@@ -20,6 +20,7 @@ import { signOut } from "./actions";
 import { SearchBox } from "./search-box";
 import { Highlights } from "./highlights";
 import { BulletinSection } from "./bulletin-section";
+import { PortfolioInsights } from "./portfolio-insights";
 
 export default async function DashboardPage() {
   const supabase = await createClient();
@@ -72,6 +73,8 @@ export default async function DashboardPage() {
           <SearchBox messages={t.search} />
         </Card>
       </section>
+
+      <PortfolioInsights messages={t.insights} locale={locale} />
 
       <section>
         <p className="mb-3 text-xs font-medium uppercase tracking-wide text-text-tertiary">

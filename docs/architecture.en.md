@@ -138,6 +138,7 @@ Each decision states what it **Binds**, what deviation it **Prevents**, and the 
 - **Binds:** All periodic/async jobs (data fetching, end-of-day fundamentals refresh, screen re-evaluation, alert checks) are Celery tasks in the same codebase, run by separate worker + beat processes.
 - **Prevents:** Cron scripts scattered outside the app's observability/dependency boundary.
 - **Rule:** A new periodic job is a Celery beat entry — never a cron job hitting an external HTTP endpoint.
+- **Status (2026-09-28): not implemented; a change is proposed.** Celery/Redis was never set up; so far every job is computed at request time. Epic 13 (portfolio insight tracking), the project's first real periodic job, proposes the opposite of this rule: Supabase `pg_cron` + `pg_net` triggering a protected HTTP endpoint (`POST /internal/insights/run`). Rationale: the free Render plan has no separate worker or beat process, and GitHub Actions cron proved unreliable. Rationale and alternatives: `docs/product-brief-epic13-portfolio-insights.md` §2. This AD should be formally updated when Story 13.2 starts.
 
 ### AD-9 — Single Charting Engine: TradingView Lightweight Charts
 - **Binds:** The same charting library is used natively on web and via a WebView bridge on mobile; both platforms consume the same normalized candle-data contract from the backend.

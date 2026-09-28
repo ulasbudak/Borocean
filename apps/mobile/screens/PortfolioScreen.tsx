@@ -8,7 +8,13 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { BIST_ENABLED, formatPrice, formatSignedPercent, signColor } from "@borocean/shared";
+import {
+  BIST_ENABLED,
+  formatPrice,
+  formatSignedPercent,
+  signColor,
+  type Insight,
+} from "@borocean/shared";
 import { useLocale } from "../lib/locale-context";
 import { useTheme, radius, spacing, type ThemeColors } from "../lib/theme";
 import {
@@ -19,6 +25,8 @@ import {
   fetchPortfolios,
   type Portfolio,
 } from "../lib/portfolios-client";
+import { fetchPortfolioInsights, markInsightsRead } from "../lib/insights-client";
+import { InsightCard, InsightList } from "./InsightViews";
 
 export function PortfolioScreen({ onBack }: { onBack: () => void }) {
   const { locale, messages } = useLocale();
@@ -32,6 +40,44 @@ export function PortfolioScreen({ onBack }: { onBack: () => void }) {
   const [newPortfolioName, setNewPortfolioName] = useState("");
   const [creating, setCreating] = useState(false);
   const [openFormFor, setOpenFormFor] = useState<string | null>(null);
+  const [insights, setInsights] = useState<Insight[]>([]);
+  const [insightWarnings, setInsightWarnings] = useState<string[]>([]);
+  const [openInsightFor, setOpenInsightFor] = useState<string | null>(null);
+
+  // Story 13.4 — morning-scan updates for held symbols; best-effort (only hides badges).
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadInsights() {
+      try {
+        const data = await fetchPortfolioInsights();
+        if (!cancelled) {
+          setInsights(data.insights);
+          setInsightWarnings(data.warnings);
+        }
+      } catch {
+        // No badges.
+      }
+    }
+
+    loadInsights();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  function markInsightRead(insight: Insight) {
+    if (insight.read) return;
+    markInsightsRead([insight.id]).catch(() => {});
+    setInsights((prev) => prev.map((i) => (i.id === insight.id ? { ...i, read: true } : i)));
+  }
+
+  // Newest update per symbol (the list is sorted newest first).
+  const latestInsight = new Map<string, Insight>();
+  for (const insight of insights) {
+    const key = `${insight.exchange}:${insight.symbol}`;
+    if (!latestInsight.has(key)) latestInsight.set(key, insight);
+  }
 
   async function load() {
     try {
@@ -133,6 +179,19 @@ export function PortfolioScreen({ onBack }: { onBack: () => void }) {
         </TouchableOpacity>
       </View>
 
+      {(insights.length > 0 || insightWarnings.length > 0) && (
+        <View style={styles.card}>
+          <Text style={styles.insightTitle}>{messages.insights.portfolioStripTitle}</Text>
+          {insightWarnings.map((warning) => (
+            <Text key={warning} style={styles.warning}>
+              {warning}
+            </Text>
+          ))}
+          <InsightList items={insights} onOpen={markInsightRead} />
+          <Text style={styles.emptyHint}>{messages.insights.disclaimer}</Text>
+        </View>
+      )}
+
       {error && <Text style={styles.error}>{error}</Text>}
       {warnings.map((warning) => (
         <Text key={warning} style={styles.warning}>
@@ -173,35 +232,57 @@ export function PortfolioScreen({ onBack }: { onBack: () => void }) {
           {portfolio.positions.length === 0 ? (
             <Text style={styles.emptyText}>{t.emptyPortfolio}</Text>
           ) : (
-            portfolio.positions.map((position) => (
-              <View key={position.id} style={styles.positionRow}>
-                <View style={styles.positionHeader}>
-                  <Text style={styles.exchangeBadge}>{position.exchange}</Text>
-                  <Text style={styles.itemSymbol}>{position.symbol}</Text>
-                  <TouchableOpacity
-                    onPress={() => handleDeletePosition(portfolio.id, position.id)}
-                    hitSlop={8}
-                    style={{ marginLeft: "auto" }}
-                  >
-                    <Text style={styles.removeLink}>✕</Text>
-                  </TouchableOpacity>
+            portfolio.positions.map((position) => {
+              const insight = latestInsight.get(`${position.exchange}:${position.symbol}`);
+              const rowKey = `${portfolio.id}:${position.id}`;
+              return (
+                <View key={position.id} style={styles.positionRow}>
+                  <View style={styles.positionHeader}>
+                    <Text style={styles.exchangeBadge}>{position.exchange}</Text>
+                    <Text style={styles.itemSymbol}>{position.symbol}</Text>
+                    {insight && (
+                      <TouchableOpacity
+                        style={[styles.insightBadge, !insight.read && styles.insightBadgeNew]}
+                        onPress={() => {
+                          setOpenInsightFor((current) => (current === rowKey ? null : rowKey));
+                          markInsightRead(insight);
+                        }}
+                      >
+                        <Text
+                          style={[styles.insightBadgeText, !insight.read && styles.insightBadgeTextNew]}
+                        >
+                          {messages.insights.newBadge}
+                        </Text>
+                      </TouchableOpacity>
+                    )}
+                    <TouchableOpacity
+                      onPress={() => handleDeletePosition(portfolio.id, position.id)}
+                      hitSlop={8}
+                      style={{ marginLeft: "auto" }}
+                    >
+                      <Text style={styles.removeLink}>✕</Text>
+                    </TouchableOpacity>
+                  </View>
+                  <Text style={styles.positionMeta}>
+                    {t.columnQuantity}: {position.quantity} · {t.columnAvgCost}:{" "}
+                    {formatPrice(position.avg_cost, "USD", locale)}
+                  </Text>
+                  {position.market_value !== null && position.pnl_abs !== null && position.pnl_pct !== null ? (
+                    <Text style={{ color: signColor(position.pnl_abs, mode), fontSize: 12 }}>
+                      {formatPrice(position.market_value, "USD", locale)} · {formatPrice(position.pnl_abs, "USD", locale)} (
+                      {formatSignedPercent(position.pnl_pct, locale)})
+                    </Text>
+                  ) : (
+                    <Text style={styles.emptyText}>
+                      {position.exchange === "BIST" ? t.bistUnavailableHint : t.priceUnavailable}
+                    </Text>
+                  )}
+                  {insight && openInsightFor === rowKey && (
+                    <InsightCard insight={insight} showSymbol={false} />
+                  )}
                 </View>
-                <Text style={styles.positionMeta}>
-                  {t.columnQuantity}: {position.quantity} · {t.columnAvgCost}:{" "}
-                  {formatPrice(position.avg_cost, "USD", locale)}
-                </Text>
-                {position.market_value !== null && position.pnl_abs !== null && position.pnl_pct !== null ? (
-                  <Text style={{ color: signColor(position.pnl_abs, mode), fontSize: 12 }}>
-                    {formatPrice(position.market_value, "USD", locale)} · {formatPrice(position.pnl_abs, "USD", locale)} (
-                    {formatSignedPercent(position.pnl_pct, locale)})
-                  </Text>
-                ) : (
-                  <Text style={styles.emptyText}>
-                    {position.exchange === "BIST" ? t.bistUnavailableHint : t.priceUnavailable}
-                  </Text>
-                )}
-              </View>
-            ))
+              );
+            })
           )}
 
           {openFormFor === portfolio.id ? (
@@ -475,6 +556,30 @@ function makeStyles(colors: ThemeColors) {
       color: colors.textTertiary,
       fontSize: 12,
       marginTop: 2,
+    },
+    insightTitle: {
+      fontSize: 11,
+      fontWeight: "600",
+      textTransform: "uppercase",
+      letterSpacing: 0.4,
+      color: colors.textTertiary,
+    },
+    insightBadge: {
+      borderRadius: radius.full,
+      paddingHorizontal: spacing[2],
+      paddingVertical: 2,
+      backgroundColor: colors.surfaceHover,
+    },
+    insightBadgeNew: {
+      backgroundColor: colors.accent + "26",
+    },
+    insightBadgeText: {
+      fontSize: 11,
+      fontWeight: "600",
+      color: colors.textSecondary,
+    },
+    insightBadgeTextNew: {
+      color: colors.accent,
     },
     positionRow: {
       paddingVertical: spacing[2],

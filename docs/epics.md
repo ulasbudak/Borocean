@@ -61,6 +61,7 @@ NFR-1 Performans (arama <1sn, gerçek-zamanlı veri birkaç sn içinde), NFR-2 G
 | FR-110, FR-111, FR-112 | Epic 10 |
 | FR-120 – FR-126 | Epic 11 |
 | FR-130, FR-131 | Epic 12 |
+| FR-140 – FR-146 | Epic 13 |
 
 ## 4. Epic Listesi
 
@@ -111,6 +112,10 @@ Kullanıcı kripto varlıkları arayıp detay sayfasında fiyat, grafik ve piyas
 ### Epic 12: Hukuki Uyum (SPK ve KVKK)
 Uygulama, kişiye yönelik al/sat/tut yönlendirmesi üretmeden bir analiz ve bilgilendirme aracı olarak kalır (SPK yatırım danışmanlığı sınırı); kullanıcı kişisel verilerinin nasıl işlendiğini okuyabilir ve hesabını tüm verileriyle kendisi silebilir (KVKK). Kullanıcının 2026-09-28'de paylaştığı hukuki değerlendirmeye dayanır; bkz. `docs/compliance.md`.
 **FRs covered:** FR-130, FR-131
+
+### Epic 13: Portföy Gelişme Takibi (Arka Plan AI Taraması) (Tamamlandı — prod kurulumu bekliyor)
+Uygulama her gün, kullanıcı hiçbir şey yapmadan, portföylerdeki hisseleri tarar. Önemli bir gelişme yakaladığında (sert fiyat hareketi, bilanço, önemli SEC dosyası vb.) bunu kısa bir AI notuyla portföy ekranında ve Panelde gösterir. Gelişme kartı ne olduğunu anlatır, ne yapılacağını söylemez (Epic 12).
+**FRs covered:** FR-140, FR-141, FR-142, FR-143, FR-144, FR-145, FR-146
 
 **Epic bağımsızlığı notu:** Her epic bir öncekinin çıktısını kullanabilir (örn. Epic 3, Epic 2'nin ürettiği temel veri modelini kullanır) ama hiçbir epic sonraki bir epiğin tamamlanmasını beklemez. Epic 8 (Abonelik), Epic 1-7'de üretilen özellik sınırlarını freemium kapıları arkasına yerleştirir ama bu epiklerin fonksiyonelliğini değiştirmez.
 
@@ -814,11 +819,145 @@ So that verilerim üzerindeki KVKK haklarımı destek beklemeden kullanabileyim.
 
 ---
 
-## 17. Sonraki Adımlar
+## 17. Epic 13: Portföy Gelişme Takibi (Arka Plan AI Taraması)
+
+> Kullanıcı isteği (2026-09-28): "Portföydeki hisselerin günlük AI raporları arka planda önemli bir detay yakaladığında portföyde ve kullanıcı sayfasında görünsün." Karar gerekçesi, alternatifler, araştırma sonuçları ve maliyet bütçesi için bkz. **`docs/product-brief-epic13-portfolio-insights.md`**.
+>
+> **Temel tasarım:**
+> - **Önce kural, sonra AI.** Deterministik dedektörler "olay" yakalar; Gemini yalnızca olay olan semboller için açıklama yazar. Böylece "önemli" kararı açıklanabilir, tekrarlanabilir ve ucuz olur.
+> - **Arka plan:** Supabase `pg_cron` + `pg_net` her sabah açılışlardan önce (05:30 UTC, TR 08:30) API'yi tetikler. Projedeki ilk zamanlanmış iş budur; GitHub Actions cron'u güvenilmez çıktığı için ve ücretsiz kalmak için seçildi.
+> - **Global üretim, kişisel gösterim.** Olaylar ve notlar sembol başına bir kez üretilir. Kullanıcıya pozisyonlarına göre filtrelenip gösterilir, okundu durumu kullanıcı bazlıdır.
+> - **Uyum:** `docs/compliance.md` kuralları geçerli. Analist al/sat tavsiye verisi kullanılmaz; haberlerden yalnızca başlık, kaynak ve bağlantı.
+>
+> **Veri kaynağı — 2026-09-28'de mevcut Finnhub anahtarıyla canlı denendi:** `company-news` ✓ (AAPL için bir haftada 245 haber — gürültülü, doğrudan tetikleyici olamaz), `stock/earnings` ✓ (gerçekleşen/beklenen EPS ve sapma %), `calendar/earnings` ✓, `stock/filings` ✓ (SEC form türüyle), `stock/insider-transactions` ✓, `stock/recommendation` ✓ ama **kullanılmayacak** (analist al/sat sayıları), `press-releases` ✗ (planda yok).
+
+### Story 13.1: Olay Tespit Motoru ve Gelişme Veri Modeli
+
+- [x] **Tamamlandı** — bkz. **`docs/stories/story-13.1.md`**. Deterministik dedektörler, Finnhub kaynakları (başlıklarda alaka ve yönlendirme filtresi) ve migration 0013. Kalibrasyon 117 hisse × 150 günlük gerçek veriyle yapıldı: günlük ortalama %2,7 sembol işaretleniyor (hedef <%10).
+
+As a **geliştirici**,
+I want bir sembolün günlük verisinden deterministik olayları ve önem puanlarını üreten, test edilebilir bir motor ile bunları saklayan bir veri modeli,
+So that "önemli gelişme" kararı açıklanabilir, tekrarlanabilir ve LLM'den bağımsız olsun.
+
+**Acceptance Criteria:**
+
+- **Given** bir sembolün mum, bilanço, SEC dosyası ve temel veri anlık görüntüsü, **When** `detect_events(symbol, date)` çalışırsa, **Then** karar notundaki tablodaki olay türleri için `{type, severity, facts}` listesi döner. `facts` yalnızca ölçülmüş değerleri içerir (örn. `{"change_pct": -7.2, "threshold_pct": 5.0}`) (FR-141).
+- **Given** geçmiş veri, **When** eşikler kalibre edilirse, **Then** sıradan bir işlem gününde evrendeki sembollerin yaklaşık %10'undan azı "önemli" çıkar. Kalibrasyon yöntemi ve sonucu story dokümanına yazılır. Bu story'nin ilk görevidir.
+- **Given** tespit sonucu, **When** kaydedilirse, **Then** `symbol_insights` tablosunda (global; `symbol, exchange, insight_date` tekil) olaylar, en yüksek önem, AI notu (boş olabilir), `prompt_version` ve oluşturulma zamanı saklanır. Temel metrik değişimi için önceki anlık görüntü `symbol_fundamentals_snapshots` tablosunda tutulur.
+- **And** Finnhub `stock/recommendation` hiçbir yerde okunmaz; dedektörler birim testleriyle (sabit veriyle) doğrulanır.
+
+### Story 13.2: Günlük Arka Plan Çalıştırıcısı (`pg_cron` + `pg_net`)
+
+- [x] **Tamamlandı** — bkz. **`docs/stories/story-13.2.md`**. `POST /internal/insights/run` (sırla korunuyor); idempotent, tempolu ve tavanlı çalıştırıcı; yedek tetikleme; `setup_insights_cron.sql`. Canlı uçtan uca doğrulandı. **Açık kalan:** prod kurulumu (migration, cron betiği, Render'da `CRON_SECRET`).
+
+As a **ürün sahibi**,
+I want portföylerdeki sembollerin her sabah, kimse uygulamayı açmadan taranmasını,
+So that kullanıcı güne başlarken gelişmeleri hazır bulsun.
+
+**Acceptance Criteria:**
+
+- **Given** Supabase'de `pg_cron` ve `pg_net` etkin, **When** saat 05:30 UTC (TR 08:30, açılışlardan önce) olursa, **Then** `POST /internal/insights/run` çağrılır. Yarım kalan işi tamamlamak için 06:30 ve 07:30 UTC'de tekrar çağrılır (FR-140).
+- **Given** uç nokta, **When** `X-Cron-Secret` başlığı eksik veya yanlışsa, **Then** 401 döner. Doğruysa hemen 202 döner ve işi arka planda yürütür.
+- **Given** bir çalıştırma, **When** yürütülürse, **Then** tüm portföylerdeki farklı ABD sembolleri, en çok kullanıcının tuttuğu sembollerden başlayarak işlenir. O gün işlenmiş semboller atlanır (idempotent). Twelve Data'ya dakikada en fazla 4 istek atılır ve günlük sembol tavanına uyulur. Her çalıştırma `insight_runs` tablosuna başlangıç, bitiş, işlenen/atlanan/hatalı sayılarıyla yazılır.
+- **Given** bugünün çalıştırması hiç başlamamış, **When** bir kullanıcı portföyünü açarsa, **Then** çalıştırma tetiklenir ve kullanıcıya "bugünün taraması hazırlanıyor" bilgisi gösterilir. Sessiz eksiklik olmaz (NFR-2).
+- **And** kararın `docs/architecture.md`'ye yeni bir mimari karar olarak işlenmesi (AD-8'in yerini alır) ve prod Supabase'de eklentilerin ve cron kaydının kurulum adımlarının dokümante edilmesi.
+
+### Story 13.3: Gelişmeler için AI Notu
+
+- [x] **Tamamlandı** — bkz. **`docs/stories/story-13.3.md`**. Uyum kurallı Gemini notu (Ne oldu / Veride neyi değiştiriyor / Riskler + etki tonu), günlük 50 not tavanı, tempolu yeniden deneme, AI notuna hak kontrolü.
+
+As a **kullanıcı (AI raporu hakkı olan)**,
+I want tespit edilen gelişmenin kısa, anlaşılır bir açıklamasını okumak,
+So that sayıların ne anlama gelebileceğini hisse sayfasına gitmeden anlayabileyim.
+
+**Acceptance Criteria:**
+
+- **Given** önemli olayı olan bir sembol, **When** çalıştırma onu işlerse, **Then** Gemini'ye yalnızca olayların `facts` alanı ve sembolün temel verisi verilir. Not "Ne oldu / Veride neyi değiştiriyor / Dikkat edilebilecek riskler" yapısında üretilir ve olayın etkisi olumlu/olumsuz/nötr olarak sınıflandırılır (FR-142).
+- **Given** `COMPLIANCE_RULES`, **When** not üretilirse, **Then** al/sat/tut, "pozisyonunu gözden geçir", "fırsat", hedef fiyat veya kişisel tavsiye içermez. Not `DISCLAIMER_LINE` ile biter ve `PROMPT_VERSION` ile saklanır.
+- **Given** günlük LLM tavanı (başlangıç: 50 not), **When** aşılırsa, **Then** kalan olaylar notsuz kaydedilir ve arayüzde yalnızca olay listesiyle gösterilir.
+- **And** AI notu `Entitlement.ai_reports` gerektirir, deterministik olay listesi herkese açıktır (FR-145).
+
+### Story 13.4: Portföy Ekranında Gelişmeler
+
+- [x] **Tamamlandı** — bkz. **`docs/stories/story-13.4.md`**. Portföyde "Yeni gelişme" rozeti, satır içi kart, 7 günlük şerit (web + mobil); okundu durumu.
+
+As a **kullanıcı**,
+I want portföyümde hangi hissede önemli bir gelişme olduğunu bir bakışta görmek,
+So that her hisseyi tek tek açmadan neyin değiştiğini fark edebileyim.
+
+**Acceptance Criteria:**
+
+- **Given** portföyünde son 7 günde gelişmesi olan bir pozisyon, **When** kullanıcı portföy ekranını açarsa (web + mobil), **Then** o pozisyon satırında "Yeni gelişme" rozeti görünür. Rozete tıklayınca olaylar, AI notu (varsa), tarih ve hisse sayfası bağlantısını içeren kart açılır (FR-143).
+- **Given** birden fazla gelişme, **When** portföy açılırsa, **Then** başlığın altında son 7 günün gelişmeleri tarih sırasıyla bir şeritte listelenir.
+- **Given** kullanıcı bir gelişmeyi açar, **When** kart görüntülenirse, **Then** `insight_reads` tablosuna okundu kaydı düşer ve rozet "yeni" vurgusunu kaybeder. `insight_reads` `auth.users` üzerinden `ON DELETE CASCADE` bağlıdır.
+- **And** `GET /insights?scope=portfolio` yalnızca kullanıcının pozisyonlarındaki sembollerin gelişmelerini döner; karttaki metinler "ne yapılacağını" söylemez.
+
+### Story 13.5: Panelde "Portföyündeki Gelişmeler" ve Hisse Sayfasında "Son Gelişmeler"
+
+- [x] **Tamamlandı** — bkz. **`docs/stories/story-13.5.md`**. Panelde "Portföyündeki Gelişmeler" kartı (okunmamış sayısı), hisse sayfasında "Son gelişmeler" (web + mobil); KVKK metni güncellendi.
+
+As a **kullanıcı**,
+I want uygulamayı açtığımda portföyümdeki yeni gelişmeleri ana sayfada görmek,
+So that portföy ekranına gitmeden önemli bir şey olup olmadığını anlayabileyim.
+
+**Acceptance Criteria:**
+
+- **Given** okunmamış gelişmeler, **When** kullanıcı Paneli açarsa (web `/dashboard`, mobil `HomeScreen`), **Then** "Portföyündeki Gelişmeler" kartı okunmamış sayısını ve en son 3–5 gelişmeyi gösterir; karttan portföy ekranına ve hisse sayfasına gidilebilir (FR-144).
+- **Given** hiç gelişme yok, **When** Panel açılırsa, **Then** kart "Son 7 günde portföyünde önemli bir gelişme yok" der. Portföyü olmayan kullanıcıya kart gösterilmez.
+- **Given** bir hisse detay sayfası, **When** o sembol için son 30 günde gelişme varsa, **Then** "Son gelişmeler" bölümü listelenir (portföyde olmasa da).
+- **And** `docs/compliance.md` ve KVKK aydınlatma metni güncellenir: yeni işleme amacı ("portföyünüzdeki hisselere ait gelişmeleri göstermek") ve okundu verisi.
+
+### Story 13.6: Portföy Gelişmesi Mobil Bildirimi (Push)
+
+- [x] **Tamamlandı** — bkz. **`docs/stories/story-13.6.md`**. Günde en fazla bir özet mobil push; dokununca portföy ekranı açılıyor; e-posta yok. Cihazda teslim EAS development build bekliyor.
+
+As a **mobil kullanıcı**,
+I want portföyümdeki bir hissede önemli gelişme olduğunda telefonuma bildirim gelmesini,
+So that uygulamayı açmasam da haberdar olayım.
+
+**Acceptance Criteria:**
+
+- **Given** Story 5.4'teki push tercihi açık ve cihaz anahtarı kayıtlı, **When** sabah taraması kullanıcının tuttuğu hisselerde önemli gelişme kaydederse, **Then** kullanıcıya günde en fazla bir özet push gönderilir. Metin yalnızca olayları söyler ("Portföyünde 2 gelişme: AAPL bilanço açıkladı, MSFT günlük %-6,1") (FR-146).
+- **And** e-posta gönderilmez (kullanıcı kararı, 2026-09-28). Gerçek cihazda teslim, Story 5.4'teki gibi EAS development build bekliyor.
+
+### Story 13.7: İzleme Listesindeki Hisselere Genişletme — Opsiyonel
+
+As a **kullanıcı**,
+I want izleme listemdeki hisseler için de gelişmeleri görmek,
+So that henüz almadığım ama takip ettiğim şirketlerdeki önemli olayları da kaçırmayayım.
+
+**Acceptance Criteria:**
+
+- **Given** izleme listesindeki semboller, **When** tarama evreni hesaplanırsa, **Then** portföy sembollerinden sonra (daha düşük öncelikle) eklenir ve günlük tavan korunur.
+- **And** gelişmeler izleme listesi ekranında ve Paneldeki kartta ayrı bir etiketle gösterilir.
+
+### Epic 13 — Kararlar (2026-09-28, kullanıcı)
+
+1. **Kullanıcı sayfası = Panel** (web `/dashboard`, mobil `HomeScreen`).
+2. **Önce portföy**; izleme listesi Story 13.7 (sonra).
+3. **Bildirim: yalnızca mobil push** (Story 13.6 ilk sürümde), e-posta yok.
+4. **Tarama: günde bir kez, sabah açılıştan önce** — 05:30 UTC (TR 08:30), 06:30/07:30 UTC yeniden tetikleme.
+5. **Haber başlıkları gösterilecek**, kaynak adı ve bağlantıyla. Yalnızca başlık gösterilir; olayı olan hisselerin kartında son 48 saatten en fazla 3 başlık yer alır.
+
+**Uygulama sırası:** 13.1 → 13.2 → 13.3 → 13.4 → 13.5 → 13.6; 13.7 sonra.
+
+---
+
+## 18. Sonraki Adımlar
 
 *(2026-09-28'de güncellendi.)*
 
-**Durum:** Epic 1–7, 9, 10 ve 12 tamamlandı; Story 8.1 tamamlandı. Mobil eşitlik açıkları kapandı: mobil şifre sıfırlama ve "Simülasyonda al". Web ve API 2026-09-21'den beri canlıda. Story 8.2 bilinçli olarak ertelendi (`ALL_FEATURES_FREE`). Sıradaki geliştirme epiği Epic 11'dir.
+**Durum:** Epic 1–7, 9, 10 ve 12 tamamlandı; Story 8.1 tamamlandı. Mobil eşitlik açıkları kapandı: mobil şifre sıfırlama ve "Simülasyonda al". Web ve API 2026-09-21'den beri canlıda. Story 8.2 bilinçli olarak ertelendi (`ALL_FEATURES_FREE`). Backlog'da iki epic bekliyor: Epic 11 (kripto) ve Epic 13 (portföy gelişme takibi). Hangisinin önce yapılacağına kullanıcı karar vermeli.
+
+**Epic 13:** 2026-09-28'de 13.1–13.6 tamamlandı (13.7 sonra). Canlıya almak için sırasıyla:
+- Migration `0013_portfolio_insights.sql` prod Supabase'e uygulanmalı.
+- Render'a `CRON_SECRET` girilmeli.
+- `apps/api/scripts/setup_insights_cron.sql` prod SQL editöründe çalıştırılmalı.
+- İlk sabahın sonucu `insight_runs`'tan kontrol edilmeli.
+- **Gemini kota riski:** bkz. Story 13.3 DoD.
+
+Aşağıdaki maddeler Epic 11 ve genel işler içindir.
+
 
 1. **Epic 11'e başlamadan önce §15'teki açık sorular kullanıcıyla netleştirilmeli:** veri kaynağı (Twelve Data kotası mı, CoinGecko mu), başlangıç evreni (ilk ~100 varlık, USD pariteleri, stablecoin'ler) ve freemium sınırlarının hisse+kripto için ortak olup olmadığı. Epic 11 story'leri `docs/compliance.md`'deki kurallara uymalı (kripto için de al/sat yönlendirmesi yok).
 2. **Önerilen Epic 11 sırası:** Sprint 1 — 11.1 (veri adaptörü) + 11.2 (arama ve detay); Sprint 2 — 11.3 (göstergeler/sinyaller) + 11.4 (izleme listesi, alarm, portföy; kesirli miktar); Sprint 3 — 11.5 (simülasyon) + 11.6 (tarama/karşılaştırma) + 11.7 (AI raporları kapsam kararı).

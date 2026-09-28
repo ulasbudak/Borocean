@@ -514,4 +514,37 @@ export interface Messages {
     lastUpdated: string;
     backToHome: string;
   };
+  insights: {
+    panelTitle: string;
+    portfolioStripTitle: string;
+    stockSectionTitle: string;
+    newBadge: string;
+    unreadCount: string;
+    noneRecent: string;
+    noneForSymbol: string;
+    markAllRead: string;
+    viewPortfolio: string;
+    viewStock: string;
+    noteLocked: string;
+    headlinesTitle: string;
+    loadError: string;
+    loading: string;
+    severityHigh: string;
+    disclaimer: string;
+    tone: { positive: string; negative: string; neutral: string; mixed: string };
+    events: {
+      priceMove: string;
+      volumeSpike: string;
+      week52High: string;
+      week52Low: string;
+      earnings: string;
+      earningsSurprise: string;
+      upcomingEarnings: string;
+      upcomingEarningsToday: string;
+      filing: string;
+      fundamentalChange: string;
+      technical: Record<string, string>;
+      metrics: Record<string, string>;
+    };
+  };
 }

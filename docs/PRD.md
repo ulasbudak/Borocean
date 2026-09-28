@@ -152,6 +152,18 @@ Gereksinimler özellik alanlarına göre gruplanmış ve global olarak numaralan
 - **FR-130** Sistem, hiçbir ekranda ve hiçbir AI çıktısında belirli bir sermaye piyasası aracı için al/sat/tut yönlendirmesi, hedef fiyat, getiri tahmini, kullanıcının kişisel durumuna göre tavsiye veya portföy dağılımı önerisi üretmemelidir. Skorlar, hangi objektif metriklerden türediğini gösteren kategorilere ayrılarak sunulmalı; hisse listeleri (ör. bülten) değerlendirme içermeyen ölçütlerle oluşturulmalı; AI çıktıları "finansal durum / analiz / riskler" çerçevesinde kalmalı ve "Bu içerik yatırım tavsiyesi değildir. Yalnızca kamuya açık verilerin analizi ve bilgilendirme amacı taşır." ibaresini taşımalıdır.
 - **FR-131** Sistem, KVKK kapsamında bir aydınlatma metni, kullanım koşulları ve gizlilik politikası sunmalı; kayıt ekranında bunlara bağlantı vermeli ve kullanıcının hesabını ve ona bağlı tüm kişisel verilerini uygulama içinden kalıcı olarak silebilmesini sağlamalıdır.
 
+### 5.15 Portföy Gelişme Takibi (Arka Plan AI Taraması)
+
+> **Analist notu (2026-09-28):** Kullanıcı isteğiyle eklendi; Epic 13. Karar gerekçesi, araştırma ve alternatifler için bkz. `docs/product-brief-epic13-portfolio-insights.md`. Projedeki ilk zamanlanmış iştir (Supabase `pg_cron` + `pg_net`). Epic 12 kurallarına (`docs/compliance.md`) tabidir: gelişme kartı ne olduğunu anlatır, ne yapılacağını söylemez.
+
+- **FR-140** Sistem, her işlem günü sonunda kullanıcı portföylerindeki tüm farklı sembolleri, kullanıcı etkileşimi olmadan (arka planda) taramalıdır. Tarama idempotent olmalı, veri sağlayıcı kotalarını canlı kullanıcılar için korumalı ve yarıda kalırsa kaldığı yerden devam edebilmelidir.
+- **FR-141** Sistem, "önemli gelişme"yi deterministik ve açıklanabilir kurallarla tespit etmelidir: sert fiyat hareketi, olağandışı hacim, 52 haftalık zirve/dip, önemli teknik olay, bilanço açıklanması ve beklentiden sapma, yaklaşan bilanço, önemli SEC dosyası, temel metrik değişimi. Her olayın bir önem puanı olmalı; analistlerin al/sat tavsiye verisi kullanılmamalıdır.
+- **FR-142** Sistem, önemli olay tespit edilen semboller için kamuya açık verilere dayanan kısa bir AI notu üretmelidir ("Ne oldu / Veride neyi değiştiriyor / Riskler"). Not sembol başına bir kez üretilmeli (kullanıcı bazlı değil), FR-130'a uymalı ve günlük bir LLM bütçesiyle sınırlanmalıdır. Bütçe aşılırsa olay, notsuz olarak gösterilmelidir.
+- **FR-143** Portföy ekranında gelişmesi olan pozisyonlar işaretlenmeli ve gelişme ayrıntısı (olaylar, AI notu, tarih, hisse sayfası bağlantısı) açılabilmelidir; son 7 günün gelişmeleri portföy başında listelenmelidir.
+- **FR-144** Kullanıcının ana sayfasında (Panel) portföyündeki son gelişmeler, okunmamış sayısıyla birlikte gösterilmelidir; okundu durumu kullanıcı bazlı saklanmalıdır.
+- **FR-145** Deterministik olay listesi tüm kullanıcılara, AI notu ise AI raporu hakkı olan kullanıcılara (FR-080 – FR-083) açık olmalıdır.
+- **FR-146** Mobil push tercihi açık kullanıcıya, portföyündeki hisselerde önemli gelişme olan günlerde en fazla bir özet push bildirimi gönderilmelidir. Bu özellik için e-posta bildirimi gönderilmez. Gelişme kartlarında ilgili haber başlıkları kaynak adı ve orijinal habere bağlantıyla gösterilebilir; haber metni kopyalanmaz.
+
 ## 6. Fonksiyonel Olmayan Gereksinimler (NFR)
 
 | Kategori | Gereksinim |
@@ -183,7 +195,8 @@ Gereksinimler özellik alanlarına göre gruplanmış ve global olarak numaralan
   2. **FR-110, FR-111, FR-112** (Alım-satım simülasyonu/paper trading) — kullanıcı isteği (2026-09-19), Epic 9 ile eş zamanlı, Epic 10 olarak backlog'a eklendi.
   3. **FR-120 – FR-126** (Kripto para piyasası — veri, analiz ve sanal işlem) — kullanıcı isteği (2026-09-26), Epic 11 olarak backlog'a eklendi.
   4. **FR-130, FR-131** (Hukuki uyum — SPK ve KVKK) — kullanıcının paylaştığı hukuki değerlendirme (2026-09-28), Epic 12 olarak eklendi ve tamamlandı.
-  5. **FR-102** (ML tabanlı örüntü tanıma — FR-025'in genişletilmiş hali), FR-012 (özelleştirilebilir skor ağırlıklandırma), FR-033 (tarama bildirimi), FR-053 (portföy risk analizi), FR-063 (gelişmiş kişiselleştirme), FR-071 (SMS) — sıralama arasında henüz kesin öncelik belirlenmedi.
+  5. **FR-140 – FR-146** (Portföy gelişme takibi — arka plan AI taraması) — kullanıcı isteği (2026-09-28), Epic 13 olarak backlog'a eklendi.
+  6. **FR-102** (ML tabanlı örüntü tanıma — FR-025'in genişletilmiş hali), FR-012 (özelleştirilebilir skor ağırlıklandırma), FR-033 (tarama bildirimi), FR-053 (portföy risk analizi), FR-063 (gelişmiş kişiselleştirme), FR-071 (SMS) — sıralama arasında henüz kesin öncelik belirlenmedi.
 - **Kapsam dışı (şimdilik):** Döviz varlık sınıfı (kripto 2026-09-26'da Epic 11 olarak kapsama alındı — yalnızca veri/analiz/sanal işlem), sosyal/topluluk özellikleri, gerçek alım-satım emri iletimi (brokerage/kripto borsası entegrasyonu).
 
 ## 9. Açık Sorular ve Varsayımlar

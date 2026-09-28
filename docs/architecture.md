@@ -136,6 +136,7 @@ Her karar; neyi bağladığını (**Binds**), hangi sapmayı önlediğini (**Pre
 - **Binds:** Tüm periyodik/asenkron işler (veri çekme, günsonu temel veri güncelleme, tarama yeniden değerlendirme, alarm kontrolü) aynı kod tabanında Celery task'larıdır; ayrı worker + beat süreçleriyle çalışır.
 - **Prevents:** Uygulamanın gözlemlenebilirlik/bağımlılık sınırları dışında dağınık cron script'leri.
 - **Rule:** Yeni bir periyodik iş, dışarıdan bir HTTP endpoint'ine vuran bir cron değil, bir Celery beat girdisidir.
+- **Durum (2026-09-28): uygulanmadı; değişiklik önerildi.** Celery/Redis hiç kurulmadı; bugüne kadar her iş istek anında hesaplanıyor. Projedeki ilk gerçek periyodik iş olan Epic 13 (portföy gelişme takibi), bu kuralın tersine, Supabase `pg_cron` + `pg_net` ile korumalı bir HTTP uç noktasını (`POST /internal/insights/run`) tetiklemeyi öneriyor. Gerekçe: ücretsiz Render planında ayrı worker ve beat süreci yok, GitHub Actions cron'u güvenilmez çıktı. Gerekçe ve alternatifler: `docs/product-brief-epic13-portfolio-insights.md` §2. Story 13.2 başladığında bu AD resmen güncellenmeli.
 
 ### AD-9 — Tek Grafik Motoru: TradingView Lightweight Charts
 - **Binds:** Web'de native, mobilde WebView köprüsüyle aynı grafik kütüphanesi kullanılır; her iki platform da backend'den aynı normalize edilmiş mum verisi sözleşmesini tüketir.

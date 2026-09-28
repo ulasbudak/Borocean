@@ -23,7 +23,7 @@ export default async function PortfolioPage() {
         backLabel={t.portfolio.backToDashboard}
         title={t.portfolio.title}
       />
-      <PortfolioView messages={t.portfolio} locale={locale} />
+      <PortfolioView messages={t.portfolio} insightMessages={t.insights} locale={locale} />
     </div>
   );
 }

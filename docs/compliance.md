@@ -31,6 +31,14 @@ Belirleyici olan AI kullanılması değil, uygulamanın kullanıcıya **ne tür 
 
 Uygulama zaten doğru tarafta olan konular: yaş/gelir/risk profili **toplanmıyor**, yerindelik testi veya kişiye özel portföy önerisi yok, gerçek emir iletilmiyor (simülasyon tamamen sanal), portföy verisi öneri üretmek için kullanılmıyor.
 
+## 2a. Epic 13 — portföy gelişmeleri (2026-09-28)
+
+- Gelişmeler deterministik kurallarla tespit edilir (`app/insight_detectors.py`); AI yalnızca açıklar. Kart ne olduğunu anlatır, ne yapılacağını söylemez. AI notu `COMPLIANCE_RULES` ile üretilir ve modele okurun hisseyi tuttuğunu varsaymaması söylenir.
+- Finnhub `stock/recommendation` (analistlerin al/sat sayıları) kullanılmaz. Haber başlıkları kaynak adı ve bağlantıyla gösterilir, metin kopyalanmaz. "Stock to buy", "should you sell" gibi yönlendirici başlıklar filtrelenir (`app/insight_sources.py`).
+- Push metni yalnızca olayı söyler ("AAPL: günlük değişim %-6,1").
+- KVKK aydınlatma metnine yeni amaç ve okundu verisi eklendi. `insight_reads` ve `insight_push_log` tabloları `auth.users` üzerinden `ON DELETE CASCADE` bağlı, hesap silmeyle birlikte silinir.
+- Avukat incelemesine eklenecek soru: gelişmelerin kullanıcının pozisyonlarına göre seçilip gösterilmesi "kişiselleştirilmiş bilgilendirme" sayılır mı?
+
 ## 3. Pazarlama için kurallar
 
 - "Garanti kazanç", "yükselecek hisseyi biliyoruz", "%X getiri" gibi ifadeler kullanılmaz.

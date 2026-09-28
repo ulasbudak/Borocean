@@ -1,9 +1,12 @@
+import hmac
+from datetime import UTC, datetime
+
 import psycopg
-from fastapi import Depends, FastAPI, HTTPException, Response
+from fastapi import Depends, FastAPI, Header, HTTPException, Response
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
-from app import market_data
+from app import insight_runner, insights, market_data
 from app.account import delete_account
 from app.ai_combined import CombinedAIReport, get_combined_report
 from app.ai_fundamental import AIReportUnavailableError, FundamentalAIReport, get_fundamental_report
@@ -1143,3 +1146,102 @@ def delete_note_endpoint(
 @app.get("/entitlements")
 def get_entitlements_endpoint(claims: dict = Depends(get_current_claims)) -> Entitlement:
     return get_entitlement(claims["sub"])
+
+
+# --- Epic 13: portfolio insights -------------------------------------------------------
+
+
+class InsightsResponse(BaseModel):
+    insights: list[insights.Insight]
+    unread_count: int
+    holds_positions: bool = False
+    run: insights.InsightRun | None
+    warnings: list[str]
+
+
+class MarkInsightsReadRequest(BaseModel):
+    ids: list[str]
+
+
+def _insights_unavailable() -> HTTPException:
+    return HTTPException(status_code=503, detail="Gelişme verisi şu an sağlanamıyor.")
+
+
+def _gate_notes(user_id: str, items: list[insights.Insight]) -> list[insights.Insight]:
+    """The deterministic event list is for everyone; the AI note needs AI-report access."""
+    if get_entitlement(user_id).ai_reports:
+        return items
+    return [
+        item.model_copy(update={"note": None, "note_tone": None, "note_locked": True})
+        if item.note
+        else item
+        for item in items
+    ]
+
+
+@app.post("/internal/insights/run", status_code=202)
+async def trigger_insight_run(x_cron_secret: str | None = Header(default=None)) -> dict:
+    secret = get_settings().cron_secret
+    if not secret:
+        raise HTTPException(status_code=503, detail="CRON_SECRET is not configured")
+    if not x_cron_secret or not hmac.compare_digest(x_cron_secret, secret):
+        raise HTTPException(status_code=401, detail="invalid cron secret")
+    started = insight_runner.start_background_scan("cron")
+    return {"started": started}
+
+
+@app.get("/insights")
+async def get_portfolio_insights(claims: dict = Depends(get_current_claims)) -> InsightsResponse:
+    user_id = claims["sub"]
+    now = datetime.now(UTC)
+    today = now.date()
+    warnings: list[str] = []
+    try:
+        items = insights.list_portfolio_insights(user_id, today)
+        holds_positions = insights.user_holds_positions(user_id)
+        run = insights.latest_run(today)
+        if run is None and insight_runner.fallback_due(now) and holds_positions:
+            # The morning cron didn't run today: start the scan now instead of silently
+            # showing yesterday's picture (NFR-2).
+            insight_runner.start_background_scan("fallback")
+            warnings.append(
+                "Bugünün taraması hazırlanıyor; yeni gelişmeler birkaç dakika içinde görünecek."
+            )
+    except psycopg.Error as exc:
+        raise _insights_unavailable() from exc
+    items = _gate_notes(user_id, items)
+    return InsightsResponse(
+        insights=items,
+        unread_count=sum(1 for item in items if not item.read),
+        holds_positions=holds_positions,
+        run=run,
+        warnings=warnings,
+    )
+
+
+@app.get("/insights/symbol")
+def get_symbol_insights(
+    symbol: str, exchange: str = "US", claims: dict = Depends(get_current_claims)
+) -> InsightsResponse:
+    user_id = claims["sub"]
+    try:
+        items = insights.list_symbol_insights(
+            user_id, symbol.strip().upper(), exchange.strip().upper(), datetime.now(UTC).date()
+        )
+    except psycopg.Error as exc:
+        raise _insights_unavailable() from exc
+    items = _gate_notes(user_id, items)
+    return InsightsResponse(
+        insights=items, unread_count=sum(1 for i in items if not i.read), run=None, warnings=[]
+    )
+
+
+@app.post("/insights/read", status_code=204)
+def post_insights_read(
+    body: MarkInsightsReadRequest, claims: dict = Depends(get_current_claims)
+) -> Response:
+    try:
+        insights.mark_read(claims["sub"], body.ids[:200])
+    except psycopg.Error as exc:
+        raise _insights_unavailable() from exc
+    return Response(status_code=204)
