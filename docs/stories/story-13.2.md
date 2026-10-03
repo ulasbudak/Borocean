@@ -44,7 +44,7 @@ Bu, projedeki ilk zamanlanmış iş. AD-8 (Celery + Redis) hiç kurulmadı ve ü
 
 1. **[Backend]** Uç nokta, çalıştırıcı, tempo/tavan/idempotentlik, yedek tetikleme + testler. ✅
 2. **[Ops]** `setup_insights_cron.sql` (prod kurulum betiği). Dev veritabanında geri alınan bir işlem içinde denendi: üç cron kaydı ve Vault sırrı oluştu, geri alma sonrası iz kalmadı. ✅
-3. **[Ops]** Prod'da migration 0013 + `setup_insights_cron.sql` + Render'da `CRON_SECRET`. ☐ (kullanıcı işlemi)
+3. **[Ops]** Prod'da migration 0013 + `setup_insights_cron.sql` + Render'da `CRON_SECRET`. ✅ (kullanıcı tarafından, 2026-10-04; canlı API doğru sırla 202, yanlış sırla 401 dönüyor, ilk tarama elle tetiklendi)
 
 ## Kabul Kriterleri
 
@@ -65,4 +65,5 @@ Bu, projedeki ilk zamanlanmış iş. AD-8 (Celery + Redis) hiç kurulmadı ve ü
   - **Yarım mum:** seans içinde bugünün yarım mumu işleniyordu; artık yalnızca tamamlanmış seanslar kullanılıyor.
   - **Başlık alakası:** alakasız başlıklar (başka şirketlerin haberleri) filtreleniyor.
   - **Başlık uyumu:** analist hedef fiyatı ve not değişikliği içeren başlıklar notlara sızıyordu; artık filtreleniyor.
-- [ ] Prod kurulumu (Görev 3) ve ilk gerçek sabah çalıştırmasının `insight_runs`'tan kontrolü.
+- [x] Prod kurulumu (Görev 3), 2026-10-04.
+- [ ] İlk gerçek sabah çalıştırmasının `insight_runs`'tan kontrolü.

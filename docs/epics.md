@@ -113,7 +113,7 @@ Kullanıcı kripto varlıkları arayıp detay sayfasında fiyat, grafik ve piyas
 Uygulama, kişiye yönelik al/sat/tut yönlendirmesi üretmeden bir analiz ve bilgilendirme aracı olarak kalır (SPK yatırım danışmanlığı sınırı); kullanıcı kişisel verilerinin nasıl işlendiğini okuyabilir ve hesabını tüm verileriyle kendisi silebilir (KVKK). Kullanıcının 2026-09-28'de paylaştığı hukuki değerlendirmeye dayanır; bkz. `docs/compliance.md`.
 **FRs covered:** FR-130, FR-131
 
-### Epic 13: Portföy Gelişme Takibi (Arka Plan AI Taraması) (Tamamlandı — prod kurulumu bekliyor)
+### Epic 13: Portföy Gelişme Takibi (Arka Plan AI Taraması) (Tamamlandı, canlıda — 2026-10-04)
 Uygulama her gün, kullanıcı hiçbir şey yapmadan, portföylerdeki hisseleri tarar. Önemli bir gelişme yakaladığında (sert fiyat hareketi, bilanço, önemli SEC dosyası vb.) bunu kısa bir AI notuyla portföy ekranında ve Panelde gösterir. Gelişme kartı ne olduğunu anlatır, ne yapılacağını söylemez (Epic 12).
 **FRs covered:** FR-140, FR-141, FR-142, FR-143, FR-144, FR-145, FR-146
 

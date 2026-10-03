@@ -115,7 +115,7 @@ Users can search crypto assets and see price, chart and market information on a 
 The app stays an analysis and information tool without producing personal buy/sell/hold direction (the SPK investment-advice boundary); users can read how their personal data is processed and delete their account with all of its data themselves (KVKK). Based on a legal assessment the user shared on 2026-09-28; see `docs/compliance.md`.
 **FRs covered:** FR-130, FR-131
 
-### Epic 13: Portfolio Insight Tracking (Background AI Scan) (Done — waiting on production setup)
+### Epic 13: Portfolio Insight Tracking (Background AI Scan) (Done, live — 2026-10-04)
 Every day, without the user doing anything, the app scans the stocks in portfolios. When it catches an important update (sharp price move, earnings, important SEC filing, etc.), it shows it with a short AI note on the portfolio screen and on the dashboard. The update card says what happened, never what to do (Epic 12).
 **FRs covered:** FR-140, FR-141, FR-142, FR-143, FR-144, FR-145, FR-146
 
