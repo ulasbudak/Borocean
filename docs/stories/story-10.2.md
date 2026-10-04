@@ -40,6 +40,8 @@ Story 10.1'in emir formu (`PlaceOrderForm`, hem web `simulation-view.tsx` hem mo
 2. **[Mobil]** Aynı davranış `SimulationScreen.tsx`'te. ✅
 3. **[i18n]** `symbolSearching` anahtarı üç dosyada (`types.ts`, `tr.ts`, `en.ts`). ✅
 
+> **Güncelleme (2026-10-04):** Kullanıcı, portföye hisse eklerken arama olmadığını bildirdi. Portföy işlem formunda yalnızca düz bir sembol kutusu vardı. Bu story'nin öneri listesi ortak bir bileşene taşındı (web `components/symbol-autocomplete.tsx`, mobil `screens/SymbolAutocomplete.tsx`) ve hem simülasyon hem portföy formunda kullanılıyor. Portföyde öneri seçilince şirket adı da kaydediliyor. Commit `ef8875a`. Typecheck, lint ve build temiz; dev Supabase duraklatıldığı için giriş gerektiren tarayıcı testi yapılamadı.
+
 ## Kabul Kriterleri
 
 **AC1 — Öneri listesi**
