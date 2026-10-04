@@ -356,6 +356,7 @@ export interface Messages {
     formTitle: string;
     symbolLabel: string;
     symbolPlaceholder: string;
+    symbolSearching: string;
     exchangeLabel: string;
     exchangeUs: string;
     exchangeBist: string;

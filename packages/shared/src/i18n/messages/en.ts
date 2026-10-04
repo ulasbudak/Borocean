@@ -366,6 +366,7 @@ export const en: Messages = {
     formTitle: "New transaction",
     symbolLabel: "Symbol",
     symbolPlaceholder: "e.g. AAPL",
+    symbolSearching: "Searching...",
     exchangeLabel: "Exchange",
     exchangeUs: "US",
     exchangeBist: "BIST",

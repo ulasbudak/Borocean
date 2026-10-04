@@ -27,6 +27,7 @@ import {
 } from "../lib/portfolios-client";
 import { fetchPortfolioInsights, markInsightsRead } from "../lib/insights-client";
 import { InsightCard, InsightList } from "./InsightViews";
+import { SymbolAutocomplete } from "./SymbolAutocomplete";
 
 export function PortfolioScreen({ onBack }: { onBack: () => void }) {
   const { locale, messages } = useLocale();
@@ -331,6 +332,7 @@ function AddTransactionForm({
   const t = messages;
   const styles = makeStyles(colors);
   const [symbol, setSymbol] = useState("");
+  const [name, setName] = useState<string | null>(null);
   const [exchange, setExchange] = useState<"US" | "BIST">("US");
   const [side, setSide] = useState<"buy" | "sell">("buy");
   const [quantity, setQuantity] = useState("");
@@ -349,6 +351,7 @@ function AddTransactionForm({
       await onSubmit({
         symbol: symbol.trim().toUpperCase(),
         exchange,
+        name,
         quantity: parsedQuantity,
         price: parsedPrice,
         side,
@@ -363,13 +366,19 @@ function AddTransactionForm({
   return (
     <View style={styles.form}>
       <Text style={styles.formTitle}>{t.formTitle}</Text>
-      <TextInput
-        style={styles.input}
-        placeholder={t.symbolPlaceholder}
-        placeholderTextColor={colors.textTertiary}
+      <SymbolAutocomplete
         value={symbol}
-        onChangeText={setSymbol}
-        autoCapitalize="characters"
+        onChange={(value) => {
+          setSymbol(value);
+          setName(null);
+        }}
+        onSelect={(result) => {
+          setSymbol(result.symbol);
+          setName(result.name);
+          setExchange(result.exchange === "BIST" ? "BIST" : "US");
+        }}
+        placeholder={t.symbolPlaceholder}
+        inputStyle={styles.input}
       />
       <View style={styles.toggleRow}>
         <ToggleOption

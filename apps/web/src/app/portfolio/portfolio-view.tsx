@@ -19,6 +19,7 @@ import { Badge, ChangeValue } from "@/components/ui/change-value";
 import { InsightCard } from "@/components/insights/insight-card";
 import { InsightList } from "@/components/insights/insight-list";
 import { fetchPortfolioInsights, markInsightsRead } from "@/lib/insights-client";
+import { SymbolAutocomplete } from "@/components/symbol-autocomplete";
 import {
   addTransaction,
   createPortfolio,
@@ -419,6 +420,7 @@ function AddTransactionForm({
 }) {
   const t = messages;
   const [symbol, setSymbol] = useState("");
+  const [name, setName] = useState<string | null>(null);
   const [exchange, setExchange] = useState("US");
   const [quantity, setQuantity] = useState("");
   const [price, setPrice] = useState("");
@@ -438,6 +440,7 @@ function AddTransactionForm({
       await onSubmit({
         symbol: symbol.trim().toUpperCase(),
         exchange,
+        name,
         quantity: parsedQuantity,
         price: parsedPrice,
         side,
@@ -453,14 +456,22 @@ function AddTransactionForm({
     <form onSubmit={handleSubmit} className="flex flex-col gap-3">
       <p className="text-xs font-medium uppercase tracking-wide text-text-tertiary">{t.formTitle}</p>
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
-        <Field>
+        <Field className="relative">
           <Label htmlFor="symbol">{t.symbolLabel}</Label>
-          <Input
+          <SymbolAutocomplete
             id="symbol"
             value={symbol}
-            onChange={(e) => setSymbol(e.target.value)}
+            onChange={(value) => {
+              setSymbol(value);
+              setName(null);
+            }}
+            onSelect={(result) => {
+              setSymbol(result.symbol);
+              setName(result.name);
+              setExchange(result.exchange);
+            }}
             placeholder={t.symbolPlaceholder}
-            required
+            searchingLabel={t.symbolSearching}
           />
         </Field>
         <Field>
