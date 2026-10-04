@@ -66,4 +66,4 @@ Bu, projedeki ilk zamanlanmış iş. AD-8 (Celery + Redis) hiç kurulmadı ve ü
   - **Başlık alakası:** alakasız başlıklar (başka şirketlerin haberleri) filtreleniyor.
   - **Başlık uyumu:** analist hedef fiyatı ve not değişikliği içeren başlıklar notlara sızıyordu; artık filtreleniyor.
 - [x] Prod kurulumu (Görev 3), 2026-10-04.
-- [ ] İlk gerçek sabah çalıştırmasının `insight_runs`'tan kontrolü.
+- [x] İlk gerçek sabah çalıştırmaları kontrol edildi (2026-10-04, kullanıcı `insight_runs`'tan): 05:30, 06:30 ve 07:30 UTC çalışmaları `trigger = cron`, `status = completed`, `failed = 0`, `error` boş.
