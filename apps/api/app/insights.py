@@ -40,6 +40,8 @@ class Insight(BaseModel):
     note_locked: bool = False
     read: bool = False
     created_at: datetime
+    # "portfolio" when the user holds the symbol, "watchlist" when they only watch it (13.7).
+    source: str = "portfolio"
 
 
 class InsightRun(BaseModel):
@@ -162,6 +164,7 @@ def _row_to_insight(row: dict) -> Insight:
         note_tone=row["note_tone"],
         read=bool(row.get("read", False)),
         created_at=row["created_at"],
+        source=row.get("source") or "portfolio",
     )
 
 
@@ -172,26 +175,42 @@ _INSIGHT_COLUMNS = (
 
 
 def list_portfolio_insights(user_id: str, today: date) -> list[Insight]:
-    """Insights of the last 7 days for symbols the user currently holds, newest first."""
+    """Insights of the last 7 days for symbols the user holds or watches, newest first. A
+    symbol both held and watched counts as held (source "portfolio")."""
     with get_connection() as conn, conn.cursor(row_factory=dict_row) as cur:
         cur.execute(
             f"""
             WITH held AS (
-                SELECT p.symbol, p.exchange, max(p.name) AS name
+                SELECT p.symbol, p.exchange, max(p.name) AS name, 'portfolio' AS source
                 FROM positions p
                 JOIN portfolios pf ON pf.id = p.portfolio_id
                 WHERE pf.user_id = %s
                 GROUP BY p.symbol, p.exchange
+            ),
+            watched AS (
+                SELECT wi.symbol, wi.exchange, max(wi.name) AS name, 'watchlist' AS source
+                FROM watchlist_items wi
+                JOIN watchlists w ON w.id = wi.watchlist_id
+                WHERE w.user_id = %s
+                GROUP BY wi.symbol, wi.exchange
+            ),
+            tracked AS (
+                SELECT * FROM held
+                UNION ALL
+                SELECT * FROM watched w
+                WHERE NOT EXISTS (
+                    SELECT 1 FROM held h WHERE h.symbol = w.symbol AND h.exchange = w.exchange
+                )
             )
-            SELECT {_INSIGHT_COLUMNS}, held.name,
+            SELECT {_INSIGHT_COLUMNS}, tracked.name, tracked.source,
                    (r.user_id IS NOT NULL) AS read
             FROM symbol_insights i
-            JOIN held ON held.symbol = i.symbol AND held.exchange = i.exchange
+            JOIN tracked ON tracked.symbol = i.symbol AND tracked.exchange = i.exchange
             LEFT JOIN insight_reads r ON r.insight_id = i.id AND r.user_id = %s
             WHERE i.insight_date > %s
             ORDER BY i.insight_date DESC, i.severity DESC, i.symbol
             """,
-            (user_id, user_id, today - timedelta(days=PORTFOLIO_WINDOW_DAYS)),
+            (user_id, user_id, user_id, today - timedelta(days=PORTFOLIO_WINDOW_DAYS)),
         )
         return [_row_to_insight(row) for row in cur.fetchall()]
 
@@ -221,6 +240,16 @@ def user_holds_positions(user_id: str) -> bool:
         return cur.fetchone() is not None
 
 
+def user_watches_symbols(user_id: str) -> bool:
+    with get_connection() as conn, conn.cursor() as cur:
+        cur.execute(
+            "SELECT 1 FROM watchlist_items wi JOIN watchlists w ON w.id = wi.watchlist_id "
+            "WHERE w.user_id = %s LIMIT 1",
+            (user_id,),
+        )
+        return cur.fetchone() is not None
+
+
 def mark_read(user_id: str, insight_ids: list[str]) -> None:
     if not insight_ids:
         return
@@ -237,16 +266,32 @@ def mark_read(user_id: str, insight_ids: list[str]) -> None:
 
 
 def portfolio_universe(limit: int) -> list[tuple[str, str | None]]:
-    """Distinct US symbols held in any portfolio (with a company name), most-held first."""
+    """Distinct US symbols to scan, most-followed first: everything held in a portfolio comes
+    before symbols that are only on watchlists (13.7), so the daily cap trims watchlists
+    first."""
     with get_connection() as conn, conn.cursor() as cur:
         cur.execute(
             """
-            SELECT p.symbol, max(p.name)
-            FROM positions p
-            JOIN portfolios pf ON pf.id = p.portfolio_id
-            WHERE p.exchange = 'US'
-            GROUP BY p.symbol
-            ORDER BY count(DISTINCT pf.user_id) DESC, p.symbol
+            WITH held AS (
+                SELECT p.symbol, max(p.name) AS name,
+                       count(DISTINCT pf.user_id) AS followers, 0 AS tier
+                FROM positions p
+                JOIN portfolios pf ON pf.id = p.portfolio_id
+                WHERE p.exchange = 'US'
+                GROUP BY p.symbol
+            ),
+            watched AS (
+                SELECT wi.symbol, max(wi.name) AS name,
+                       count(DISTINCT w.user_id) AS followers, 1 AS tier
+                FROM watchlist_items wi
+                JOIN watchlists w ON w.id = wi.watchlist_id
+                WHERE wi.exchange = 'US' AND wi.symbol NOT IN (SELECT symbol FROM held)
+                GROUP BY wi.symbol
+            )
+            SELECT symbol, name FROM (
+                SELECT * FROM held UNION ALL SELECT * FROM watched
+            ) universe
+            ORDER BY tier, followers DESC, symbol
             LIMIT %s
             """,
             (limit,),

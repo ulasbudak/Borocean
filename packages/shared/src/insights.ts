@@ -29,12 +29,15 @@ export type Insight = {
   note_locked: boolean;
   read: boolean;
   created_at: string;
+  /** "watchlist" when the user only watches the symbol (13.7); older API responses omit it. */
+  source?: "portfolio" | "watchlist";
 };
 
 export type InsightsResponse = {
   insights: Insight[];
   unread_count: number;
   holds_positions: boolean;
+  watches_symbols?: boolean;
   warnings: string[];
 };
 

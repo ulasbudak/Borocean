@@ -1212,6 +1212,7 @@ class InsightsResponse(BaseModel):
     insights: list[insights.Insight]
     unread_count: int
     holds_positions: bool = False
+    watches_symbols: bool = False
     run: insights.InsightRun | None
     warnings: list[str]
 
@@ -1269,8 +1270,13 @@ async def get_portfolio_insights(claims: dict = Depends(get_current_claims)) -> 
     try:
         items = await asyncio.to_thread(insights.list_portfolio_insights, user_id, today)
         holds_positions = await asyncio.to_thread(insights.user_holds_positions, user_id)
+        watches_symbols = await asyncio.to_thread(insights.user_watches_symbols, user_id)
         run = await asyncio.to_thread(insights.latest_run, today)
-        if run is None and insight_runner.fallback_due(now) and holds_positions:
+        if (
+            run is None
+            and insight_runner.fallback_due(now)
+            and (holds_positions or watches_symbols)
+        ):
             # The morning cron didn't run today: start the scan now instead of silently
             # showing yesterday's picture (NFR-2).
             insight_runner.start_background_scan("fallback")
@@ -1284,6 +1290,7 @@ async def get_portfolio_insights(claims: dict = Depends(get_current_claims)) -> 
         insights=items,
         unread_count=sum(1 for item in items if not item.read),
         holds_positions=holds_positions,
+        watches_symbols=watches_symbols,
         run=run,
         warnings=warnings,
     )

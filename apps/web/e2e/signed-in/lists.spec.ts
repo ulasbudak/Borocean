@@ -62,3 +62,11 @@ test("simulation: create with a budget, place a market order, then delete", asyn
   await simulation.getByRole("button", { name: "Simülasyonu sil" }).click();
   await expect(page.getByText("E2E Simülasyon", { exact: true })).toHaveCount(0);
 });
+
+test("the watchlist page has its own updates section", async ({ page }) => {
+  await page.goto("/watchlist");
+  await expect(page.getByText("İzleme listendeki gelişmeler")).toBeVisible({ timeout: 30_000 });
+  await expect(
+    page.getByText("Son 7 günde izleme listendeki hisselerde önemli bir gelişme yok.")
+  ).toBeVisible();
+});

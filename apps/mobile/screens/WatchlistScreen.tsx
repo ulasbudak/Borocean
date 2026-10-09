@@ -9,6 +9,7 @@ import {
   View,
 } from "react-native";
 import { useLocale } from "../lib/locale-context";
+import { WatchlistInsights } from "./WatchlistInsights";
 import { useTheme, radius, spacing, type ThemeColors } from "../lib/theme";
 import {
   createWatchlist,
@@ -171,6 +172,8 @@ export function WatchlistScreen({
                 <TouchableOpacity
                   onPress={() => handleRemoveItem(watchlist.id, item.id)}
                   hitSlop={8}
+                  accessibilityRole="button"
+                  accessibilityLabel={`${t.removeItemButton}: ${item.symbol}`}
                 >
                   <Text style={styles.removeLink}>✕</Text>
                 </TouchableOpacity>
@@ -179,6 +182,8 @@ export function WatchlistScreen({
           )}
         </View>
       ))}
+
+      <WatchlistInsights />
     </ScrollView>
   );
 }

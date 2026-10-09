@@ -577,6 +577,9 @@ export const en: Messages = {
   },
   insights: {
     panelTitle: "Updates in Your Portfolio",
+    watchlistBadge: "Watchlist",
+    watchlistSectionTitle: "Updates on your watchlist",
+    noneRecentWatchlist: "No important updates on your watchlist in the last 7 days.",
     portfolioStripTitle: "Updates from the last 7 days",
     stockSectionTitle: "Recent updates",
     newBadge: "New update",

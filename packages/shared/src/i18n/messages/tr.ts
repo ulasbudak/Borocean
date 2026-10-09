@@ -577,6 +577,9 @@ export const tr: Messages = {
   },
   insights: {
     panelTitle: "Portföyündeki Gelişmeler",
+    watchlistBadge: "İzleme listesi",
+    watchlistSectionTitle: "İzleme listendeki gelişmeler",
+    noneRecentWatchlist: "Son 7 günde izleme listendeki hisselerde önemli bir gelişme yok.",
     portfolioStripTitle: "Son 7 günün gelişmeleri",
     stockSectionTitle: "Son gelişmeler",
     newBadge: "Yeni gelişme",

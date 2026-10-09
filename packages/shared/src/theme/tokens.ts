@@ -34,7 +34,7 @@ export const colorTokens = {
     textDisabled: "#CBD5E1",
     accent: "#2563EB",
     accentText: "#FFFFFF",
-    positive: "#15803D",
+    positive: "#14733A",
     negative: "#B91C1C",
     warning: "#B45309",
     info: "#0284C7",

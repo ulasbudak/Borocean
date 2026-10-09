@@ -260,6 +260,8 @@ export function PortfolioScreen({ onBack }: { onBack: () => void }) {
                       onPress={() => handleDeletePosition(portfolio.id, position.id)}
                       hitSlop={8}
                       style={{ marginLeft: "auto" }}
+                      accessibilityRole="button"
+                      accessibilityLabel={`${t.deletePositionButton}: ${position.symbol}`}
                     >
                       <Text style={styles.removeLink}>✕</Text>
                     </TouchableOpacity>

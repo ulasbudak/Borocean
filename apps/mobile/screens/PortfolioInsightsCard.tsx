@@ -47,7 +47,7 @@ export function PortfolioInsightsCard({ onOpenPortfolio }: { onOpenPortfolio: ()
     );
   }
 
-  if (data !== null && !data.holds_positions) return null;
+  if (data !== null && !data.holds_positions && !data.watches_symbols) return null;
 
   const unread = data?.insights.filter((i) => !i.read) ?? [];
 

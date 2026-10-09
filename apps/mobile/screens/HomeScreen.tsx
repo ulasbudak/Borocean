@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import * as Notifications from "expo-notifications";
+import { useNavigation } from "@react-navigation/native";
+import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import type { Session } from "@supabase/supabase-js";
 import { SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { displayNameFrom } from "@borocean/shared";
@@ -7,19 +7,10 @@ import { supabase } from "../lib/supabase";
 import { useLocale } from "../lib/locale-context";
 import { useTheme, radius, spacing, type ThemeColors } from "../lib/theme";
 import { SearchBox } from "./SearchBox";
-import { StockOverviewScreen } from "./StockOverviewScreen";
-import { SettingsScreen } from "./SettingsScreen";
-import { ScreenerScreen } from "./ScreenerScreen";
-import { WatchlistScreen } from "./WatchlistScreen";
-import { PortfolioScreen } from "./PortfolioScreen";
-import { AlertsScreen } from "./AlertsScreen";
-import { SignalAlertsScreen } from "./SignalAlertsScreen";
-import { CompareScreen } from "./CompareScreen";
-import { SimulationScreen } from "./SimulationScreen";
 import { Highlights } from "./Highlights";
 import { BulletinSection } from "./BulletinSection";
-import { BulletinsScreen } from "./BulletinsScreen";
 import { PortfolioInsightsCard } from "./PortfolioInsightsCard";
+import type { RootStackParamList } from "../navigation/RootNavigator";
 
 type SymbolResult = {
   symbol: string;
@@ -31,128 +22,19 @@ export function HomeScreen({ session }: { session: Session }) {
   const { messages } = useLocale();
   const { colors } = useTheme();
   const styles = makeStyles(colors);
-  const [selectedStock, setSelectedStock] = useState<SymbolResult | null>(null);
-  const [showSettings, setShowSettings] = useState(false);
-  const [showScreener, setShowScreener] = useState(false);
-  const [showWatchlist, setShowWatchlist] = useState(false);
-  const [showPortfolio, setShowPortfolio] = useState(false);
-  const [showAlerts, setShowAlerts] = useState(false);
-  const [showSignalAlerts, setShowSignalAlerts] = useState(false);
-  const [showCompare, setShowCompare] = useState(false);
-  const [showSimulation, setShowSimulation] = useState(false);
-  const [showBulletins, setShowBulletins] = useState(false);
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const openStock = (result: SymbolResult) =>
+    navigation.push("Stock", { symbol: result.symbol, exchange: result.exchange });
   // First-run guide (UX plan 16.4) until the user has picked interest sectors.
   const interestSectors = session.user.user_metadata?.interest_sectors;
   const needsOnboarding = !Array.isArray(interestSectors) || interestSectors.length === 0;
-
-  // Story 13.6 — tapping the morning "updates in your portfolio" push opens the portfolio.
-  useEffect(() => {
-    const subscription = Notifications.addNotificationResponseReceivedListener((response) => {
-      if (response.notification.request.content.data?.type === "portfolio_insights") {
-        setSelectedStock(null);
-        setShowPortfolio(true);
-      }
-    });
-    return () => subscription.remove();
-  }, []);
-
-  if (selectedStock) {
-    return (
-      <SafeAreaView style={styles.container}>
-        <StockOverviewScreen
-          symbol={selectedStock.symbol}
-          exchange={selectedStock.exchange}
-          onBack={() => setSelectedStock(null)}
-          onOpenSimulation={() => {
-            setSelectedStock(null);
-            setShowSimulation(true);
-          }}
-        />
-      </SafeAreaView>
-    );
-  }
-
-  if (showSettings) {
-    return (
-      <SafeAreaView style={styles.container}>
-        <SettingsScreen onBack={() => setShowSettings(false)} />
-      </SafeAreaView>
-    );
-  }
-
-  if (showScreener) {
-    return (
-      <SafeAreaView style={styles.container}>
-        <ScreenerScreen onBack={() => setShowScreener(false)} onSelectResult={setSelectedStock} />
-      </SafeAreaView>
-    );
-  }
-
-  if (showWatchlist) {
-    return (
-      <SafeAreaView style={styles.container}>
-        <WatchlistScreen onBack={() => setShowWatchlist(false)} onSelectResult={setSelectedStock} />
-      </SafeAreaView>
-    );
-  }
-
-  if (showPortfolio) {
-    return (
-      <SafeAreaView style={styles.container}>
-        <PortfolioScreen onBack={() => setShowPortfolio(false)} />
-      </SafeAreaView>
-    );
-  }
-
-  if (showAlerts) {
-    return (
-      <SafeAreaView style={styles.container}>
-        <AlertsScreen onBack={() => setShowAlerts(false)} onSelectResult={setSelectedStock} />
-      </SafeAreaView>
-    );
-  }
-
-  if (showSignalAlerts) {
-    return (
-      <SafeAreaView style={styles.container}>
-        <SignalAlertsScreen
-          onBack={() => setShowSignalAlerts(false)}
-          onSelectResult={setSelectedStock}
-        />
-      </SafeAreaView>
-    );
-  }
-
-  if (showCompare) {
-    return (
-      <SafeAreaView style={styles.container}>
-        <CompareScreen onBack={() => setShowCompare(false)} />
-      </SafeAreaView>
-    );
-  }
-
-  if (showBulletins) {
-    return (
-      <SafeAreaView style={styles.container}>
-        <BulletinsScreen onBack={() => setShowBulletins(false)} />
-      </SafeAreaView>
-    );
-  }
-
-  if (showSimulation) {
-    return (
-      <SafeAreaView style={styles.container}>
-        <SimulationScreen onBack={() => setShowSimulation(false)} />
-      </SafeAreaView>
-    );
-  }
 
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView style={styles.container} contentContainerStyle={styles.content}>
         <View style={styles.header}>
           <Text style={styles.title}>{messages.common.appName}</Text>
-          <TouchableOpacity onPress={() => setShowSettings(true)}>
+          <TouchableOpacity onPress={() => navigation.navigate("Settings")}>
             <Text style={styles.link}>{messages.settings.title}</Text>
           </TouchableOpacity>
         </View>
@@ -168,16 +50,16 @@ export function HomeScreen({ session }: { session: Session }) {
             <Text style={styles.navCardText}>{messages.onboarding.title}</Text>
             <Text style={styles.onboardingText}>{messages.onboarding.intro}</Text>
             <Text style={styles.onboardingText}>1. {messages.onboarding.stepInterests}</Text>
-            <TouchableOpacity onPress={() => setShowSettings(true)}>
+            <TouchableOpacity onPress={() => navigation.navigate("Settings")}>
               <Text style={styles.link}>{messages.onboarding.stepInterestsAction}</Text>
             </TouchableOpacity>
             <Text style={styles.onboardingText}>2. {messages.onboarding.stepSearch}</Text>
             <Text style={styles.onboardingText}>3. {messages.onboarding.stepTrack}</Text>
             <View style={styles.onboardingLinks}>
-              <TouchableOpacity onPress={() => setShowWatchlist(true)}>
+              <TouchableOpacity onPress={() => navigation.navigate("Watchlist")}>
                 <Text style={styles.link}>{messages.onboarding.stepTrackWatchlist}</Text>
               </TouchableOpacity>
-              <TouchableOpacity onPress={() => setShowPortfolio(true)}>
+              <TouchableOpacity onPress={() => navigation.navigate("Portfolio")}>
                 <Text style={styles.link}>{messages.onboarding.stepTrackPortfolio}</Text>
               </TouchableOpacity>
             </View>
@@ -185,42 +67,42 @@ export function HomeScreen({ session }: { session: Session }) {
         )}
 
         <View style={styles.card}>
-          <SearchBox onSelectResult={setSelectedStock} />
+          <SearchBox onSelectResult={openStock} />
         </View>
 
-        <PortfolioInsightsCard onOpenPortfolio={() => setShowPortfolio(true)} />
+        <PortfolioInsightsCard onOpenPortfolio={() => navigation.navigate("Portfolio")} />
 
         <Text style={styles.sectionLabel}>{messages.highlights.title}</Text>
-        <Highlights onSelectResult={setSelectedStock} />
+        <Highlights onSelectResult={openStock} />
 
         <Text style={styles.sectionLabel}>{messages.bulletin.title}</Text>
-        <BulletinSection onShowAll={() => setShowBulletins(true)} />
+        <BulletinSection onShowAll={() => navigation.navigate("Bulletins")} />
 
-        <TouchableOpacity style={styles.navCard} onPress={() => setShowWatchlist(true)}>
+        <TouchableOpacity style={styles.navCard} onPress={() => navigation.navigate("Watchlist")}>
           <Text style={styles.navCardText}>{messages.watchlist.title}</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.navCard} onPress={() => setShowPortfolio(true)}>
+        <TouchableOpacity style={styles.navCard} onPress={() => navigation.navigate("Portfolio")}>
           <Text style={styles.navCardText}>{messages.portfolio.title}</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.navCard} onPress={() => setShowAlerts(true)}>
+        <TouchableOpacity style={styles.navCard} onPress={() => navigation.navigate("Alerts")}>
           <Text style={styles.navCardText}>{messages.alerts.title}</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.navCard} onPress={() => setShowSignalAlerts(true)}>
+        <TouchableOpacity style={styles.navCard} onPress={() => navigation.navigate("SignalAlerts")}>
           <Text style={styles.navCardText}>{messages.signalAlerts.title}</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.navCard} onPress={() => setShowScreener(true)}>
+        <TouchableOpacity style={styles.navCard} onPress={() => navigation.navigate("Screener")}>
           <Text style={styles.navCardText}>{messages.screener.title}</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.navCard} onPress={() => setShowCompare(true)}>
+        <TouchableOpacity style={styles.navCard} onPress={() => navigation.navigate("Compare")}>
           <Text style={styles.navCardText}>{messages.comparison.title}</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.navCard} onPress={() => setShowSimulation(true)}>
+        <TouchableOpacity style={styles.navCard} onPress={() => navigation.navigate("Simulation")}>
           <Text style={styles.navCardText}>{messages.simulation.title}</Text>
         </TouchableOpacity>
 

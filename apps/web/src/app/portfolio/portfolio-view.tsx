@@ -304,7 +304,7 @@ export function PortfolioView({
                                   className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium ${
                                     insight.read
                                       ? "bg-surface-hover text-text-secondary"
-                                      : "bg-accent/15 text-accent"
+                                      : "bg-accent/15 text-text-primary ring-1 ring-accent/40"
                                   }`}
                                 >
                                   <Sparkles size={12} />

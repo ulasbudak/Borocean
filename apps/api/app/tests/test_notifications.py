@@ -189,15 +189,20 @@ async def test_notify_trigger_sends_push_when_enabled_with_token(monkeypatch):
     )
     sent = {}
 
-    async def fake_send_push(token, title, body):
+    async def fake_send_push(token, title, body, data=None):
         sent["push"] = (token, title, body)
+        sent["data"] = data
         return True
 
     monkeypatch.setattr(notifications, "send_expo_push", fake_send_push)
 
-    await notifications.notify_trigger("user-1", "user@example.com", "Title", "Body")
+    await notifications.notify_trigger(
+        "user-1", "user@example.com", "Title", "Body", alerts_path="/signal-alerts"
+    )
 
     assert sent["push"] == ("tok", "Title", "Body")
+    # The app opens the screen the alert is about when the push is tapped.
+    assert sent["data"] == {"type": "alert", "path": "/signal-alerts"}
 
 
 @pytest.mark.anyio

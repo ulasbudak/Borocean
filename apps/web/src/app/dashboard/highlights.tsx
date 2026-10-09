@@ -44,7 +44,7 @@ export function Highlights({ messages, locale }: { messages: Messages["highlight
         <p className="text-sm text-text-secondary">
           {warnings[0] ?? t.empty}{" "}
           {missingInterests && (
-            <Link href="/settings" className="text-accent hover:underline">
+            <Link href="/settings" className="text-accent underline underline-offset-2">
               →
             </Link>
           )}

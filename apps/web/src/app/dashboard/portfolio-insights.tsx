@@ -10,7 +10,8 @@ import { fetchPortfolioInsights, markInsightsRead } from "@/lib/insights-client"
 
 const MAX_ITEMS = 5;
 
-/** Story 13.5 — "Updates in your portfolio" on the dashboard. Hidden without positions. */
+/** Story 13.5 — "Updates in your portfolio" on the dashboard, including watched symbols with
+ * their own badge (13.7). Hidden when the user neither holds nor watches anything. */
 export function PortfolioInsights({
   messages,
   locale,
@@ -70,7 +71,7 @@ export function PortfolioInsights({
       </Section>
     );
   }
-  if (!data.holds_positions) return null;
+  if (!data.holds_positions && !data.watches_symbols) return null;
 
   const items = data.insights.slice(0, MAX_ITEMS);
   const unread = data.insights.filter((i) => !i.read);

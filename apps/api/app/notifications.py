@@ -200,7 +200,10 @@ async def notify_trigger(
 
     if settings.push_enabled and settings.expo_push_token:
         try:
-            await send_expo_push(settings.expo_push_token, title, body)
+            # Tapping the push opens the alert screen it is about (mobile navigation, 16.2).
+            await send_expo_push(
+                settings.expo_push_token, title, body, data={"type": "alert", "path": alerts_path}
+            )
         except Exception:
             pass
 

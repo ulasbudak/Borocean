@@ -13,18 +13,18 @@ export function GettingStarted({ messages }: { messages: Messages["onboarding"] 
       <ol className="mt-3 flex list-decimal flex-col gap-2 pl-5 text-sm text-text-secondary">
         <li>
           {t.stepInterests}{" "}
-          <Link href="/settings" className="font-medium text-accent hover:underline">
+          <Link href="/settings" className="font-medium text-accent underline underline-offset-2">
             {t.stepInterestsAction}
           </Link>
         </li>
         <li>{t.stepSearch}</li>
         <li>
           {t.stepTrack}{" "}
-          <Link href="/watchlist" className="font-medium text-accent hover:underline">
+          <Link href="/watchlist" className="font-medium text-accent underline underline-offset-2">
             {t.stepTrackWatchlist}
           </Link>
           {" · "}
-          <Link href="/portfolio" className="font-medium text-accent hover:underline">
+          <Link href="/portfolio" className="font-medium text-accent underline underline-offset-2">
             {t.stepTrackPortfolio}
           </Link>
         </li>

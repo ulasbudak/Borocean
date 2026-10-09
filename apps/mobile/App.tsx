@@ -6,7 +6,8 @@ import { LocaleProvider } from "./lib/locale-provider";
 import { ThemePreferenceProvider } from "./lib/theme-preference";
 import { useTheme } from "./lib/theme";
 import { AuthScreen } from "./screens/AuthScreen";
-import { HomeScreen } from "./screens/HomeScreen";
+import { SafeAreaProvider } from "react-native-safe-area-context";
+import { RootNavigator } from "./navigation/RootNavigator";
 
 // Follows the theme chosen in Settings, not only the OS, so the clock stays readable.
 function ThemedStatusBar() {
@@ -28,11 +29,13 @@ export default function App() {
   }, []);
 
   return (
-    <ThemePreferenceProvider>
-      <LocaleProvider>
-        {session ? <HomeScreen session={session} /> : <AuthScreen />}
-        <ThemedStatusBar />
-      </LocaleProvider>
-    </ThemePreferenceProvider>
+    <SafeAreaProvider>
+      <ThemePreferenceProvider>
+        <LocaleProvider>
+          {session ? <RootNavigator session={session} /> : <AuthScreen />}
+          <ThemedStatusBar />
+        </LocaleProvider>
+      </ThemePreferenceProvider>
+    </SafeAreaProvider>
   );
 }

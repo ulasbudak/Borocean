@@ -37,6 +37,11 @@ export function InsightList({
                 className={`h-2 w-2 shrink-0 rounded-full ${insight.read ? "bg-transparent" : "bg-accent"}`}
               />
               <span className="font-semibold text-text-primary">{insight.symbol}</span>
+              {insight.source === "watchlist" && (
+                <span className="shrink-0 rounded-full bg-surface-hover px-1.5 py-0.5 text-[11px] font-medium text-text-secondary">
+                  {messages.watchlistBadge}
+                </span>
+              )}
               <span className="min-w-0 flex-1 truncate text-text-secondary">
                 {insight.events[0] ? describeInsightEvent(insight.events[0], messages, locale) : ""}
                 {insight.events.length > 1 ? ` +${insight.events.length - 1}` : ""}

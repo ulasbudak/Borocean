@@ -88,6 +88,9 @@ export function InsightList({
             >
               <View style={[styles.dot, !insight.read && { backgroundColor: colors.accent }]} />
               <Text style={styles.symbol}>{insight.symbol}</Text>
+              {insight.source === "watchlist" && (
+                <Text style={styles.watchBadge}>{messages.insights.watchlistBadge}</Text>
+              )}
               <Text style={styles.summary} numberOfLines={1}>
                 {insight.events[0]
                   ? describeInsightEvent(insight.events[0], messages.insights, locale)
@@ -119,6 +122,15 @@ function makeStyles(colors: ThemeColors) {
     symbol: {
       fontWeight: "700",
       color: colors.textPrimary,
+    },
+    watchBadge: {
+      fontSize: 11,
+      fontWeight: "500",
+      color: colors.textSecondary,
+      backgroundColor: colors.surfaceHover,
+      borderRadius: radius.full,
+      paddingHorizontal: spacing[2],
+      overflow: "hidden",
     },
     meta: {
       fontSize: 11,

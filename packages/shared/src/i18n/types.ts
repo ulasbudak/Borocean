@@ -555,6 +555,9 @@ export interface Messages {
   };
   insights: {
     panelTitle: string;
+    watchlistBadge: string;
+    watchlistSectionTitle: string;
+    noneRecentWatchlist: string;
     portfolioStripTitle: string;
     stockSectionTitle: string;
     newBadge: string;

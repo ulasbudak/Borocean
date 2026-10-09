@@ -360,6 +360,7 @@ def test_cron_trigger_requires_the_configured_secret(monkeypatch):
 def test_portfolio_insights_hide_the_note_without_ai_access(monkeypatch, signed_in):
     monkeypatch.setattr(insights, "list_portfolio_insights", lambda u, d: [INSIGHT])
     monkeypatch.setattr(insights, "user_holds_positions", lambda u: True)
+    monkeypatch.setattr(insights, "user_watches_symbols", lambda u: False)
     monkeypatch.setattr(insights, "latest_run", lambda d: None)
     monkeypatch.setattr(main.insight_runner, "fallback_due", lambda now: False)
     monkeypatch.setattr(main, "get_entitlement", lambda u: entitlement(ai_reports=False))
@@ -380,6 +381,7 @@ def test_portfolio_insights_start_the_fallback_when_the_morning_run_is_missing(
     monkeypatch.setattr(insights, "list_portfolio_insights", lambda u, d: [])
     monkeypatch.setattr(insights, "latest_run", lambda d: None)
     monkeypatch.setattr(insights, "user_holds_positions", lambda u: True)
+    monkeypatch.setattr(insights, "user_watches_symbols", lambda u: False)
     monkeypatch.setattr(main.insight_runner, "fallback_due", lambda now: True)
     monkeypatch.setattr(
         main.insight_runner, "start_background_scan", lambda t: started.append(t) or True

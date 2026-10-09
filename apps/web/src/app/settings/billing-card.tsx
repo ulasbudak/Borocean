@@ -60,7 +60,7 @@ export function BillingCard({ messages }: { messages: Messages["billing"] }) {
           className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
             entitlement.tier === "free"
               ? "bg-surface-hover text-text-secondary"
-              : "bg-accent/15 text-accent"
+              : "bg-accent/15 text-text-primary ring-1 ring-accent/40"
           }`}
         >
           {entitlement.tier === "premium"
