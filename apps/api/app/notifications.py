@@ -1,3 +1,5 @@
+from html import escape
+
 import httpx
 from psycopg.rows import dict_row
 from pydantic import BaseModel
@@ -85,7 +87,12 @@ async def send_expo_push(
 
 
 async def send_email(
-    to: str, subject: str, body: str, *, client: httpx.AsyncClient | None = None
+    to: str,
+    subject: str,
+    body: str,
+    *,
+    html: str | None = None,
+    client: httpx.AsyncClient | None = None,
 ) -> bool:
     settings = get_settings()
     if not settings.resend_api_key:
@@ -101,6 +108,7 @@ async def send_email(
                 "to": [to],
                 "subject": subject,
                 "text": body,
+                **({"html": html} if html else {}),
             },
             headers={
                 "Authorization": f"Bearer {settings.resend_api_key}",
@@ -115,7 +123,69 @@ async def send_email(
             await http_client.aclose()
 
 
-async def notify_trigger(user_id: str, email: str | None, title: str, body: str) -> None:
+SITE_URL = "https://borocean.com"
+_FONT = "-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif"
+_BUTTON = (
+    "display:inline-block;background:#2563eb;color:#fff;text-decoration:none;"
+    "font-weight:600;font-size:14px;padding:10px 18px;border-radius:8px;"
+)
+
+EMAIL_FOOTER = {
+    "tr": {
+        "alerts": "Alarmlarını gör",
+        "settings": "Bildirim ayarları",
+        "disclaimer": "Bu bildirim, kurduğun alarma göre otomatik gönderilmiştir; yatırım "
+        "tavsiyesi değildir.",
+    },
+    "en": {
+        "alerts": "View your alerts",
+        "settings": "Notification settings",
+        "disclaimer": "This notification was sent automatically for an alert you set; it is "
+        "not investment advice.",
+    },
+}
+
+
+def alert_email(title: str, body: str, locale: str, alerts_path: str) -> tuple[str, str]:
+    """Plain-text and HTML versions of an alert email: the message, links to the alerts
+    page and notification settings, and the not-investment-advice notice (Story 14.2)."""
+    f = EMAIL_FOOTER["en" if locale == "en" else "tr"]
+    alerts_url = f"{SITE_URL}{alerts_path}"
+    settings_url = f"{SITE_URL}/settings"
+    text = (
+        f"{body}\n\n{f['alerts']}: {alerts_url}\n{f['settings']}: {settings_url}\n\n"
+        f"{f['disclaimer']}"
+    )
+    html = (
+        f'<!doctype html><html lang="{locale}"><head><meta charset="utf-8"></head>'
+        f'<body style="margin:0;background:#f6f8fb;font-family:{_FONT};color:#0f172a;">'
+        '<div style="max-width:480px;margin:0 auto;padding:32px 16px;">'
+        '<div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;'
+        'padding:28px;">'
+        '<p style="margin:0 0 20px;font-size:18px;font-weight:700;color:#2563eb;">'
+        "Borocean</p>"
+        f'<h1 style="margin:0 0 12px;font-size:18px;">{escape(title)}</h1>'
+        '<p style="margin:0 0 24px;font-size:15px;line-height:1.6;color:#334155;">'
+        f"{escape(body)}</p>"
+        f'<a href="{alerts_url}" style="{_BUTTON}">{f["alerts"]}</a>'
+        '<hr style="border:none;border-top:1px solid #e2e8f0;margin:24px 0;">'
+        '<p style="margin:0;font-size:12px;line-height:1.6;color:#94a3b8;">'
+        f'{f["disclaimer"]}<br><a href="{settings_url}" style="color:#94a3b8;">'
+        f"{f['settings']}</a></p>"
+        "</div></div></body></html>"
+    )
+    return text, html
+
+
+async def notify_trigger(
+    user_id: str,
+    email: str | None,
+    title: str,
+    body: str,
+    *,
+    locale: str = "tr",
+    alerts_path: str = "/alerts",
+) -> None:
     """Best-effort notification dispatch for a just-triggered alert.
 
     Never raises: a notification-delivery failure must not break the /alerts or
@@ -135,6 +205,7 @@ async def notify_trigger(user_id: str, email: str | None, title: str, body: str)
 
     if settings.email_enabled and email:
         try:
-            await send_email(email, title, body)
+            text, html = alert_email(title, body, locale, alerts_path)
+            await send_email(email, title, text, html=html)
         except Exception:
             pass

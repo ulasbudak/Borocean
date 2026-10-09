@@ -145,7 +145,7 @@ async def test_evaluate_marks_alert_triggered_when_rule_fires(monkeypatch):
 
     monkeypatch.setattr(signal_alerts, "get_us_candles", fake_get_us_candles)
     monkeypatch.setattr(signal_alerts, "evaluate_signals", fake_evaluate_signals)
-    monkeypatch.setattr(signal_alerts, "_mark_triggered", lambda alert_id, triggered_at: None)
+    monkeypatch.setattr(signal_alerts, "_mark_triggered", lambda alert_id, triggered_at: True)
 
     alert = make_alert(rule_id="rsi_oversold")
     updated, warnings = await signal_alerts.evaluate_and_persist([alert])

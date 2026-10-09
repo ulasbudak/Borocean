@@ -93,13 +93,53 @@ def delete_alert(user_id: str, alert_id: str) -> None:
         raise SignalAlertNotFoundError(alert_id)
 
 
-def _mark_triggered(alert_id: str, triggered_at: datetime) -> None:
+def _mark_triggered(alert_id: str, triggered_at: datetime) -> bool:
+    """True only for the call that actually moved the alert to triggered (see
+    app/alerts.py::_mark_triggered)."""
     with get_connection() as conn, conn.cursor() as cur:
         cur.execute(
-            "UPDATE signal_alerts SET status = 'triggered', triggered_at = %s WHERE id = %s",
+            "UPDATE signal_alerts SET status = 'triggered', triggered_at = %s "
+            "WHERE id = %s AND status = 'active'",
             (triggered_at, alert_id),
         )
+        changed = cur.rowcount > 0
         conn.commit()
+    return changed
+
+
+def list_active_us_alerts_by_user() -> dict[str, dict]:
+    """All active US signal alerts grouped by owner, with email and locale (Story 14.2)."""
+    with get_connection() as conn, conn.cursor(row_factory=dict_row) as cur:
+        cur.execute(
+            """
+            SELECT a.id, a.symbol, a.exchange, a.name, a.rule_id, a.timeframe, a.status,
+                   a.created_at, a.triggered_at, a.user_id, u.email,
+                   coalesce(u.raw_user_meta_data->>'locale', 'tr') AS locale
+            FROM signal_alerts a JOIN auth.users u ON u.id = a.user_id
+            WHERE a.status = 'active' AND a.exchange = 'US'
+            """
+        )
+        rows = cur.fetchall()
+    owners: dict[str, dict] = {}
+    for row in rows:
+        owner = owners.setdefault(
+            str(row["user_id"]), {"email": row["email"], "locale": row["locale"], "alerts": []}
+        )
+        owner["alerts"].append(_row_to_alert(row))
+    return owners
+
+
+def signal_alert_message(alert: SignalAlert, locale: str) -> tuple[str, str]:
+    label = alert.name or alert.symbol
+    if locale == "en":
+        return (
+            "Borocean signal alert",
+            f"The '{alert.rule_id}' signal fired for {label} ({alert.symbol}).",
+        )
+    return (
+        "Borocean Sinyal Alarmı",
+        f"{label} ({alert.symbol}) için '{alert.rule_name}' sinyali tetiklendi.",
+    )
 
 
 async def evaluate_and_persist(
@@ -107,6 +147,8 @@ async def evaluate_and_persist(
     *,
     user_id: str | None = None,
     email: str | None = None,
+    locale: str = "tr",
+    signal_cache: dict[tuple[str, str], list | None] | None = None,
 ) -> tuple[list[SignalAlert], list[str]]:
     """Check active US signal alerts against the latest evaluated signals and persist any
     that just fired. Mirrors app/alerts.py's price-alert evaluation shape (on-read, no
@@ -120,7 +162,8 @@ async def evaluate_and_persist(
     every alert that transitions to `triggered` during this call.
     """
     warnings: list[str] = []
-    signal_cache: dict[tuple[str, str], list | None] = {}
+    # Shared across users by the background run, so each symbol is fetched once per run.
+    signal_cache = {} if signal_cache is None else signal_cache
     updated: list[SignalAlert] = []
 
     for alert in alerts:
@@ -152,17 +195,14 @@ async def evaluate_and_persist(
         match = next((s for s in signals if s.rule_id == alert.rule_id), None)
         if match is not None:
             triggered_at = datetime.fromtimestamp(match.triggered_at, tz=UTC)
-            _mark_triggered(alert.id, triggered_at)
+            won = _mark_triggered(alert.id, triggered_at)
             updated.append(
                 alert.model_copy(update={"status": "triggered", "triggered_at": triggered_at})
             )
-            if user_id is not None:
-                label = alert.name or alert.symbol
+            if user_id is not None and won:
+                title, body = signal_alert_message(alert, locale)
                 await notify_trigger(
-                    user_id,
-                    email,
-                    "Borocean Sinyal Alarmı",
-                    f"{label} ({alert.symbol}) için '{alert.rule_name}' sinyali tetiklendi.",
+                    user_id, email, title, body, locale=locale, alerts_path="/signal-alerts"
                 )
         else:
             updated.append(alert)

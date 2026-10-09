@@ -6,7 +6,7 @@ from fastapi import Depends, FastAPI, Header, HTTPException, Response
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
-from app import insight_runner, insights, market_data
+from app import alert_runner, insight_runner, insights, market_data
 from app.account import account_check_allowed, account_exists, delete_account
 from app.ai_combined import CombinedAIReport, get_combined_report
 from app.ai_fundamental import AIReportUnavailableError, FundamentalAIReport, get_fundamental_report
@@ -615,6 +615,10 @@ def _alerts_unavailable() -> HTTPException:
     return HTTPException(status_code=503, detail="Alarm verisi şu an sağlanamıyor.")
 
 
+def _claims_locale(claims: dict) -> str:
+    return "en" if (claims.get("user_metadata") or {}).get("locale") == "en" else "tr"
+
+
 @app.get("/alerts")
 async def get_alerts(claims: dict = Depends(get_current_claims)) -> dict[str, object]:
     try:
@@ -622,7 +626,10 @@ async def get_alerts(claims: dict = Depends(get_current_claims)) -> dict[str, ob
     except psycopg.Error as exc:
         raise _alerts_unavailable() from exc
     updated, warnings = await evaluate_and_persist(
-        alerts, user_id=claims["sub"], email=claims.get("email")
+        alerts,
+        user_id=claims["sub"],
+        email=claims.get("email"),
+        locale=_claims_locale(claims),
     )
     return {"alerts": updated, "warnings": warnings}
 
@@ -695,7 +702,10 @@ async def get_signal_alerts(
     except psycopg.Error as exc:
         raise _signal_alerts_unavailable() from exc
     updated, warnings = await evaluate_signal_alerts(
-        alerts, user_id=claims["sub"], email=claims.get("email")
+        alerts,
+        user_id=claims["sub"],
+        email=claims.get("email"),
+        locale=_claims_locale(claims),
     )
     return {"alerts": updated, "warnings": warnings}
 
@@ -1197,15 +1207,28 @@ def _gate_notes(user_id: str, items: list[insights.Insight]) -> list[insights.In
     ]
 
 
-@app.post("/internal/insights/run", status_code=202)
-async def trigger_insight_run(x_cron_secret: str | None = Header(default=None)) -> dict:
+def _check_cron_secret(x_cron_secret: str | None) -> None:
     secret = get_settings().cron_secret
     if not secret:
         raise HTTPException(status_code=503, detail="CRON_SECRET is not configured")
     if not x_cron_secret or not hmac.compare_digest(x_cron_secret, secret):
         raise HTTPException(status_code=401, detail="invalid cron secret")
+
+
+@app.post("/internal/insights/run", status_code=202)
+async def trigger_insight_run(x_cron_secret: str | None = Header(default=None)) -> dict:
+    _check_cron_secret(x_cron_secret)
     started = insight_runner.start_background_scan("cron")
     return {"started": started}
+
+
+@app.post("/internal/alerts/run", status_code=202)
+async def trigger_alert_run(kind: str, x_cron_secret: str | None = Header(default=None)) -> dict:
+    """Story 14.2 — pg_cron evaluates every user's alerts in the background."""
+    _check_cron_secret(x_cron_secret)
+    if kind not in alert_runner.RUNNERS:
+        raise HTTPException(status_code=400, detail="kind must be 'price' or 'signal'")
+    return {"started": alert_runner.start_background_run(kind)}
 
 
 @app.get("/insights")

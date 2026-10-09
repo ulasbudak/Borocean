@@ -987,6 +987,15 @@ So that kullanıcılar kayıt olurken "Çok fazla deneme" hatası almasın ve e-
 
 ### Story 14.2: Alarm E-posta Bildirimlerinin Canlıda Açılması
 
+- [x] **Kod tamamlandı (2026-10-09); canlı kurulum kullanıcıda.**
+  - **Bulgu:** Alarmlar yalnızca Alarmlar sayfası açıldığında değerlendiriliyordu, bu yüzden bildirim kullanıcı zaten ekrandayken gidiyordu.
+  - **Arka plan değerlendirmesi:** `app/alert_runner.py` + `POST /internal/alerts/run?kind=price|signal` (cron sırrıyla korumalı). Fiyat alarmları hafta içi ABD seansında 15 dakikada bir, sinyal alarmları günde bir kez (05:15 UTC). Kurulum: `scripts/setup_alerts_cron.sql`.
+  - Her sembol bir çalıştırmada bir kez çekiliyor.
+  - `_mark_triggered` artık yalnızca aktif alarmı güncelliyor, böylece sayfa ve zamanlayıcı aynı anda çalışsa da tek bildirim gidiyor.
+  - E-posta ve push metni kullanıcının dilinde; e-posta HTML, alarm ve ayar bağlantıları ile "yatırım tavsiyesi değildir" ibaresi içeriyor.
+  - **Doğrulama:** 381 test yeşil. Dev'de gerçek alarmlarla denendi: eşiği geçen AAPL fiyat alarmı ve AAPL sinyal alarmı tetiklendi, MSFT aktif kaldı.
+  - **Kullanıcı işi:** Render'a `RESEND_API_KEY` + `NOTIFICATION_FROM_EMAIL`, prod'da `setup_alerts_cron.sql`.
+
 As a **kullanıcı**,
 I want fiyat ve sinyal alarmlarım tetiklendiğinde e-posta almak,
 So that ayarlardaki "E-posta bildirimleri" seçeneği gerçekten çalışsın.

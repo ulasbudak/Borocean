@@ -140,7 +140,7 @@ async def test_evaluate_marks_alert_triggered_when_condition_met(monkeypatch):
         return StockOverview(symbol=symbol, exchange="US", name="Apple Inc", price=210.0)
 
     monkeypatch.setattr(alerts, "get_us_overview", fake_get_us_overview)
-    monkeypatch.setattr(alerts, "_mark_triggered", lambda alert_id: None)
+    monkeypatch.setattr(alerts, "_mark_triggered", lambda alert_id: True)
 
     alert = make_alert(direction="above", threshold=200.0)
     updated, warnings = await alerts.evaluate_and_persist([alert])

@@ -87,13 +87,58 @@ def delete_alert(user_id: str, alert_id: str) -> None:
         raise AlertNotFoundError(alert_id)
 
 
-def _mark_triggered(alert_id: str) -> None:
+def _mark_triggered(alert_id: str) -> bool:
+    """True only for the call that actually moved the alert to triggered. The page-load
+    path (GET /alerts) and the background run (Story 14.2) can evaluate the same alert at
+    the same time; only the winner sends the notification."""
     with get_connection() as conn, conn.cursor() as cur:
         cur.execute(
-            "UPDATE price_alerts SET status = 'triggered', triggered_at = now() WHERE id = %s",
+            "UPDATE price_alerts SET status = 'triggered', triggered_at = now() "
+            "WHERE id = %s AND status = 'active'",
             (alert_id,),
         )
+        changed = cur.rowcount > 0
         conn.commit()
+    return changed
+
+
+def list_active_us_alerts_by_user() -> dict[str, dict]:
+    """All active US price alerts grouped by owner, with the owner's email and locale
+    (Story 14.2 background run)."""
+    with get_connection() as conn, conn.cursor(row_factory=dict_row) as cur:
+        cur.execute(
+            """
+            SELECT a.id, a.symbol, a.exchange, a.name, a.direction, a.threshold, a.status,
+                   a.created_at, a.triggered_at, a.user_id, u.email,
+                   coalesce(u.raw_user_meta_data->>'locale', 'tr') AS locale
+            FROM price_alerts a JOIN auth.users u ON u.id = a.user_id
+            WHERE a.status = 'active' AND a.exchange = 'US'
+            """
+        )
+        rows = cur.fetchall()
+    owners: dict[str, dict] = {}
+    for row in rows:
+        owner = owners.setdefault(
+            str(row["user_id"]), {"email": row["email"], "locale": row["locale"], "alerts": []}
+        )
+        owner["alerts"].append(_row_to_alert(row))
+    return owners
+
+
+def price_alert_message(alert: PriceAlert, locale: str) -> tuple[str, str]:
+    label = alert.name or alert.symbol
+    above = alert.direction == "above"
+    if locale == "en":
+        return (
+            "Borocean price alert",
+            f"{label} ({alert.symbol}) {'rose above' if above else 'fell below'} "
+            f"{alert.threshold}.",
+        )
+    return (
+        "Borocean Fiyat Alarmı",
+        f"{label} ({alert.symbol}) {alert.threshold} seviyesinin "
+        f"{'üstüne yükseldi' if above else 'altına düştü'}.",
+    )
 
 
 def _condition_met(direction: str, threshold: float, price: float) -> bool:
@@ -103,7 +148,12 @@ def _condition_met(direction: str, threshold: float, price: float) -> bool:
 
 
 async def evaluate_and_persist(
-    alerts: list[PriceAlert], *, user_id: str | None = None, email: str | None = None
+    alerts: list[PriceAlert],
+    *,
+    user_id: str | None = None,
+    email: str | None = None,
+    locale: str = "tr",
+    price_cache: dict[str, float | None] | None = None,
 ) -> tuple[list[PriceAlert], list[str]]:
     """Check active US alerts against the latest price and persist any that just triggered.
 
@@ -115,7 +165,8 @@ async def evaluate_and_persist(
     every alert that transitions to `triggered` during this call.
     """
     warnings: list[str] = []
-    price_cache: dict[str, float | None] = {}
+    # Shared across users by the background run, so each symbol is quoted once per run.
+    price_cache = {} if price_cache is None else price_cache
     updated: list[PriceAlert] = []
 
     for alert in alerts:
@@ -142,22 +193,13 @@ async def evaluate_and_persist(
             continue
 
         if _condition_met(alert.direction, alert.threshold, price):
-            _mark_triggered(alert.id)
+            won = _mark_triggered(alert.id)
             updated.append(
-                alert.model_copy(
-                    update={"status": "triggered", "triggered_at": datetime.now(UTC)}
-                )
+                alert.model_copy(update={"status": "triggered", "triggered_at": datetime.now(UTC)})
             )
-            if user_id is not None:
-                label = alert.name or alert.symbol
-                verb = "yükseldi" if alert.direction == "above" else "düştü"
-                await notify_trigger(
-                    user_id,
-                    email,
-                    "Borocean Fiyat Alarmı",
-                    f"{label} ({alert.symbol}) {alert.threshold} seviyesinin "
-                    f"{'üstüne' if alert.direction == 'above' else 'altına'} {verb}.",
-                )
+            if user_id is not None and won:
+                title, body = price_alert_message(alert, locale)
+                await notify_trigger(user_id, email, title, body, locale=locale)
         else:
             updated.append(alert)
 
