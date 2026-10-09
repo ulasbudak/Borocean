@@ -972,6 +972,8 @@ So that I don't miss important events at companies I follow but haven't bought y
 
 ### Story 14.1: Sending Email from the Domain (Resend) and Supabase SMTP
 
+- [x] **Done (2026-10-09).** `borocean.com` verified in Resend (region eu-west-1; DKIM `resend._domainkey`, sending records on the `send` subdomain). Squarespace's "no email" preset was removed; `_dmarc` is `p=none`. Supabase prod SMTP: `smtp.resend.com:465`, sender `Borocean <noreply@borocean.com>`; the email limit was raised from 2 to 30 per hour. Turkish templates: `docs/email-templates/`. **Verified live end to end:** sign-up → Turkish confirmation email → dashboard; password reset → Turkish email → log in with the new password; test account deleted. Note: saved templates took a few minutes to take effect.
+
 As a **product owner**,
 I want sign-up confirmation, password reset and alert emails to come from `noreply@borocean.com` without the 2-emails-per-hour cap,
 So that users don't get "Too many attempts" while signing up and emails don't land in spam.

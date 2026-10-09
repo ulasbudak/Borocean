@@ -970,6 +970,8 @@ So that henüz almadığım ama takip ettiğim şirketlerdeki önemli olayları 
 
 ### Story 14.1: Alan Adından E-posta Gönderimi (Resend) ve Supabase SMTP
 
+- [x] **Tamamlandı (2026-10-09).** Resend'de `borocean.com` doğrulandı (bölge eu-west-1; DKIM `resend._domainkey`, gönderim kayıtları `send` alt alan adında). Squarespace'in "e-posta gönderilmez" ayar seti kaldırıldı; `_dmarc` değeri `p=none`. Supabase prod SMTP: `smtp.resend.com:465`, gönderen `Borocean <noreply@borocean.com>`; e-posta sınırı saatte 2'den 30'a çıkarıldı. Türkçe şablonlar: `docs/email-templates/`. **Canlıda uçtan uca doğrulandı:** kayıt → Türkçe onay e-postası → Panel; şifre sıfırlama → Türkçe e-posta → yeni şifreyle giriş; test hesabı silindi. Not: kaydedilen şablonların uygulanması birkaç dakika sürdü.
+
 As a **ürün sahibi**,
 I want kayıt onayı, şifre sıfırlama ve alarm e-postalarının `noreply@borocean.com` adresinden, saatlik 2 e-posta sınırına takılmadan gitmesini,
 So that kullanıcılar kayıt olurken "Çok fazla deneme" hatası almasın ve e-postalar spam'e düşmesin.
