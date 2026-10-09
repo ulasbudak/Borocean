@@ -980,7 +980,7 @@ So that users don't get "Too many attempts" while signing up and emails don't la
 
 **Acceptance Criteria:**
 
-- **Given** a Resend account, **When** `borocean.com` is added and its DKIM/SPF/MX (bounce) records are entered in Squarespace DNS, **Then** the domain shows as "Verified" in Resend; the existing `v=spf1 -all` record is replaced with Resend's SPF record. A `_dmarc` record (starting with `p=none`) is added as well.
+- **Given** a Resend account, **When** `borocean.com` is added and its DKIM/SPF/MX (bounce) records are entered in Squarespace DNS, **Then** the domain shows as "Verified" in Resend. Resend's SPF and bounce (MX) records go on the `send.borocean.com` subdomain, so the root's `v=spf1 -all` record doesn't need to change. A `_dmarc` record (starting with `p=none`) is added as well.
 - **Given** Supabase prod → Authentication → SMTP Settings, **When** Resend's SMTP details (sender `Borocean <noreply@borocean.com>`) are entered, **Then** confirmation and reset emails come from this address; Rate Limits → email sending is raised from 2 per hour to a reasonable value (e.g. 30).
 - **And** the Supabase email templates (confirmation, password reset) are made Turkish and Borocean-branded.
 - **And** a real sign-up and password reset are tried end to end in production with a test address, checking that the email doesn't land in spam ("SPF/DKIM PASS" in Gmail).

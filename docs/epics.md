@@ -978,7 +978,7 @@ So that kullanıcılar kayıt olurken "Çok fazla deneme" hatası almasın ve e-
 
 **Acceptance Criteria:**
 
-- **Given** Resend hesabı, **When** `borocean.com` eklenip DKIM/SPF/MX(bounce) kayıtları Squarespace DNS'ine girilirse, **Then** alan adı Resend'de "Verified" olur; mevcut `v=spf1 -all` kaydı Resend'in SPF kaydıyla değiştirilir. Ek olarak `_dmarc` kaydı (`p=none` ile başlayarak) eklenir.
+- **Given** Resend hesabı, **When** `borocean.com` eklenip DKIM/SPF/MX(bounce) kayıtları Squarespace DNS'ine girilirse, **Then** alan adı Resend'de "Verified" olur. Resend'in SPF ve bounce (MX) kayıtları `send.borocean.com` alt alan adına girildiği için kök alan adındaki `v=spf1 -all` kaydının değiştirilmesi gerekmez. Ek olarak `_dmarc` kaydı (`p=none` ile başlayarak) eklenir.
 - **Given** Supabase prod → Authentication → SMTP Settings, **When** Resend SMTP bilgileri (gönderen `Borocean <noreply@borocean.com>`) girilirse, **Then** onay ve sıfırlama e-postaları bu adresten gider; Rate Limits → e-posta gönderim sınırı saatte 2'den makul bir değere (örn. 30) çıkarılır.
 - **And** Supabase e-posta şablonları (onay, şifre sıfırlama) Türkçe ve Borocean markalı hale getirilir.
 - **And** gerçek bir kayıt ve şifre sıfırlama, prod'da bir test adresiyle uçtan uca denenir; e-postanın spam'e düşmediği (Gmail'de "SPF/DKIM PASS") kontrol edilir.
