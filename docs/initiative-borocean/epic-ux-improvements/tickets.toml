@@ -16,13 +16,12 @@ references = ["docs/initiative-borocean/ux-borocean/ux-borocean.md", "docs/initi
 id = 2
 type = "story"
 title = "Mobilde gerçek gezinme"
-description = "Durum bayraklı ekran geçişleri bir gezinme yığınına taşınır; Android geri tuşu, push ile ekran açma ve derin bağlantı çalışır."
+description = "Durum bayraklı ekran geçişleri React Navigation yığınına (native-stack) taşınır; Android geri tuşu, push ile ekran açma ve derin bağlantı çalışır."
 verify = "Android'de geri tuşu önceki ekrana döner; bir alarm push'u ilgili alarm ekranını açar; borocean:// bağlantısı hisse sayfasını açar."
 covers = []
 after = []
 hitl = false
 risk = "high"
-unknown = "Gezinme kütüphanesi seçimi ve mobil mağaza yayınının kapsamı kullanıcıyla netleşmeli."
 references = ["docs/initiative-borocean/ux-borocean/ux-borocean.md", "docs/initiative-borocean/ux-borocean/EXPERIENCE.md"]
 
 [[entry]]

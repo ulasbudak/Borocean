@@ -34,7 +34,7 @@ colors:
   text-disabled-light: '#CBD5E1'
   accent-light: '#2563EB'
   accent-text-light: '#FFFFFF'
-  positive-light: '#15803D'
+  positive-light: '#14733A'
   negative-light: '#B91C1C'
   warning-light: '#B45309'
   info-light: '#0284C7'

@@ -42,7 +42,7 @@ Bu belge, canlıdaki ürünün nasıl davrandığını kayda geçirir (brownfiel
 | Hukuki | `/terms`, `/kvkk`, `/privacy` | Web bağlantısı | Kayıt, alt bilgi | Koşullar, aydınlatma, gizlilik |
 
 - **Web gezinme:** Panel'in en üstündeki 8 karoluk hızlı erişim ızgarası birincil gezinmedir. Her alt sayfanın başında aynı hedefleri taşıyan kompakt bir gezinme satırı vardır (`AppNav`, 16.3); etkin sayfa `aria-current` ile işaretlidir ve satır dar ekranda alt satıra kayar.
-- **Mobil gezinme:** HomeScreen, alt ekranları durum bayraklarıyla tam ekran açar; her ekranın bir "geri" düğmesi vardır. Gezinme kütüphanesi yoktur. `[ASSUMPTION]` Android donanım geri tuşu ve derin bağlantılar alt ekranları hedefleyemiyor; push bildirimi yalnızca portföy ekranını açar.
+- **Mobil gezinme:** React Navigation yığını (`apps/mobile/navigation/RootNavigator.tsx`, 16.2). Android geri tuşu bir önceki ekrana döner. Gelişme push'u portföyü, alarm push'u ilgili alarm ekranını açar (soğuk başlatmada da). `borocean://` bağlantıları her ekranı açar (`borocean://stock/US/AAPL`). Bağlantı ya da push ile açılan bir ekranda "geri" Ana sayfaya döner.
 
 Görsel referans: [`mockups/key-panel.html`](mockups/key-panel.html), [`mockups/key-stock.html`](mockups/key-stock.html), [`mockups/key-mobile-portfolio.html`](mockups/key-mobile-portfolio.html). Çelişkide bu belge geçerlidir.
 
@@ -77,7 +77,7 @@ Davranış kuralları. Görsel tanımlar `DESIGN.md` › Components'tadır.
 | Sinyal listesi | Hisse › Teknik | En yeni üstte; her satır yön, kural ve tarih |
 | Grafik | Hisse › Teknik | Zaman dilimi chip'leri, indikatör ekle/çıkar, trend ve yatay çizgi çizimi (kaydedilir) |
 | AI raporu | Hisse › AI | İstek üzerine; üretilirken iskelet; altında model ve uyarı ibaresi; çıktı önbellekten gelebilir |
-| Gelişme kartı | Panel, portföy, hisse sayfası | Okunmamış rozeti; açınca okundu sayılır; haber başlıkları kaynak bağlantısıyla yeni sekmede açılır |
+| Gelişme kartı | Panel, portföy, izleme listesi, hisse sayfası | Okunmamış rozeti; açınca okundu sayılır; haber başlıkları kaynak bağlantısıyla yeni sekmede açılır. Yalnızca izlenen hisselerin gelişmeleri "İzleme listesi" rozeti taşır ve izleme listesi ekranında ayrı bölümde görünür (13.7) |
 | İzleme listesine ekle / Alarm kur / Simülasyonda al | Hisse sayfası başlığı | Satır içi panel veya form; başarıda kısa onay metni |
 | Değişim değeri | Her yer | İşaret + yüzde; yeşil/kırmızı yalnızca yön için. `[ASSUMPTION]` Yüzde Türkçede de noktalı yazılıyor (`formatChange`, "+1.00%"); 16.7 düzeltir |
 | Tema değiştirici | Ayarlar (web ve mobil) | Sistem / koyu / açık. Web'de tercih tarayıcıda saklanır ve ilk boyamadan önce uygulanır; mobilde cihazda saklanır ve durum çubuğu da temaya uyar (16.5) |
@@ -111,13 +111,14 @@ Davranış kuralları. Görsel tanımlar `DESIGN.md` › Components'tadır.
 
 ## Accessibility Floor
 
-`[ASSUMPTION]` Hedef WCAG 2.2 AA; resmi bir denetim yapılmadı.
+Hedef WCAG 2.2 AA. Web'de 18 sayfa iki temada axe ile taranır ve ciddi/kritik bulgu sıfırdır (16.6, [`a11y-audit-2026-10-10.md`](a11y-audit-2026-10-10.md)). Mobilde gerçek cihazla VoiceOver/TalkBack turu mağaza yayınından önce yapılacak.
 
 - Kontrast: normal metin en az 4.5:1; tüm token çiftleri iki modda da bunu karşılar (Story 16.1, 2026-10-09).
 - Yön bilgisi yalnızca renkle verilmez: değişim değeri işaret (+/−) taşır, sinyal satırı yön etiketi taşır.
 - Hızlı erişim `nav` öğesi `aria-label` taşır. Sekmeler ve chip'ler `role="group"` içinde gerçek düğmelerdir.
 - Grafik tek başına bilgi taşımaz: aynı veri sinyal listesinde ve metrik satırlarında metin olarak vardır.
-- Mobilde dokunma hedefleri en az 44pt `[ASSUMPTION]`.
+- Mobilde dokunma hedefleri en az 44pt `[ASSUMPTION]`; yalnızca simgeden oluşan düğmeler `accessibilityRole` ve `accessibilityLabel` taşır.
+- Metin içindeki bağlantılar altı çizilidir; seçili chip ve sekmeler durumu kenarlıkla da gösterir, yalnızca renkle değil.
 
 ## Responsive & Platform
 

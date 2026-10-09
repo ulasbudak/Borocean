@@ -43,4 +43,4 @@ Yalnızca docs/initiative-borocean/ux-borocean/ux-borocean.md planındaki maddel
 ## Notes
 
 - Decision: 2026-10-09 — maddeler birbirinden bağımsız; ayrı Refactor sweep eklenmedi. 16.6 (denetim) 16.1'den sonra.
-- Open question: 16.2 için gezinme kütüphanesi (expo-router / React Navigation) seçimi; mobil mağaza yayını kararına bağlı.
+- Decision: 2026-10-10 — kullanıcı 16.2 için React Navigation'ı onayladı (mevcut ekranlara en az dokunan yol); mağaza yayını ileride.
