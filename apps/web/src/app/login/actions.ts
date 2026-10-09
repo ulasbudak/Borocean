@@ -2,12 +2,18 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { authErrorKey, type AuthErrorMessages } from "@borocean/shared";
+import {
+  authErrorKey,
+  isValidDisplayName,
+  normalizeDisplayName,
+  type AuthErrorMessages,
+} from "@borocean/shared";
 import { createClient } from "@/lib/supabase/server";
 import { getSiteOrigin } from "@/lib/site-origin";
 
 export type AuthFormState = {
   email: string;
+  displayName?: string;
   error?: keyof AuthErrorMessages;
   /** Sign-up succeeded but the address still has to be verified from the email link. */
   checkEmail?: boolean;
@@ -20,18 +26,23 @@ export async function authenticate(
   const email = String(formData.get("email") ?? "").trim();
   const password = String(formData.get("password") ?? "");
   const intent = formData.get("intent");
+  const displayName = normalizeDisplayName(String(formData.get("displayName") ?? ""));
   const supabase = await createClient();
 
   if (intent === "signup") {
+    if (!isValidDisplayName(displayName)) {
+      return { email, displayName, error: "displayNameInvalid" };
+    }
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
+        data: { display_name: displayName },
         emailRedirectTo: `${await getSiteOrigin()}/auth/oauth?next=/dashboard&flow=signup`,
       },
     });
     if (error) {
-      return { email, error: authErrorKey(error.code) };
+      return { email, displayName, error: authErrorKey(error.code) };
     }
     // With email confirmation on there is no session yet. (Supabase also answers this way
     // for an already-registered address, so we can't — and don't — tell the two apart.)

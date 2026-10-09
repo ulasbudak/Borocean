@@ -2,7 +2,12 @@
 
 import { cookies } from "next/headers";
 import { revalidatePath } from "next/cache";
-import { SUPPORTED_LOCALES, type Locale } from "@borocean/shared";
+import {
+  SUPPORTED_LOCALES,
+  isValidDisplayName,
+  normalizeDisplayName,
+  type Locale,
+} from "@borocean/shared";
 import { createClient } from "@/lib/supabase/server";
 import { LOCALE_COOKIE } from "@/lib/i18n/locale";
 
@@ -42,4 +47,20 @@ export async function setInterestSectors(sectors: string[]) {
   // the dashboard's Highlights reflects the new sectors on the very next load.
   await supabase.auth.refreshSession();
   revalidatePath("/", "layout");
+}
+
+export async function setDisplayName(value: string): Promise<{ ok: boolean }> {
+  const name = normalizeDisplayName(value);
+  if (!isValidDisplayName(name)) return { ok: false };
+
+  const supabase = await createClient();
+  const { data } = await supabase.auth.getClaims();
+  if (!data?.claims) return { ok: false };
+
+  const { error } = await supabase.auth.updateUser({ data: { display_name: name } });
+  if (error) return { ok: false };
+  // Same stale-JWT reason as setInterestSectors: the header/greeting read getClaims().
+  await supabase.auth.refreshSession();
+  revalidatePath("/", "layout");
+  return { ok: true };
 }

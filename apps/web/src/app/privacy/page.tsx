@@ -7,7 +7,7 @@ export const metadata = {
 
 export default function PrivacyPage() {
   return (
-    <LegalPage title="Gizlilik Politikası" updated="28 Eylül 2026">
+    <LegalPage title="Gizlilik Politikası" updated="9 Ekim 2026">
       <p>
         Borocean (&quot;biz&quot;), hisse senedi ve portföy analiz hizmeti sunan bir web ve mobil
         uygulamasıdır. Bu sayfa, hizmeti kullanırken hangi verileri topladığımızı, neden
@@ -18,7 +18,7 @@ export default function PrivacyPage() {
       <h2>Topladığımız veriler</h2>
       <ul>
         <li>
-          Hesap bilgileri: e-posta adresi ve şifre (Supabase Auth üzerinden güvenli şekilde
+          Hesap bilgileri: e-posta adresi, kullanıcı adı ve şifre (Supabase Auth üzerinden güvenli şekilde
           saklanır, biz düz metin şifreyi hiçbir zaman görmeyiz)
         </li>
         <li>

@@ -7,7 +7,12 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { authErrorKey } from "@borocean/shared";
+import {
+  DISPLAY_NAME_MAX,
+  authErrorKey,
+  isValidDisplayName,
+  normalizeDisplayName,
+} from "@borocean/shared";
 import { supabase } from "../lib/supabase";
 import { useLocale } from "../lib/locale-context";
 import { useTheme, radius, spacing, type ThemeColors } from "../lib/theme";
@@ -17,6 +22,7 @@ export function AuthScreen() {
   const { messages } = useLocale();
   const { colors } = useTheme();
   const styles = makeStyles(colors);
+  const [displayName, setDisplayName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -42,10 +48,18 @@ export function AuthScreen() {
   }
 
   async function signUpWithEmail() {
-    setLoading(true);
     setError(null);
     setNotice(null);
-    const { data, error } = await supabase.auth.signUp({ email: email.trim(), password });
+    if (!isValidDisplayName(displayName)) {
+      setError(messages.auth.errors.displayNameInvalid);
+      return;
+    }
+    setLoading(true);
+    const { data, error } = await supabase.auth.signUp({
+      email: email.trim(),
+      password,
+      options: { data: { display_name: normalizeDisplayName(displayName) } },
+    });
     if (error) {
       setError(messages.auth.errors[authErrorKey(error.code)]);
     } else if (!data.session) {
@@ -61,6 +75,16 @@ export function AuthScreen() {
     <View style={styles.container}>
       <View style={styles.card}>
         <Text style={styles.title}>{messages.common.appName}</Text>
+        <TextInput
+          style={styles.input}
+          placeholder={messages.auth.displayName}
+          placeholderTextColor={colors.textTertiary}
+          autoCapitalize="words"
+          maxLength={DISPLAY_NAME_MAX}
+          value={displayName}
+          onChangeText={setDisplayName}
+        />
+        <Text style={styles.fieldHint}>{messages.auth.displayNameHint}</Text>
         <TextInput
           style={styles.input}
           placeholder={messages.auth.email}
@@ -186,6 +210,11 @@ function makeStyles(colors: ThemeColors) {
       fontWeight: "600",
       textAlign: "center",
       marginTop: spacing[1],
+    },
+    fieldHint: {
+      color: colors.textTertiary,
+      fontSize: 11,
+      marginTop: -spacing[2],
     },
     hint: {
       color: colors.textTertiary,

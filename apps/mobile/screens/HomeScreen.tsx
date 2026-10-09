@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import * as Notifications from "expo-notifications";
 import type { Session } from "@supabase/supabase-js";
 import { SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { displayNameFrom } from "@borocean/shared";
 import { supabase } from "../lib/supabase";
 import { useLocale } from "../lib/locale-context";
 import { useTheme, radius, spacing, type ThemeColors } from "../lib/theme";
@@ -143,7 +144,10 @@ export function HomeScreen({ session }: { session: Session }) {
           </TouchableOpacity>
         </View>
         <Text style={styles.subtitle}>
-          {messages.dashboard.loggedInAs}: {session.user.email}
+          {messages.dashboard.greeting.replace(
+            "{name}",
+            displayNameFrom(session.user.user_metadata) ?? session.user.email ?? ""
+          )}
         </Text>
 
         <View style={styles.card}>

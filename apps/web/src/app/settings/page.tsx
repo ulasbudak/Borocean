@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { messages } from "@borocean/shared";
+import { displayNameFrom, messages } from "@borocean/shared";
 import { createClient } from "@/lib/supabase/server";
 import { getLocale } from "@/lib/i18n/locale";
 import { PageHeader } from "@/components/ui/page-header";
@@ -11,6 +11,7 @@ import { NotificationSettings } from "./notification-settings";
 import { InterestSectors } from "./interest-sectors";
 import { BillingCard } from "./billing-card";
 import { DeleteAccount } from "./delete-account";
+import { DisplayNameForm } from "./display-name";
 
 export default async function SettingsPage() {
   const supabase = await createClient();
@@ -29,6 +30,17 @@ export default async function SettingsPage() {
   return (
     <div className="mx-auto flex max-w-3xl flex-col gap-6 px-4 py-8">
       <PageHeader backHref="/dashboard" backLabel={t.settings.backToDashboard} title={t.settings.title} />
+
+      <Card>
+        <CardHeader>
+          <CardTitle>{t.settings.displayNameTitle}</CardTitle>
+        </CardHeader>
+        <DisplayNameForm
+          current={displayNameFrom(data.claims.user_metadata) ?? ""}
+          messages={t.settings}
+          authMessages={t.auth}
+        />
+      </Card>
 
       <Card>
         <CardHeader>

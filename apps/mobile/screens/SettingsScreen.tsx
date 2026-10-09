@@ -8,7 +8,15 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { ALL_SECTORS, translateSector, type Locale } from "@borocean/shared";
+import {
+  ALL_SECTORS,
+  DISPLAY_NAME_MAX,
+  displayNameFrom,
+  isValidDisplayName,
+  normalizeDisplayName,
+  translateSector,
+  type Locale,
+} from "@borocean/shared";
 import { useLocale } from "../lib/locale-context";
 import { useTheme, radius, spacing, type ThemeColors } from "../lib/theme";
 import { supabase } from "../lib/supabase";
@@ -33,12 +41,29 @@ export function SettingsScreen({ onBack }: { onBack: () => void }) {
   const [error, setError] = useState<string | null>(null);
   const [interestSectors, setInterestSectors] = useState<string[]>([]);
   const [entitlement, setEntitlement] = useState<Entitlement | null>(null);
+  const [displayName, setDisplayName] = useState("");
+  const [savingName, setSavingName] = useState(false);
+  const [nameStatus, setNameStatus] = useState<"saved" | "error" | null>(null);
   const [deleteConfirmText, setDeleteConfirmText] = useState("");
   const [deletingAccount, setDeletingAccount] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
 
   const deleteConfirmed =
     deleteConfirmText.trim().toLocaleUpperCase("tr") === messages.settings.deleteAccountConfirmWord;
+
+  async function saveDisplayName() {
+    if (!isValidDisplayName(displayName)) {
+      setNameStatus("error");
+      return;
+    }
+    setSavingName(true);
+    setNameStatus(null);
+    const { error: updateError } = await supabase.auth.updateUser({
+      data: { display_name: normalizeDisplayName(displayName) },
+    });
+    setNameStatus(updateError ? "error" : "saved");
+    setSavingName(false);
+  }
 
   async function handleDeleteAccount() {
     setDeletingAccount(true);
@@ -72,6 +97,7 @@ export function SettingsScreen({ onBack }: { onBack: () => void }) {
       const { data } = await supabase.auth.getUser();
       const stored = data.user?.user_metadata?.interest_sectors;
       if (!cancelled && Array.isArray(stored)) setInterestSectors(stored);
+      if (!cancelled) setDisplayName(displayNameFrom(data.user?.user_metadata) ?? "");
     }
 
     async function loadEntitlement() {
@@ -169,6 +195,36 @@ export function SettingsScreen({ onBack }: { onBack: () => void }) {
         <Text style={styles.backLink}>{messages.settings.backToDashboard}</Text>
       </TouchableOpacity>
       <Text style={styles.title}>{messages.settings.title}</Text>
+
+      <View style={styles.card}>
+        <Text style={styles.label}>{messages.settings.displayNameTitle}</Text>
+        <Text style={styles.hint}>{messages.settings.displayNameHint}</Text>
+        <TextInput
+          style={styles.input}
+          value={displayName}
+          maxLength={DISPLAY_NAME_MAX}
+          autoCapitalize="words"
+          onChangeText={(value) => {
+            setDisplayName(value);
+            setNameStatus(null);
+          }}
+        />
+        {nameStatus === "saved" && (
+          <Text style={styles.hint}>{messages.settings.displayNameSaved}</Text>
+        )}
+        {nameStatus === "error" && (
+          <Text style={styles.error}>{messages.auth.errors.displayNameInvalid}</Text>
+        )}
+        <TouchableOpacity
+          style={[styles.saveButton, savingName && styles.disabled]}
+          disabled={savingName}
+          onPress={saveDisplayName}
+        >
+          <Text style={styles.saveButtonText}>
+            {savingName ? messages.settings.displayNameSaving : messages.settings.displayNameSave}
+          </Text>
+        </TouchableOpacity>
+      </View>
 
       {entitlement && (
         <View style={styles.card}>
@@ -371,6 +427,16 @@ function makeStyles(colors: ThemeColors) {
       paddingHorizontal: spacing[3],
       paddingVertical: spacing[2],
       color: colors.textPrimary,
+    },
+    saveButton: {
+      backgroundColor: colors.accent,
+      borderRadius: radius.md,
+      paddingVertical: spacing[3],
+      alignItems: "center",
+    },
+    saveButtonText: {
+      color: colors.accentText,
+      fontWeight: "700",
     },
     dangerButton: {
       borderWidth: 1,

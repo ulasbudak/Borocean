@@ -27,6 +27,8 @@ export const en: Messages = {
     orDivider: "or",
     forgotPassword: "Forgot password?",
     forgotPasswordBrowserHint: "The password reset page opens in your browser. Once you set a new password, come back to the app and log in.",
+    displayName: "Username",
+    displayNameHint: "Required when signing up. Shown across the site instead of your email address.",
     forgotPasswordTitle: "Reset your password",
     forgotPasswordSubtitle: "Enter your account's email and we'll send you a password reset link.",
     sendResetLink: "Send reset link",
@@ -58,6 +60,7 @@ export const en: Messages = {
       rateLimited: "Too many attempts. Please try again in a few minutes.",
       samePassword: "Your new password must be different from the old one.",
       passwordMismatch: "Passwords don't match.",
+      displayNameInvalid: "Username must be 2–30 characters.",
       sessionMissing:
         "Your password reset session is missing or has expired. Please request a new link.",
       generic: "Something went wrong. Please try again.",
@@ -78,6 +81,8 @@ export const en: Messages = {
   dashboard: {
     title: "Dashboard",
     loggedInAs: "Logged in as",
+    greeting: "Hi, {name}",
+    setDisplayNamePrompt: "Set a username; it will be shown instead of your email address.",
     signOut: "Sign out",
     settingsLink: "Settings",
     quickAccess: "Quick access",
@@ -206,6 +211,11 @@ export const en: Messages = {
     on: "On",
     off: "Off",
     legalTitle: "Legal",
+    displayNameTitle: "Username",
+    displayNameHint: "Shown across the site instead of your email address (2–30 characters).",
+    displayNameSave: "Save",
+    displayNameSaving: "Saving...",
+    displayNameSaved: "Saved.",
     deleteAccountTitle: "Delete account",
     deleteAccountBody:
       "Your account and all data linked to it (watchlists, alerts, portfolios, simulations, notes, saved screens, notification settings) are permanently deleted. This cannot be undone.",

@@ -9,7 +9,7 @@ export const metadata = {
 // with any new table or third-party service.
 export default function KvkkPage() {
   return (
-    <LegalPage title="KVKK Aydınlatma Metni" updated="28 Eylül 2026">
+    <LegalPage title="KVKK Aydınlatma Metni" updated="9 Ekim 2026">
       <p>
         Bu metin, 6698 sayılı Kişisel Verilerin Korunması Kanunu (&quot;KVKK&quot;) m.10
         uyarınca, Borocean web ve mobil uygulamasını (&quot;Uygulama&quot;) kullanırken kişisel
@@ -25,8 +25,9 @@ export default function KvkkPage() {
       <h2>2. İşlenen kişisel veriler</h2>
       <ul>
         <li>
-          <strong>Kimlik ve iletişim:</strong> e-posta adresi; sosyal hesapla giriş etkinse
-          sağlayıcının paylaştığı ad ve e-posta.
+          <strong>Kimlik ve iletişim:</strong> e-posta adresi ve kayıt olurken seçtiğiniz
+          kullanıcı adı (uygulamada e-posta adresiniz yerine gösterilir; gerçek adınız olması
+          gerekmez); sosyal hesapla giriş etkinse sağlayıcının paylaştığı ad ve e-posta.
         </li>
         <li>
           <strong>Hesap güvenliği:</strong> şifrenin tek yönlü özeti (şifrenizi düz metin olarak

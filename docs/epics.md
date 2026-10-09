@@ -194,6 +194,10 @@ So that hisse hakkında hızlı bir ilk izlenim edinebileyim.
 
 - [x] **Tamamlandı (geriye dönük dokümante edildi)** — Detaylı kabul kriterleri ve görev tanımı için bkz. **`docs/stories/story-1.7.md`**. Kod 2026-09-26'da story dokümanı olmadan `5e29760` commit'iyle yayımlandı. Giriş/kayıt hataları formda satır içi ve çevrilmiş olarak gösterilir (`authErrorKey`, web + mobil); canlıda "Confirm email" açık olduğundan kayıt sonrası "e-postanı doğrula" ekranı gösterilir; web'e `/forgot-password` → `/reset-password` akışı ve tasarlanmış `/error` sayfası eklendi. **Mobil (2026-09-28):** "Şifremi unuttum" bağlantısı web sıfırlama akışını cihaz tarayıcısında açıyor (PKCE doğrulayıcısı tarayıcıda olduğu için); doğrulama bildirimi zaten vardı.
 
+### Story 1.8: Kullanıcı Adı ve Panelde Üst Menü
+
+- [x] **Tamamlandı** — bkz. **`docs/stories/story-1.8.md`**. Kullanıcı isteği (2026-10-09). Kayıtta kullanıcı adı soruluyor (`user_metadata.display_name`). Sitede e-posta yerine ad görünüyor ve ayarlardan değiştirilebiliyor (web + mobil). Panel'deki hızlı erişim menüsü en üste taşındı.
+
 ---
 
 ## 6. Epic 2: Temel Analiz (Fundamental)

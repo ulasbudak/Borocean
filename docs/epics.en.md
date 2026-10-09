@@ -196,6 +196,10 @@ So that I can get a quick first impression of the stock.
 
 - [x] **Done (documented retroactively)** — For detailed acceptance criteria and the task breakdown see **`docs/stories/story-1.7.md`**. The code shipped on 2026-09-26 in commit `5e29760` without a story document. Sign-in/sign-up errors are shown inline on the form and translated (`authErrorKey`, web + mobile); since "Confirm email" is on in production, a "verify your email" screen is shown after sign-up; the web gained a `/forgot-password` → `/reset-password` flow and a designed `/error` page. **Mobile (2026-09-28):** a "Forgot password?" link opens the web reset flow in the device browser (the PKCE verifier lives in the browser); the verification notice already existed.
 
+### Story 1.8: Username and Top Menu on the Dashboard
+
+- [x] **Done** — see **`docs/stories/story-1.8.md`**. User request (2026-10-09). Sign-up asks for a username (`user_metadata.display_name`). The site shows it instead of the email address, and it can be changed in settings (web + mobile). The dashboard's quick-access menu moved to the top.
+
 ---
 
 ## 6. Epic 2: Fundamental Analysis

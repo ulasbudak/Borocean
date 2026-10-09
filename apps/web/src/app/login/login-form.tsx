@@ -2,7 +2,7 @@
 
 import { useActionState } from "react";
 import Link from "next/link";
-import { Lock, Mail } from "lucide-react";
+import { Lock, Mail, User } from "lucide-react";
 import type { Messages } from "@borocean/shared";
 import { Field, IconInput, Label } from "@/components/ui/input";
 import {
@@ -53,6 +53,19 @@ export function LoginForm({
         {state.error && (
           <Notice tone="error">{messages.errors[state.error]}</Notice>
         )}
+        <Field>
+          <Label htmlFor="displayName">{messages.displayName}</Label>
+          <IconInput
+            icon={<User size={16} />}
+            id="displayName"
+            name="displayName"
+            type="text"
+            autoComplete="nickname"
+            maxLength={30}
+            defaultValue={state.displayName}
+          />
+          <p className="mt-1 text-xs text-text-tertiary">{messages.displayNameHint}</p>
+        </Field>
         <Field>
           <Label htmlFor="email">{messages.email}</Label>
           <IconInput

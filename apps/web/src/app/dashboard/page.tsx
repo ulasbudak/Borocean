@@ -11,7 +11,7 @@ import {
   SlidersHorizontal,
   Wallet,
 } from "lucide-react";
-import { messages } from "@borocean/shared";
+import { displayNameFrom, messages } from "@borocean/shared";
 import { createClient } from "@/lib/supabase/server";
 import { getLocale } from "@/lib/i18n/locale";
 import { Card } from "@/components/ui/card";
@@ -34,7 +34,9 @@ export default async function DashboardPage() {
   const locale = await getLocale();
   const t = messages[locale];
   const email = claims.email ?? "";
-  const initial = email.charAt(0).toUpperCase() || "?";
+  const displayName = displayNameFrom(claims.user_metadata);
+  const shownName = displayName ?? email;
+  const initial = shownName.charAt(0).toLocaleUpperCase(locale) || "?";
 
   return (
     <div className="mx-auto flex max-w-3xl flex-col gap-8 px-4 py-8">
@@ -42,7 +44,7 @@ export default async function DashboardPage() {
         <Logo size="sm" />
         <div className="flex items-center gap-3">
           <div
-            title={email}
+            title={shownName}
             className="flex h-8 w-8 items-center justify-center rounded-full bg-surface-elevated text-xs font-semibold text-text-secondary ring-1 ring-border-default"
           >
             {initial}
@@ -60,10 +62,92 @@ export default async function DashboardPage() {
       </header>
 
       <div>
-        <p className="mb-2 text-sm text-text-secondary">
-          {t.dashboard.loggedInAs}: <span className="text-text-primary">{email}</span>
+        <p className="text-lg font-semibold text-text-primary">
+          {t.dashboard.greeting.replace("{name}", shownName)}
         </p>
+        {!displayName && (
+          <Link href="/settings" className="mt-1 inline-block text-xs text-accent hover:underline">
+            {t.dashboard.setDisplayNamePrompt}
+          </Link>
+        )}
       </div>
+
+      <section>
+        <nav aria-label={t.dashboard.quickAccess} className="grid grid-cols-4 gap-2 sm:grid-cols-8">
+          <Link
+            href="/watchlist"
+            className="group flex flex-col items-center gap-1.5 rounded-lg border border-border-subtle bg-surface px-1 py-3 text-center transition-all hover:-translate-y-0.5 hover:border-accent/50 hover:shadow-lg hover:shadow-black/20"
+          >
+            <div className="flex h-8 w-8 items-center justify-center rounded-md bg-surface-hover text-text-secondary group-hover:text-accent">
+              <Bookmark size={16} />
+            </div>
+            <span className="text-xs font-medium leading-tight text-text-primary">{t.watchlist.title}</span>
+          </Link>
+          <Link
+            href="/portfolio"
+            className="group flex flex-col items-center gap-1.5 rounded-lg border border-border-subtle bg-surface px-1 py-3 text-center transition-all hover:-translate-y-0.5 hover:border-accent/50 hover:shadow-lg hover:shadow-black/20"
+          >
+            <div className="flex h-8 w-8 items-center justify-center rounded-md bg-surface-hover text-text-secondary group-hover:text-accent">
+              <Wallet size={16} />
+            </div>
+            <span className="text-xs font-medium leading-tight text-text-primary">{t.portfolio.title}</span>
+          </Link>
+          <Link
+            href="/alerts"
+            className="group flex flex-col items-center gap-1.5 rounded-lg border border-border-subtle bg-surface px-1 py-3 text-center transition-all hover:-translate-y-0.5 hover:border-accent/50 hover:shadow-lg hover:shadow-black/20"
+          >
+            <div className="flex h-8 w-8 items-center justify-center rounded-md bg-surface-hover text-text-secondary group-hover:text-accent">
+              <Bell size={16} />
+            </div>
+            <span className="text-xs font-medium leading-tight text-text-primary">{t.alerts.title}</span>
+          </Link>
+          <Link
+            href="/signal-alerts"
+            className="group flex flex-col items-center gap-1.5 rounded-lg border border-border-subtle bg-surface px-1 py-3 text-center transition-all hover:-translate-y-0.5 hover:border-accent/50 hover:shadow-lg hover:shadow-black/20"
+          >
+            <div className="flex h-8 w-8 items-center justify-center rounded-md bg-surface-hover text-text-secondary group-hover:text-accent">
+              <Radio size={16} />
+            </div>
+            <span className="text-xs font-medium leading-tight text-text-primary">{t.signalAlerts.title}</span>
+          </Link>
+          <Link
+            href="/screener"
+            className="group flex flex-col items-center gap-1.5 rounded-lg border border-border-subtle bg-surface px-1 py-3 text-center transition-all hover:-translate-y-0.5 hover:border-accent/50 hover:shadow-lg hover:shadow-black/20"
+          >
+            <div className="flex h-8 w-8 items-center justify-center rounded-md bg-surface-hover text-text-secondary group-hover:text-accent">
+              <SlidersHorizontal size={16} />
+            </div>
+            <span className="text-xs font-medium leading-tight text-text-primary">{t.screener.title}</span>
+          </Link>
+          <Link
+            href="/compare"
+            className="group flex flex-col items-center gap-1.5 rounded-lg border border-border-subtle bg-surface px-1 py-3 text-center transition-all hover:-translate-y-0.5 hover:border-accent/50 hover:shadow-lg hover:shadow-black/20"
+          >
+            <div className="flex h-8 w-8 items-center justify-center rounded-md bg-surface-hover text-text-secondary group-hover:text-accent">
+              <Columns3 size={16} />
+            </div>
+            <span className="text-xs font-medium leading-tight text-text-primary">{t.comparison.title}</span>
+          </Link>
+          <Link
+            href="/simulation"
+            className="group flex flex-col items-center gap-1.5 rounded-lg border border-border-subtle bg-surface px-1 py-3 text-center transition-all hover:-translate-y-0.5 hover:border-accent/50 hover:shadow-lg hover:shadow-black/20"
+          >
+            <div className="flex h-8 w-8 items-center justify-center rounded-md bg-surface-hover text-text-secondary group-hover:text-accent">
+              <LineChart size={16} />
+            </div>
+            <span className="text-xs font-medium leading-tight text-text-primary">{t.simulation.title}</span>
+          </Link>
+          <Link
+            href="/settings"
+            className="group flex flex-col items-center gap-1.5 rounded-lg border border-border-subtle bg-surface px-1 py-3 text-center transition-all hover:-translate-y-0.5 hover:border-accent/50 hover:shadow-lg hover:shadow-black/20"
+          >
+            <div className="flex h-8 w-8 items-center justify-center rounded-md bg-surface-hover text-text-secondary group-hover:text-accent">
+              <SettingsIcon size={16} />
+            </div>
+            <span className="text-xs font-medium leading-tight text-text-primary">{t.dashboard.settingsLink}</span>
+          </Link>
+        </nav>
+      </section>
 
       <section>
         <p className="mb-3 text-xs font-medium uppercase tracking-wide text-text-tertiary">
@@ -90,85 +174,6 @@ export default async function DashboardPage() {
         <BulletinSection messages={t.bulletin} locale={locale} />
       </section>
 
-      <section>
-        <p className="mb-3 text-xs font-medium uppercase tracking-wide text-text-tertiary">
-          {t.dashboard.quickAccess}
-        </p>
-        <nav className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-          <Link
-            href="/watchlist"
-            className="group flex flex-col gap-3 rounded-lg border border-border-subtle bg-surface p-4 transition-all hover:-translate-y-0.5 hover:border-accent/50 hover:shadow-lg hover:shadow-black/20"
-          >
-            <div className="flex h-9 w-9 items-center justify-center rounded-md bg-surface-hover text-text-secondary">
-              <Bookmark size={18} />
-            </div>
-            <span className="text-sm font-medium text-text-primary">{t.watchlist.title}</span>
-          </Link>
-          <Link
-            href="/portfolio"
-            className="group flex flex-col gap-3 rounded-lg border border-border-subtle bg-surface p-4 transition-all hover:-translate-y-0.5 hover:border-accent/50 hover:shadow-lg hover:shadow-black/20"
-          >
-            <div className="flex h-9 w-9 items-center justify-center rounded-md bg-surface-hover text-text-secondary">
-              <Wallet size={18} />
-            </div>
-            <span className="text-sm font-medium text-text-primary">{t.portfolio.title}</span>
-          </Link>
-          <Link
-            href="/alerts"
-            className="group flex flex-col gap-3 rounded-lg border border-border-subtle bg-surface p-4 transition-all hover:-translate-y-0.5 hover:border-accent/50 hover:shadow-lg hover:shadow-black/20"
-          >
-            <div className="flex h-9 w-9 items-center justify-center rounded-md bg-surface-hover text-text-secondary">
-              <Bell size={18} />
-            </div>
-            <span className="text-sm font-medium text-text-primary">{t.alerts.title}</span>
-          </Link>
-          <Link
-            href="/signal-alerts"
-            className="group flex flex-col gap-3 rounded-lg border border-border-subtle bg-surface p-4 transition-all hover:-translate-y-0.5 hover:border-accent/50 hover:shadow-lg hover:shadow-black/20"
-          >
-            <div className="flex h-9 w-9 items-center justify-center rounded-md bg-surface-hover text-text-secondary">
-              <Radio size={18} />
-            </div>
-            <span className="text-sm font-medium text-text-primary">{t.signalAlerts.title}</span>
-          </Link>
-          <Link
-            href="/screener"
-            className="group flex flex-col gap-3 rounded-lg border border-border-subtle bg-surface p-4 transition-all hover:-translate-y-0.5 hover:border-accent/50 hover:shadow-lg hover:shadow-black/20"
-          >
-            <div className="flex h-9 w-9 items-center justify-center rounded-md bg-surface-hover text-text-secondary">
-              <SlidersHorizontal size={18} />
-            </div>
-            <span className="text-sm font-medium text-text-primary">{t.screener.title}</span>
-          </Link>
-          <Link
-            href="/compare"
-            className="group flex flex-col gap-3 rounded-lg border border-border-subtle bg-surface p-4 transition-all hover:-translate-y-0.5 hover:border-accent/50 hover:shadow-lg hover:shadow-black/20"
-          >
-            <div className="flex h-9 w-9 items-center justify-center rounded-md bg-surface-hover text-text-secondary">
-              <Columns3 size={18} />
-            </div>
-            <span className="text-sm font-medium text-text-primary">{t.comparison.title}</span>
-          </Link>
-          <Link
-            href="/simulation"
-            className="group flex flex-col gap-3 rounded-lg border border-border-subtle bg-surface p-4 transition-all hover:-translate-y-0.5 hover:border-accent/50 hover:shadow-lg hover:shadow-black/20"
-          >
-            <div className="flex h-9 w-9 items-center justify-center rounded-md bg-surface-hover text-text-secondary">
-              <LineChart size={18} />
-            </div>
-            <span className="text-sm font-medium text-text-primary">{t.simulation.title}</span>
-          </Link>
-          <Link
-            href="/settings"
-            className="group flex flex-col gap-3 rounded-lg border border-border-subtle bg-surface p-4 transition-all hover:-translate-y-0.5 hover:border-accent/50 hover:shadow-lg hover:shadow-black/20"
-          >
-            <div className="flex h-9 w-9 items-center justify-center rounded-md bg-surface-hover text-text-secondary">
-              <SettingsIcon size={18} />
-            </div>
-            <span className="text-sm font-medium text-text-primary">{t.dashboard.settingsLink}</span>
-          </Link>
-        </nav>
-      </section>
     </div>
   );
 }

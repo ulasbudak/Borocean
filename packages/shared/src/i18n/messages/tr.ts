@@ -27,6 +27,8 @@ export const tr: Messages = {
     orDivider: "veya",
     forgotPassword: "Şifremi unuttum",
     forgotPasswordBrowserHint: "Şifre sıfırlama sayfası tarayıcında açılır. Yeni şifreni belirledikten sonra uygulamaya dönüp giriş yap.",
+    displayName: "Kullanıcı adı",
+    displayNameHint: "Kayıt olurken gerekli. Sitede e-posta adresin yerine bu ad görünür.",
     forgotPasswordTitle: "Şifreni sıfırla",
     forgotPasswordSubtitle: "Hesabının e-posta adresini gir, sana şifre sıfırlama bağlantısı gönderelim.",
     sendResetLink: "Sıfırlama bağlantısı gönder",
@@ -58,6 +60,7 @@ export const tr: Messages = {
       rateLimited: "Çok fazla deneme yapıldı. Lütfen birkaç dakika sonra tekrar dene.",
       samePassword: "Yeni şifren eski şifrenden farklı olmalı.",
       passwordMismatch: "Şifreler eşleşmiyor.",
+      displayNameInvalid: "Kullanıcı adı 2–30 karakter olmalı.",
       sessionMissing:
         "Şifre sıfırlama oturumun bulunamadı ya da süresi doldu. Lütfen yeni bir bağlantı iste.",
       generic: "İşlem tamamlanamadı. Lütfen tekrar dene.",
@@ -78,6 +81,8 @@ export const tr: Messages = {
   dashboard: {
     title: "Panel",
     loggedInAs: "Giriş yapıldı",
+    greeting: "Merhaba, {name}",
+    setDisplayNamePrompt: "Bir kullanıcı adı belirle; sitede e-posta adresin yerine o görünecek.",
     signOut: "Çıkış Yap",
     settingsLink: "Ayarlar",
     quickAccess: "Hızlı erişim",
@@ -206,6 +211,11 @@ export const tr: Messages = {
     on: "Açık",
     off: "Kapalı",
     legalTitle: "Hukuki metinler",
+    displayNameTitle: "Kullanıcı adı",
+    displayNameHint: "Sitede e-posta adresin yerine bu ad görünür (2–30 karakter).",
+    displayNameSave: "Kaydet",
+    displayNameSaving: "Kaydediliyor...",
+    displayNameSaved: "Kaydedildi.",
     deleteAccountTitle: "Hesabı sil",
     deleteAccountBody:
       "Hesabın ve ona bağlı tüm verilerin (izleme listeleri, alarmlar, portföyler, simülasyonlar, notlar, kayıtlı taramalar, bildirim ayarları) kalıcı olarak silinir. Bu işlem geri alınamaz.",

@@ -15,7 +15,7 @@ class Settings(BaseSettings):
     google_api_key: str = ""
     gemini_model: str = "gemini-3.6-flash"
     resend_api_key: str = ""
-    notification_from_email: str = "Borocean <alerts@borocean.app>"
+    notification_from_email: str = "Borocean <noreply@borocean.com>"
     cors_origins: str = "http://localhost:3000,http://localhost:8081"
     # Epic 13: shared secret pg_cron sends as X-Cron-Secret to POST /internal/insights/run.
     cron_secret: str = ""

@@ -7,6 +7,7 @@ export interface AuthErrorMessages {
   rateLimited: string;
   samePassword: string;
   passwordMismatch: string;
+  displayNameInvalid: string;
   sessionMissing: string;
   generic: string;
 }
@@ -38,6 +39,8 @@ export interface Messages {
     orDivider: string;
     forgotPassword: string;
     forgotPasswordBrowserHint: string;
+    displayName: string;
+    displayNameHint: string;
     forgotPasswordTitle: string;
     forgotPasswordSubtitle: string;
     sendResetLink: string;
@@ -71,6 +74,8 @@ export interface Messages {
   dashboard: {
     title: string;
     loggedInAs: string;
+    greeting: string;
+    setDisplayNamePrompt: string;
     signOut: string;
     settingsLink: string;
     quickAccess: string;
@@ -198,6 +203,11 @@ export interface Messages {
     on: string;
     off: string;
     legalTitle: string;
+    displayNameTitle: string;
+    displayNameHint: string;
+    displayNameSave: string;
+    displayNameSaving: string;
+    displayNameSaved: string;
     deleteAccountTitle: string;
     deleteAccountBody: string;
     deleteAccountButton: string;
