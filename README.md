@@ -1,8 +1,21 @@
 # Borocean
 
-Amerikan (NYSE/NASDAQ) ve Türkiye (BIST) borsalarındaki hisseleri temel ve teknik analiz parametreleriyle değerlendiren bir borsa takip uygulaması.
+Amerikan (NYSE/NASDAQ) ve Türkiye (BIST) borsalarındaki hisseleri temel ve teknik analiz parametreleriyle değerlendiren bir borsa takip uygulaması. BIST şimdilik devre dışı; canlı fiyat kaynağı bulunduğunda tek bir bayrakla açılacak.
 
-İlgili dokümanlar (Türkçe / [English](README.en.md)): [`docs/PRD.md`](docs/PRD.md) ([EN](docs/PRD.en.md)), [`docs/architecture.md`](docs/architecture.md) ([EN](docs/architecture.en.md)), [`docs/epics.md`](docs/epics.md) ([EN](docs/epics.en.md)), [`docs/product-brief-epic9-ai.md`](docs/product-brief-epic9-ai.md) ([EN](docs/product-brief-epic9-ai.en.md)).
+**Canlı:** https://borocean.com · API: `https://trendus-api.onrender.com`
+
+Başlıca özellikler:
+- Hisse arama, genel bakış, temel analiz ve sektör kıyaslaması
+- Gösterge ve çizim araçlı fiyat grafiği, kural bazlı sinyaller, metrik puanı
+- Tarama ve karşılaştırma
+- İzleme listesi, fiyat ve sinyal alarmları
+- Portföy takibi ve her sabahki portföy gelişme taraması
+- Alım-satım simülasyonu
+- Yapay zeka destekli analiz raporları ve günlük sektör bülteni
+
+Uygulama yatırım danışmanlığı yapmaz; kurallar için bkz. [`docs/compliance.md`](docs/compliance.md).
+
+İlgili dokümanlar (Türkçe / [English](README.en.md)): [`docs/PRD.md`](docs/PRD.md) ([EN](docs/PRD.en.md)), [`docs/architecture.md`](docs/architecture.md) ([EN](docs/architecture.en.md)), [`docs/epics.md`](docs/epics.md) ([EN](docs/epics.en.md)), [`docs/product-brief-epic9-ai.md`](docs/product-brief-epic9-ai.md) ([EN](docs/product-brief-epic9-ai.en.md)), [`docs/product-brief-epic13-portfolio-insights.md`](docs/product-brief-epic13-portfolio-insights.md) ([EN](docs/product-brief-epic13-portfolio-insights.en.md)), [`docs/compliance.md`](docs/compliance.md). Story dokümanları: [`docs/stories/`](docs/stories/).
 
 Türkçe dokümanlar kaynak metindir (source of truth); İngilizce versiyonlar her güncellemede eşlenir. Bkz. [`LICENSE`](LICENSE) — bu proje kapalı kaynaklı, tüm hakları saklıdır.
 

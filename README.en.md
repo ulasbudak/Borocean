@@ -2,9 +2,22 @@
 
 *This is the English translation of [`README.md`](README.md), which remains the source of truth.*
 
-A stock-tracking app that evaluates stocks on the American (NYSE/NASDAQ) and Turkish (BIST) exchanges using fundamental and technical analysis parameters.
+A stock-tracking app that evaluates stocks on the American (NYSE/NASDAQ) and Turkish (BIST) exchanges using fundamental and technical analysis parameters. BIST is disabled for now; it will be switched on with a single flag once a live price source is found.
 
-Related documents (English / [Türkçe](README.md)): [`docs/PRD.en.md`](docs/PRD.en.md) ([TR](docs/PRD.md)), [`docs/architecture.en.md`](docs/architecture.en.md) ([TR](docs/architecture.md)), [`docs/epics.en.md`](docs/epics.en.md) ([TR](docs/epics.md)), [`docs/product-brief-epic9-ai.en.md`](docs/product-brief-epic9-ai.en.md) ([TR](docs/product-brief-epic9-ai.md)).
+**Live:** https://borocean.com · API: `https://trendus-api.onrender.com`
+
+Main features:
+- Stock search, overview, fundamental analysis and sector comparison
+- Price chart with indicators and drawing tools, rule-based signals, metric score
+- Screening and comparison
+- Watchlists, price and signal alerts
+- Portfolio tracking and a morning portfolio update scan
+- Paper-trading simulation
+- AI-assisted analysis reports and a daily sector bulletin
+
+The app does not provide investment advice; for the rules see [`docs/compliance.md`](docs/compliance.md).
+
+Related documents (English / [Türkçe](README.md)): [`docs/PRD.en.md`](docs/PRD.en.md) ([TR](docs/PRD.md)), [`docs/architecture.en.md`](docs/architecture.en.md) ([TR](docs/architecture.md)), [`docs/epics.en.md`](docs/epics.en.md) ([TR](docs/epics.md)), [`docs/product-brief-epic9-ai.en.md`](docs/product-brief-epic9-ai.en.md) ([TR](docs/product-brief-epic9-ai.md)), [`docs/product-brief-epic13-portfolio-insights.en.md`](docs/product-brief-epic13-portfolio-insights.en.md) ([TR](docs/product-brief-epic13-portfolio-insights.md)), [`docs/compliance.md`](docs/compliance.md) (Turkish). Story documents: [`docs/stories/`](docs/stories/).
 
 The Turkish documents are the source of truth; the English versions are kept in sync on every update. See [`LICENSE`](LICENSE) — this project is closed-source, all rights reserved.
 
