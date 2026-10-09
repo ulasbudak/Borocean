@@ -2,7 +2,7 @@
 type: epic
 title: "Kod inceleme bulgularının düzeltilmesi (2026-10-09)"
 parent: initiative-borocean
-covers: [FR-001, FR-030, FR-042, FR-043, FR-050, FR-061, FR-100, FR-101, FR-111, FR-112]
+covers: [FR-001, FR-030, FR-042, FR-043, FR-050, FR-061, FR-100, FR-101, FR-111, FR-112, FR-142]
 after: []
 assignee: ""
 risk: high
@@ -30,6 +30,7 @@ Tüm kod tabanı incelemesinde (docs/initiative-borocean/review-codebase-2026-10
 - FR-101: Sistem, fiyat grafiğinden üretilen bir candlestick görüntüsü üzerinde, **önceden eğitilmiş bir görüntü-tanıma (CV) modeliyle** grafik okuması yapmalıdır (model seçimi ve gerekçesi: `docs/product-brief-epic9-ai.md` §"2026-09-18 Güncellemesi" — MIT lisanslı, hazır ağırlıklı bir YOLOv8 modeli). Çıktı, mevcut sinyal motoruyla (FR-024) aynı hukuki çerçevede, deterministik skordan **ayrı ve açıkça etiketlenmiş bir "modelin okuması"** olarak sunulmalı; "AI trading stratejisi" gibi tavsiye niteliğinde bir dille konumlandırılmamalıdır (bkz. Bölüm 9, yatırım danışmanlığı sınırı). Bu özellik premium katmana bağlıdır ve sembol başına önbelleğe alınır.
 - FR-111: Sistem, simülasyon içinde bir sembol için alım/satım emri verildiğinde, emri **kullanıcının girdiği bir fiyattan değil, o anki gerçek piyasa fiyatından** yürütmelidir. Alım emri, emrin maliyeti simülasyonun nakit bakiyesini aşıyorsa reddedilmelidir; satım emri, elde tutulan miktarı aşıyorsa reddedilmelidir. Yalnızca ABD hisseleri desteklenir (BIST için canlı fiyat kaynağı yok, bkz. FR-041).
 - FR-112: Sistem, her simülasyon için günlük toplam değer (nakit + pozisyon değeri) ve kâr/zarar geçmişini göstermelidir. Zamanlanmış bir arka plan işi (cron) kurulmadığından (bkz. mimari kısıt, Epic 9/Story 9.3'te de aynı yaklaşım), günün kaydı kullanıcı simülasyonu her açtığında veya her emirden sonra yeniden hesaplanır; geçmiş günlerin kayıtları bir daha değiştirilmez.
+- FR-142: Sistem, önemli olay tespit edilen semboller için kamuya açık verilere dayanan kısa bir AI notu üretmelidir ("Ne oldu / Veride neyi değiştiriyor / Riskler"). Not sembol başına bir kez üretilmeli (kullanıcı bazlı değil), FR-130'a uymalı ve günlük bir LLM bütçesiyle sınırlanmalıdır. Bütçe aşılırsa olay, notsuz olarak gösterilmelidir.
 
 ## Done when
 

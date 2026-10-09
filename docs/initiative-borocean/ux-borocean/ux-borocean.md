@@ -46,4 +46,4 @@ Başka epic'lerde zaten olan UX işleri (burada tekrar edilmedi):
 | `accent` / `surface` | 5.02 ✓ | 5.17 ✓ | Bağlantı |
 | `text-secondary` / `surface` | 7.27 ✓ | 7.58 ✓ | Etiket |
 
-16.1'in önerisi: yeni token değerleri `packages/shared/src/theme/tokens.ts`, `globals.css` ve mobil `theme.ts`'te birlikte değişir; değerler ölçülerek seçilir ve DESIGN.md güncellenir.
+**16.1 sonrası (2026-10-09):** `text-tertiary` koyu `#848C98` (4.76–5.80), açık `#5F6E82` (4.75–5.20); koyu düğme metni `#0A0B0D` (5.35); açık `positive` `#15803D` (4.58–5.02), `warning` `#B45309` (4.58–5.02), `negative` `#B91C1C` (5.91–6.47). Aralıklar canvas, surface, surface-hover ve surface-elevated üzerindedir.

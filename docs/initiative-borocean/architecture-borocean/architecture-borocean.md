@@ -87,12 +87,8 @@ Bağımlılık yönü bir kuraldır: istemciler `packages/shared`'a bağlanabili
   - Bütçe aşılınca kullanıcıya açıklayıcı bir uyarı döner; sessiz boşluk olmaz.
   - Sağlayıcı verisi üzerinde tutulan her önbelleğin anahtarı `(symbol, exchange)`'dir.
   - BIST, `BIST_ENABLED` bayrağıyla kapalıdır.
-- **Bilinen sapmalar (2026-10-09):**
-  - `fundamentals.py`, `insight_sources.py` ve `screener.py` Finnhub'ı doğrudan çağırıyor.
-  - Finnhub için hiç bütçe yok; Twelve Data için yalnızca dakikalık kilit var.
-  - `alerts.py` BIST dışındaki her borsayı ABD fiyatıyla değerlendiriyor.
-  - Run içi fiyat önbellekleri yalnızca `symbol` ile anahtarlanıyor.
-  - Kapatan ticket'lar: 15.2 (bütçe ve tek kapı), 11.1 (borsa çözümlemesi).
+- **Uygulama (15.2):** Finnhub çağrıları `market_data.finnhub_get` üzerinden yapılır. `FINNHUB_BUDGET` ve `TWELVEDATA_BUDGET` sağlayıcı bütçeleridir. Arka plan işleri `background_lane()` içinde çalışır. Fiyat önbelleği 60 saniye, profil önbelleği 24 saat tutulur; ikisinin de anahtarı `(symbol, exchange)`'dir.
+- **Kalan sapmalar:** `alerts.py` BIST dışındaki her borsayı ABD fiyatıyla değerlendiriyor, ve run içi fiyat önbellekleri yalnızca `symbol` ile anahtarlanıyor. İkisini de ticket 11.1 kapatacak.
 
 ### AD-6 — Zaman serisi depolama [RETIRED 2026-10-09]
 
@@ -111,7 +107,7 @@ Bağımlılık yönü bir kuraldır: istemciler `packages/shared`'a bağlanabili
 - **Binds:** insight_runner, alert_runner ve gelecekteki tüm periyodik işler
 - **Prevents:** Ayrı bir worker veya beat sürecine ihtiyaç duyulması (Render ücretsiz plan); aynı işin iki kez çalışıp çift bildirim göndermesi; bir varlık sınıfının başka bir piyasanın saatleriyle değerlendirilmesi.
 - **Rule:** Periyodik bir iş, Supabase `pg_cron` + `pg_net` ile `POST /internal/<iş>/run` çağrısı olarak kurulur. Çağrı Vault'taki `insights_cron_secret`'ı `X-Cron-Secret` başlığında taşır. Bu sır Render'daki `CRON_SECRET` ile aynı olmalıdır; biri değişince ikisi birlikte değişir. Uç nokta sırrı `_check_cron_secret` ile doğrular, 202 döner ve işi süreç içinde bir `asyncio` görevi olarak başlatır. Bir iş `(bağlam, borsa grubu)` ile tanımlanır (örneğin `alerts:price:US`, ileride `alerts:price:CRYPTO`). Zamanlaması o borsa grubunun piyasa saatlerinden gelir. Aynı kimlikle yalnızca bir iş aynı anda çalışır ve iş idempotenttir. Zamanlama SQL'i `apps/api/scripts/setup_<iş>_cron.sql` dosyasında durur; `pg_net` zaman aşımı 60 saniyedir, Render'ın uyanma süresini karşılar.
-- **Bilinen sapma:** Sektör bülteni zamanlanmış bir iş değil. Sayfa açılınca tek-uçuş koruması olmadan üretiliyor (ticket 15.6).
+- **Not:** Sektör bülteni zamanlanmış bir iş değil; sayfa açılınca üretilir. Ancak artık süreç içinde tek-uçuştur ve başarısızlık 10 dakika hatırlanır (15.6).
 
 ### AD-9 — Tek grafik motoru [ADOPTED]
 
@@ -136,7 +132,7 @@ Bağımlılık yönü bir kuraldır: istemciler `packages/shared`'a bağlanabili
 
 - **Binds:** ai_fundamental, ai_technical, ai_combined, bulletins, insights
 - **Prevents:** Her sayfa açılışında Gemini çağrısı yapılması ve kotanın tükenmesi; iki dildeki çıktının birbirinin üstüne yazılması.
-- **Rule:** AI çıktıları Postgres'te saklanır (`ai_reports`, `sector_bulletins`, `symbol_insights`). Aynı anahtar, sürüm ve gün için tekrar kullanılır. Arka plan işleri günlük üst sınırla çalışır. AI metni, kullanıcının arayüz dilinde üretilir (kullanıcı kararı 2026-10-09). `locale` önbellek anahtarının parçasıdır ve iki dil birbirinin üstüne yazmaz. Bugün metinler yalnızca Türkçe üretiliyor; bu bilinen sapma ve ticket 15.11 ile kapanacak. Kullanıcı isteğiyle üretilen yeni bir AI türü de saklanır; doğrudan ve önbelleksiz çağrı yasaktır. Gemini modeli `config.gemini_model`'de tek yerde tanımlıdır.
+- **Rule:** AI çıktıları Postgres'te saklanır (`ai_reports`, `sector_bulletins`, `symbol_insights`). Aynı anahtar, sürüm ve gün için tekrar kullanılır. Arka plan işleri günlük üst sınırla çalışır. AI metni, kullanıcının arayüz dilinde üretilir (kullanıcı kararı 2026-10-09). `locale` önbellek anahtarının parçasıdır ve iki dil birbirinin üstüne yazmaz. Raporlar ve bülten bunu uyguluyor (15.11, migration `0014_ai_locale.sql`). Portföy gelişme notları henüz yalnızca Türkçe üretiliyor; bu bilinen sapma ve ticket 15.12 ile kapanacak. Kullanıcı isteğiyle üretilen yeni bir AI türü de saklanır; doğrudan ve önbelleksiz çağrı yasaktır. Gemini modeli `config.gemini_model`'de tek yerde tanımlıdır.
 
 ### AD-13 — Dil [ADOPTED]
 
@@ -167,7 +163,7 @@ Bağımlılık yönü bir kuraldır: istemciler `packages/shared`'a bağlanabili
 - **Binds:** apps/api (tüm endpoint'ler ve `*_runner.py`)
 - **Prevents:** Senkron bir sorgunun olay döngüsünü bloke edip bir kullanıcının ya da sabah taramasının diğer tüm istekleri durdurması.
 - **Rule:** Senkron `psycopg` çağrısı `async def` içinden doğrudan yapılmaz. DB kullanan bir endpoint ya `def` olur (FastAPI threadpool'da çalıştırır) ya da çağrıyı `asyncio.to_thread` ile sarar. Arka plan işleri de aynı kurala uyar. Bağlantı havuzu (`psycopg_pool`) ve Supavisor pooler adresi ertelendi; tetikleri Deferred bölümünde.
-- **Bilinen sapma:** Çoğu async endpoint ve runner senkron sorguyu döngü üzerinde çalıştırıyor (CR M3 → ticket 15.5).
+- **Uygulama (15.5):** Async kod DB'ye `asyncio.to_thread` ile erişir. Sipariş işlemi (`_execute_order`) tek bir thread içinde bir transaction olarak çalışır.
 
 ### AD-18 — Borsa listesinin tek sahibi [NEW]
 

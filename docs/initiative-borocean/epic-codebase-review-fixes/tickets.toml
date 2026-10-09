@@ -121,6 +121,18 @@ risk = "medium"
 references = ["docs/initiative-borocean/review-codebase-2026-10-09.md"]
 
 [[entry]]
+id = 12
+type = "bug"
+title = "Portföy gelişme notlarını kullanıcının dilinde üretmek"
+description = "Sabah taramasındaki AI notu, sembolü tutan kullanıcıların dillerinde üretilir (İngilizce yalnızca İngilizce kullanan sahibi varsa); not satırı locale taşır, panel ve portföy kullanıcının dilindeki notu gösterir."
+verify = "İngilizce bir test kullanıcısının portföyündeki önemli gelişme için İngilizce not görünür; Türkçe kullanıcı Türkçe notu görür; günlük not tavanı iki dil için birlikte korunur."
+covers = ["FR-142"]
+after = [5, 11]
+hitl = false
+risk = "medium"
+references = ["docs/initiative-borocean/review-codebase-2026-10-09.md"]
+
+[[entry]]
 id = 10
 type = "bug"
 title = "İngilizce sinyal bildirimi ham kural kimliğini gösteriyor (L4)"

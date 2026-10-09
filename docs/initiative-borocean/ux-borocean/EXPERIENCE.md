@@ -41,7 +41,7 @@ Bu belge, canlıdaki ürünün nasıl davrandığını kayda geçirir (brownfiel
 | Ayarlar | `/settings` | SettingsScreen | Hızlı erişim | Kullanıcı adı, dil, tema (yalnızca web), ilgi alanları, bildirimler, hesap silme |
 | Hukuki | `/terms`, `/kvkk`, `/privacy` | Web bağlantısı | Kayıt, alt bilgi | Koşullar, aydınlatma, gizlilik |
 
-- **Web gezinme:** Panel'in en üstündeki 8 karoluk hızlı erişim ızgarası birincil gezinmedir. Alt sayfalar `PageHeader` ile Panel'e geri döner. Kalıcı bir üst menü ya da yan menü yoktur.
+- **Web gezinme:** Panel'in en üstündeki 8 karoluk hızlı erişim ızgarası birincil gezinmedir. Her alt sayfanın başında aynı hedefleri taşıyan kompakt bir gezinme satırı vardır (`AppNav`, 16.3); etkin sayfa `aria-current` ile işaretlidir ve satır dar ekranda alt satıra kayar.
 - **Mobil gezinme:** HomeScreen, alt ekranları durum bayraklarıyla tam ekran açar; her ekranın bir "geri" düğmesi vardır. Gezinme kütüphanesi yoktur. `[ASSUMPTION]` Android donanım geri tuşu ve derin bağlantılar alt ekranları hedefleyemiyor; push bildirimi yalnızca portföy ekranını açar.
 
 Görsel referans: [`mockups/key-panel.html`](mockups/key-panel.html), [`mockups/key-stock.html`](mockups/key-stock.html), [`mockups/key-mobile-portfolio.html`](mockups/key-mobile-portfolio.html). Çelişkide bu belge geçerlidir.
@@ -80,7 +80,7 @@ Davranış kuralları. Görsel tanımlar `DESIGN.md` › Components'tadır.
 | Gelişme kartı | Panel, portföy, hisse sayfası | Okunmamış rozeti; açınca okundu sayılır; haber başlıkları kaynak bağlantısıyla yeni sekmede açılır |
 | İzleme listesine ekle / Alarm kur / Simülasyonda al | Hisse sayfası başlığı | Satır içi panel veya form; başarıda kısa onay metni |
 | Değişim değeri | Her yer | İşaret + yüzde; yeşil/kırmızı yalnızca yön için. `[ASSUMPTION]` Yüzde Türkçede de noktalı yazılıyor (`formatChange`, "+1.00%"); 16.7 düzeltir |
-| Tema değiştirici | Web › Ayarlar | Sistem / koyu / açık; tercih tarayıcıda saklanır; ilk boyamadan önce uygulanır |
+| Tema değiştirici | Ayarlar (web ve mobil) | Sistem / koyu / açık. Web'de tercih tarayıcıda saklanır ve ilk boyamadan önce uygulanır; mobilde cihazda saklanır ve durum çubuğu da temaya uyar (16.5) |
 | Hesabı sil | Ayarlar | "SİL" yazmadan düğme etkinleşmez; başarıda karşılama sayfasına döner |
 
 ## State Patterns
@@ -98,6 +98,8 @@ Davranış kuralları. Görsel tanımlar `DESIGN.md` › Components'tadır.
 | Form hatası | Giriş, kayıt, formlar | Alanın altında satır içi, çevrilmiş mesaj |
 | AI üretiliyor | Hisse › AI | Düğme devre dışı, iskelet; hata olursa yeniden dene |
 | Okunmamış gelişme | Panel kartı, portföy satırı | Sayılı rozet; okununca kalkar |
+| İlk kullanım | Panel (web ve mobil) | İlgi alanı seçilmemişse "Başlarken" kartı: sektör seçimi, arama, izleme listesi/portföy bağlantıları; seçim yapılınca kaybolur (16.4) |
+| Kısmi veri | Öne çıkanlar, tarama | Veri sağlayıcı bütçesi dolunca liste eksik dönebilir; üstünde uyarı metni görünür (15.2) |
 
 ## Interaction Primitives
 
@@ -111,7 +113,7 @@ Davranış kuralları. Görsel tanımlar `DESIGN.md` › Components'tadır.
 
 `[ASSUMPTION]` Hedef WCAG 2.2 AA; resmi bir denetim yapılmadı.
 
-- Kontrast: normal metin en az 4.5:1. **Bilinen açık (ölçüldü 2026-10-09):** `text-tertiary` (koyu 3.82, açık 2.56), koyu birincil düğme metni (3.38), açık `positive` (3.30) ve `warning` (3.19) bu sınırın altında. Story 16.1 kapatır; o zamana kadar uyarı ibaresi gibi zorunlu metinler `text-secondary` ile yazılmalıdır.
+- Kontrast: normal metin en az 4.5:1; tüm token çiftleri iki modda da bunu karşılar (Story 16.1, 2026-10-09).
 - Yön bilgisi yalnızca renkle verilmez: değişim değeri işaret (+/−) taşır, sinyal satırı yön etiketi taşır.
 - Hızlı erişim `nav` öğesi `aria-label` taşır. Sekmeler ve chip'ler `role="group"` içinde gerçek düğmelerdir.
 - Grafik tek başına bilgi taşımaz: aynı veri sinyal listesinde ve metrik satırlarında metin olarak vardır.
@@ -123,7 +125,7 @@ Davranış kuralları. Görsel tanımlar `DESIGN.md` › Components'tadır.
 |---|---|
 | `< sm` | Hızlı erişim 4 sütun; tablolar yatay kaydırılır |
 | `≥ sm` | Hızlı erişim 8 sütun; içerik `max-w-3xl` ortada |
-| Mobil uygulama | Aynı bölümler tek sütun; grafik WebView'da; tema sistem tercihine uyar (manuel seçim yok) |
+| Mobil uygulama | Aynı bölümler tek sütun; grafik WebView'da; tema Ayarlar'daki seçime, "Sistem" seçiliyse cihaza uyar |
 
 ## Compliance in the UI
 

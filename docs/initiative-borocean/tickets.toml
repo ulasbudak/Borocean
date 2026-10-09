@@ -84,7 +84,7 @@ after = [{ epic = 1, needs = "kayıt/giriş akışı (1.9)" }, { epic = 5, needs
 id = 15
 slug = "epic-codebase-review-fixes"
 title = "Kod inceleme bulgularının düzeltilmesi (2026-10-09)"
-covers = ["FR-001", "FR-030", "FR-042", "FR-043", "FR-050", "FR-061", "FR-100", "FR-101", "FR-111", "FR-112"]
+covers = ["FR-001", "FR-030", "FR-042", "FR-043", "FR-050", "FR-061", "FR-100", "FR-101", "FR-111", "FR-112", "FR-142"]
 
 [[epic]]
 id = 16

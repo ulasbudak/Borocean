@@ -13,10 +13,10 @@ colors:
   border-default: '#2E3239'
   text-primary: '#F4F5F7'
   text-secondary: '#9CA3AF'
-  text-tertiary: '#6B7280'
+  text-tertiary: '#848C98'
   text-disabled: '#4B5563'
   accent: '#3B82F6'
-  accent-text: '#EFF6FF'
+  accent-text: '#0A0B0D'
   positive: '#34D399'
   negative: '#F87171'
   warning: '#F59E0B'
@@ -30,13 +30,13 @@ colors:
   border-default-light: '#D1D5DB'
   text-primary-light: '#0F172A'
   text-secondary-light: '#475569'
-  text-tertiary-light: '#94A3B8'
+  text-tertiary-light: '#5F6E82'
   text-disabled-light: '#CBD5E1'
   accent-light: '#2563EB'
   accent-text-light: '#FFFFFF'
-  positive-light: '#16A34A'
-  negative-light: '#DC2626'
-  warning-light: '#D97706'
+  positive-light: '#15803D'
+  negative-light: '#B91C1C'
+  warning-light: '#B45309'
   info-light: '#0284C7'
 typography:
   display:
@@ -153,7 +153,7 @@ Logo `apps/web/src/components/ui/logo.tsx` ve `docs/marketing/brand/` altındad�
 - **Info:** Rezerve; şu an kullanılmıyor.
 - **Text tertiary:** Meta bilgi, yer tutucu, bölüm etiketi ve "yatırım tavsiyesi değildir" ibaresi.
 
-Kontrast (ölçüldü 2026-10-09; ayrıntı `ux-borocean.md`): `text-tertiary` iki modda da, koyu `accent-text`/`accent` ve açık `positive`/`warning` ise normal metinde WCAG AA'nın altındadır. Story 16.1 değerleri düzeltene kadar zorunlu metin (`{components.disclaimer}` dahil) `text-tertiary` yerine `text-secondary` ile yazılmalıdır.
+Kontrast: tüm metin çiftleri her iki modda da canvas, surface, surface-hover ve surface-elevated üzerinde normal metin için WCAG AA'yı (en az 4.5:1) karşılar (Story 16.1, 2026-10-09). Koyu modda birincil düğme metni koyudur (`{colors.accent-text}`), çünkü mavi zemin üzerinde açık metin AA'yı geçmiyordu.
 
 Kural: bileşenlerde hex kodu yazılmaz. Web, `--tk-*` CSS değişkenlerine bağlı Tailwind utility'lerini (`bg-canvas`, `text-accent`) kullanır. Mobil `useTheme()` → `makeStyles(colors)` desenini kullanır. Tek istisna, mobil grafik WebView'ının gömülü HTML'idir; token değerleri oraya JS ile enjekte edilir.
 
