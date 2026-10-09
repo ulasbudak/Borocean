@@ -62,6 +62,7 @@ NFR-1 Performans (arama <1sn, gerçek-zamanlı veri birkaç sn içinde), NFR-2 G
 | FR-120 – FR-126 | Epic 11 |
 | FR-130, FR-131 | Epic 12 |
 | FR-140 – FR-146 | Epic 13 |
+| — (altyapı, mevcut FR-060/FR-043/NFR-7) | Epic 14 |
 
 ## 4. Epic Listesi
 
@@ -116,6 +117,10 @@ Uygulama, kişiye yönelik al/sat/tut yönlendirmesi üretmeden bir analiz ve bi
 ### Epic 13: Portföy Gelişme Takibi (Arka Plan AI Taraması) (Tamamlandı, canlıda — 2026-10-04)
 Uygulama her gün, kullanıcı hiçbir şey yapmadan, portföylerdeki hisseleri tarar. Önemli bir gelişme yakaladığında (sert fiyat hareketi, bilanço, önemli SEC dosyası vb.) bunu kısa bir AI notuyla portföy ekranında ve Panelde gösterir. Gelişme kartı ne olduğunu anlatır, ne yapılacağını söylemez (Epic 12).
 **FRs covered:** FR-140, FR-141, FR-142, FR-143, FR-144, FR-145, FR-146
+
+### Epic 14: Alan Adı Sonrası Altyapı (borocean.com) (Backlog — 2026-10-09)
+Alan adı olmadığı için ertelenen işler: alan adından e-posta gönderimi ve Supabase SMTP, alarm e-postaları, kurumsal iletişim adresleri, Google ile giriş, Apple ile giriş kararı, alan adı düzeni ve SEO.
+**FRs covered:** yeni FR yok; mevcut FR-060 (sosyal giriş), FR-043/FR-070 (e-posta bildirimi), NFR-7 (KVKK iletişim) gereksinimlerinin canlıda tamamlanması.
 
 **Epic bağımsızlığı notu:** Her epic bir öncekinin çıktısını kullanabilir (örn. Epic 3, Epic 2'nin ürettiği temel veri modelini kullanır) ama hiçbir epic sonraki bir epiğin tamamlanmasını beklemez. Epic 8 (Abonelik), Epic 1-7'de üretilen özellik sınırlarını freemium kapıları arkasına yerleştirir ama bu epiklerin fonksiyonelliğini değiştirmez.
 
@@ -948,7 +953,104 @@ So that henüz almadığım ama takip ettiğim şirketlerdeki önemli olayları 
 
 ---
 
-## 18. Sonraki Adımlar
+## 18. Epic 14: Alan Adı Sonrası Altyapı (borocean.com)
+
+> Kullanıcı 2026-10-09'da `borocean.com` alan adını aldı. Alan adı Vercel'e bağlandı; API CORS ayarı ve Supabase Site URL/yönlendirme ayarı güncellendi, hepsi canlıda doğrulandı. Bu epic, alan adı olmadığı için ertelenmiş işleri toplar. Kaynaklar: `docs/stories/story-1.2.md`, `story-1.7.md`, `story-5.4.md`, `docs/compliance.md` §4.
+>
+> **Canlıda bulunan sorun (aynı gün düzeltildi):** Giriş sayfasındaki "Google ile devam et" / "Apple ile devam et" düğmeleri, iki sağlayıcı da Supabase'de kapalı olduğu için kullanıcıyı ham bir JSON hata sayfasına ("provider is not enabled") götürüyordu. Artık giriş sayfası Supabase'in açık `/auth/v1/settings` yanıtını okuyor ve yalnızca açık sağlayıcıların düğmesini gösteriyor (`apps/web/src/lib/auth-providers.ts`, 5 dakika önbellek). Bir sağlayıcı açılınca düğmesi deploy gerekmeden görünür.
+>
+> **Durum tespiti (2026-10-09):** `borocean.com` için MX kaydı yok; SPF kaydı `v=spf1 -all` ("bu alan adından e-posta gönderilmez"; Squarespace'in varsayılanı). E-posta kurulurken bu kayıt değiştirilmeli.
+
+### Story 14.1: Alan Adından E-posta Gönderimi (Resend) ve Supabase SMTP
+
+As a **ürün sahibi**,
+I want kayıt onayı, şifre sıfırlama ve alarm e-postalarının `noreply@borocean.com` adresinden, saatlik 2 e-posta sınırına takılmadan gitmesini,
+So that kullanıcılar kayıt olurken "Çok fazla deneme" hatası almasın ve e-postalar spam'e düşmesin.
+
+**Karar önerisi:** Tek sağlayıcı olarak **Resend**. Kod zaten Resend kullanıyor (Story 5.4); Resend, Supabase için SMTP de sunuyor (`smtp.resend.com`). Böylece tek DNS doğrulaması ve tek panel yeterli. Ücretsiz plan: ayda 3.000, günde 100 e-posta. Önceki not Brevo'yu öneriyordu (günde 300); günlük kayıt+alarm hacmi 100'ü aşmaya başlarsa Brevo ya da Resend'in ücretli planı değerlendirilir.
+
+**Acceptance Criteria:**
+
+- **Given** Resend hesabı, **When** `borocean.com` eklenip DKIM/SPF/MX(bounce) kayıtları Squarespace DNS'ine girilirse, **Then** alan adı Resend'de "Verified" olur; mevcut `v=spf1 -all` kaydı Resend'in SPF kaydıyla değiştirilir. Ek olarak `_dmarc` kaydı (`p=none` ile başlayarak) eklenir.
+- **Given** Supabase prod → Authentication → SMTP Settings, **When** Resend SMTP bilgileri (gönderen `Borocean <noreply@borocean.com>`) girilirse, **Then** onay ve sıfırlama e-postaları bu adresten gider; Rate Limits → e-posta gönderim sınırı saatte 2'den makul bir değere (örn. 30) çıkarılır.
+- **And** Supabase e-posta şablonları (onay, şifre sıfırlama) Türkçe ve Borocean markalı hale getirilir.
+- **And** gerçek bir kayıt ve şifre sıfırlama, prod'da bir test adresiyle uçtan uca denenir; e-postanın spam'e düşmediği (Gmail'de "SPF/DKIM PASS") kontrol edilir.
+
+### Story 14.2: Alarm E-posta Bildirimlerinin Canlıda Açılması
+
+As a **kullanıcı**,
+I want fiyat ve sinyal alarmlarım tetiklendiğinde e-posta almak,
+So that ayarlardaki "E-posta bildirimleri" seçeneği gerçekten çalışsın.
+
+**Acceptance Criteria:**
+
+- **Given** Story 14.1'de doğrulanmış alan adı, **When** Render'a `RESEND_API_KEY` ve `NOTIFICATION_FROM_EMAIL=Borocean <noreply@borocean.com>` girilirse, **Then** tetiklenen alarmlar için e-posta gönderilir (Story 5.4'ün kodu değişmeden).
+- **And** e-posta metni Türkçe/İngilizce kullanıcı diline göre ve "yatırım tavsiyesi değildir" ibaresiyle gider; altta bildirim ayarlarına bağlantı bulunur.
+- **And** portföy gelişmeleri için e-posta gönderilmez (Epic 13 kararı, yalnızca mobil push).
+
+### Story 14.3: Kurumsal İletişim Adresleri (KVKK ve Destek)
+
+As a **ürün sahibi**,
+I want KVKK başvuruları ve destek için `@borocean.com` adresleri kullanmak,
+So that kişisel Gmail adresim hukuki metinlerde ve sitede yayımlanmasın.
+
+**Acceptance Criteria:**
+
+- **Given** Squarespace Domains'in e-posta yönlendirme özelliği (ya da başka bir posta kutusu), **When** `kvkk@borocean.com` ve `destek@borocean.com` kişisel adrese yönlendirilirse, **Then** gelen e-postalar ulaşır (MX kayıtları Story 14.1'deki Resend bounce kaydıyla çakışmayacak şekilde kurulur).
+- **And** `/kvkk`, `/privacy`, `/terms` sayfalarındaki iletişim adresi `kvkk@borocean.com` ile değiştirilir (`components/legal/legal-page.tsx` → `CONTACT_EMAIL`).
+
+### Story 14.4: Google ile Giriş (Web)
+
+As a **kullanıcı**,
+I want Google hesabımla tek tıkla kayıt olup giriş yapmak,
+So that ayrı bir şifre oluşturmak zorunda kalmayayım.
+
+**Acceptance Criteria:**
+
+- **Given** Google Cloud'da bir proje, **When** OAuth onay ekranı (uygulama adı Borocean, yetkili alan adı `borocean.com`, gizlilik ve koşullar bağlantıları, yalnızca `email`/`profile` kapsamları) ve bir Web OAuth istemcisi (yönlendirme adresi `https://ztchiibpegvmtdafyhxa.supabase.co/auth/v1/callback`) oluşturulup uygulama "In production"a alınırsa, **Then** Google, test kullanıcısı listesi olmadan herkes için girişe izin verir. Yalnızca temel kapsamlar kullanıldığı için Google'ın ayrıntılı doğrulaması gerekmez; marka doğrulaması için alan adının Search Console'da doğrulanması gerekebilir.
+- **Given** Supabase → Authentication → Providers → Google, **When** istemci kimliği ve sırrı girilirse, **Then** giriş sayfasında "Google ile devam et" düğmesi kendiliğinden görünür (yukarıdaki düzeltme) ve giriş prod'da uçtan uca çalışır.
+- **And** Google'dan gelen ad, kullanıcı adı olarak kullanılır (`displayNameFrom` zaten `full_name`'e bakıyor); kullanıcı ayarlardan değiştirebilir.
+- **And** KVKK aydınlatma metnindeki "sosyal hesapla giriş" maddesi ve aktarılan taraflar listesi Google'ı içerecek şekilde güncellenir.
+
+### Story 14.5: Apple ile Giriş — Karar Bekliyor
+
+As a **ürün sahibi**,
+I want Apple ile girişi açıp açmamaya karar vermek,
+So that yıllık maliyeti olan bir özelliği ihtiyaç olduğunda açalım.
+
+**Acceptance Criteria:**
+
+- **Given** Apple Developer Program üyeliği (yıllık 99 USD), **When** bir Services ID (`borocean.com` alan adı ve Supabase callback adresi) ve Sign in with Apple anahtarı oluşturulup Supabase'e girilirse, **Then** "Apple ile devam et" düğmesi kendiliğinden görünür.
+- **And** not: iOS uygulaması App Store'a çıkarken başka bir sosyal giriş (Google) sunuluyorsa Apple ile giriş de zorunlu olur; bu story o noktada zorunlu hale gelir. Mobil yayın şu an kapsam dışı.
+
+### Story 14.6: Alan Adı Düzeni ve Temel SEO
+
+As a **ürün sahibi**,
+I want sitenin tek bir adreste (`borocean.com`) görünmesini ve arama motorlarında düzgün listelenmesini,
+So that `www`, `vercel.app` ve `onrender.com` adresleri dağınık görünmesin.
+
+**Acceptance Criteria:**
+
+- **Given** Vercel alan adı ayarları, **When** `www.borocean.com` ve `web-three-kappa-87.vercel.app` istekleri gelirse, **Then** kalıcı (308) yönlendirmeyle `https://borocean.com`'a gider. Şu an `www` yönlendirmeden 200 dönüyor.
+- **And** Next.js `metadata` ile başlık, açıklama, Open Graph görseli ve `metadataBase`; `robots.txt` ve `sitemap.xml` (yalnızca herkese açık sayfalar: ana sayfa, giriş, hukuki metinler) eklenir.
+- **And** opsiyonel: API için `api.borocean.com` (Render ücretsiz planı özel alan adı destekliyor). Değiştirilirse `NEXT_PUBLIC_API_URL`, mobil `EXPO_PUBLIC_API_URL` ve Supabase'deki `trigger_insights_run()` adresi birlikte güncellenmeli.
+
+### Epic 14 — Önerilen Sıra ve Kimin Yapacağı
+
+| Sıra | Story | Sende (panel/DNS işleri) | Bende (kod/doğrulama) |
+|---|---|---|---|
+| 1 | 14.1 E-posta | Resend hesabı, DNS kayıtları, Supabase SMTP ve rate limit | Kayıt kontrolü, şablon metinleri, prod'da uçtan uca deneme |
+| 2 | 14.2 Alarm e-postası | Render'a iki ortam değişkeni | E-posta metni (dil, uyarı ibaresi, ayar bağlantısı), deneme |
+| 3 | 14.3 İletişim adresleri | Squarespace e-posta yönlendirme | Hukuki sayfalardaki adres |
+| 4 | 14.4 Google ile giriş | Google Cloud onay ekranı + istemci, Supabase provider | KVKK metni, prod'da uçtan uca deneme |
+| 5 | 14.6 Alan adı düzeni/SEO | Vercel'de `www` yönlendirmesi | metadata, robots, sitemap |
+| — | 14.5 Apple | 99 USD/yıl kararı | — |
+
+14.1 en acil olanı: prod'da e-posta gönderimi saatte ~2 ile sınırlı, bu da aynı saatte üçüncü kayıt olmaya çalışan kişinin hata alması demek.
+
+---
+
+## 19. Sonraki Adımlar
 
 *(2026-09-28'de güncellendi.)*
 
@@ -967,5 +1069,5 @@ Aşağıdaki maddeler Epic 11 ve genel işler içindir.
 1. **Epic 11'e başlamadan önce §15'teki açık sorular kullanıcıyla netleştirilmeli:** veri kaynağı (Twelve Data kotası mı, CoinGecko mu), başlangıç evreni (ilk ~100 varlık, USD pariteleri, stablecoin'ler) ve freemium sınırlarının hisse+kripto için ortak olup olmadığı. Epic 11 story'leri `docs/compliance.md`'deki kurallara uymalı (kripto için de al/sat yönlendirmesi yok).
 2. **Önerilen Epic 11 sırası:** Sprint 1 — 11.1 (veri adaptörü) + 11.2 (arama ve detay); Sprint 2 — 11.3 (göstergeler/sinyaller) + 11.4 (izleme listesi, alarm, portföy; kesirli miktar); Sprint 3 — 11.5 (simülasyon) + 11.6 (tarama/karşılaştırma) + 11.7 (AI raporları kapsam kararı).
 3. **Hukuki açık maddeler** (`docs/compliance.md` §4): avukat incelemesi, veri sorumlusu posta adresi, KVKK m.9 yurt dışı aktarım aracı, veri sağlayıcılarının ticari/yeniden dağıtım lisansları (ücretli katman açılmadan önce).
-4. **Özel alan adı alındığında birlikte açılacaklar:** Google OAuth (consent ekranı `vercel.app`'i kabul etmiyor), Apple Sign-In (ayrıca Apple Developer Program üyeliği gerekiyor), Supabase özel SMTP'si (Brevo) ve e-posta alarm bildirimleri için Render'da `RESEND_API_KEY`/`NOTIFICATION_FROM_EMAIL`.
+4. **Özel alan adı alındı (2026-10-09) — bu maddeler Epic 14'e (§18) taşındı:** Google OAuth (consent ekranı `vercel.app`'i kabul etmiyor), Apple Sign-In (ayrıca Apple Developer Program üyeliği gerekiyor), Supabase özel SMTP'si (Brevo) ve e-posta alarm bildirimleri için Render'da `RESEND_API_KEY`/`NOTIFICATION_FROM_EMAIL`.
 5. **Mobil cihaz doğrulaması:** Çoğu story'nin DoD'sinde açık kalan "mobil cihaz/simülatör doğrulaması" maddeleri bu geliştirme ortamında yapılamıyor; kullanıcının gerçek cihazda (veya EAS development build ile) toplu bir tur yapması gerekiyor. Cihazda push bildirimi (Story 5.4) de `eas init` + development build bekliyor.

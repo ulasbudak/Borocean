@@ -2,6 +2,7 @@ import { messages } from "@borocean/shared";
 import { getLocale } from "@/lib/i18n/locale";
 import { AuthShell } from "@/components/auth/auth-shell";
 import { Notice } from "@/components/auth/notice";
+import { enabledOAuthProviders } from "@/lib/auth-providers";
 import { LoginForm } from "./login-form";
 
 export default async function LoginPage({
@@ -12,6 +13,7 @@ export default async function LoginPage({
   const { notice } = await searchParams;
   const locale = await getLocale();
   const t = messages[locale];
+  const providers = await enabledOAuthProviders();
 
   const noticeText =
     notice === "email_confirmed"
@@ -28,7 +30,7 @@ export default async function LoginPage({
         </div>
       )}
 
-      <LoginForm messages={t.auth} legal={t.legal} />
+      <LoginForm messages={t.auth} legal={t.legal} providers={providers} />
     </AuthShell>
   );
 }

@@ -2,10 +2,17 @@
 
 import { useState } from "react";
 import type { Messages } from "@borocean/shared";
+import type { OAuthProvider } from "@/lib/auth-providers";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 
-export function SocialButtons({ messages }: { messages: Messages["auth"] }) {
+export function SocialButtons({
+  messages,
+  providers,
+}: {
+  messages: Messages["auth"];
+  providers: OAuthProvider[];
+}) {
   const [error, setError] = useState<string | null>(null);
   const [loadingProvider, setLoadingProvider] = useState<
     "google" | "apple" | null
@@ -33,30 +40,34 @@ export function SocialButtons({ messages }: { messages: Messages["auth"] }) {
 
   return (
     <div className="flex flex-col gap-2">
-      <Button
-        type="button"
-        variant="secondary"
-        className="w-full"
-        onClick={() => handleOAuthSignIn("google")}
-        disabled={loadingProvider !== null}
-      >
-        <span className="flex h-4 w-4 items-center justify-center rounded-full bg-[#4285F4] text-[10px] font-bold text-white">
-          G
-        </span>
-        {loadingProvider === "google" ? messages.redirecting : messages.continueWithGoogle}
-      </Button>
-      <Button
-        type="button"
-        variant="secondary"
-        className="w-full"
-        onClick={() => handleOAuthSignIn("apple")}
-        disabled={loadingProvider !== null}
-      >
-        <span className="flex h-4 w-4 items-center justify-center rounded-full bg-text-primary text-[10px] font-bold text-canvas">
+      {providers.includes("google") && (
+        <Button
+          type="button"
+          variant="secondary"
+          className="w-full"
+          onClick={() => handleOAuthSignIn("google")}
+          disabled={loadingProvider !== null}
+        >
+          <span className="flex h-4 w-4 items-center justify-center rounded-full bg-[#4285F4] text-[10px] font-bold text-white">
+            G
+          </span>
+          {loadingProvider === "google" ? messages.redirecting : messages.continueWithGoogle}
+        </Button>
+      )}
+      {providers.includes("apple") && (
+        <Button
+          type="button"
+          variant="secondary"
+          className="w-full"
+          onClick={() => handleOAuthSignIn("apple")}
+          disabled={loadingProvider !== null}
+        >
+          <span className="flex h-4 w-4 items-center justify-center rounded-full bg-text-primary text-[10px] font-bold text-canvas">
 
-        </span>
-        {loadingProvider === "apple" ? messages.redirecting : messages.continueWithApple}
-      </Button>
+          </span>
+          {loadingProvider === "apple" ? messages.redirecting : messages.continueWithApple}
+        </Button>
+      )}
       {error && (
         <p role="alert" className="text-xs text-negative">
           {error}

@@ -64,6 +64,7 @@ NFR-1 Performance (search <1s, real-time data within a few seconds), NFR-2 Relia
 | FR-120 – FR-126 | Epic 11 |
 | FR-130, FR-131 | Epic 12 |
 | FR-140 – FR-146 | Epic 13 |
+| — (infrastructure; existing FR-060/FR-043/NFR-7) | Epic 14 |
 
 ## 4. Epic List
 
@@ -118,6 +119,10 @@ The app stays an analysis and information tool without producing personal buy/se
 ### Epic 13: Portfolio Insight Tracking (Background AI Scan) (Done, live — 2026-10-04)
 Every day, without the user doing anything, the app scans the stocks in portfolios. When it catches an important update (sharp price move, earnings, important SEC filing, etc.), it shows it with a short AI note on the portfolio screen and on the dashboard. The update card says what happened, never what to do (Epic 12).
 **FRs covered:** FR-140, FR-141, FR-142, FR-143, FR-144, FR-145, FR-146
+
+### Epic 14: Post-Domain Infrastructure (borocean.com) (Backlog — 2026-10-09)
+Work deferred for lack of a domain: sending email from the domain and Supabase SMTP, alert emails, company contact addresses, Google sign-in, the Apple sign-in decision, domain consolidation and SEO.
+**FRs covered:** no new FR; completes existing FR-060 (social sign-in), FR-043/FR-070 (email notifications) and NFR-7 (KVKK contact) in production.
 
 **Epic independence note:** Each epic may use the output of an earlier one (e.g. Epic 3 uses the fundamental data model produced by Epic 2), but no epic waits on a later epic to be completed. Epic 8 (Subscription) places the feature limits produced in Epic 1–7 behind freemium gates but does not change those epics' functionality.
 
@@ -950,7 +955,104 @@ So that I don't miss important events at companies I follow but haven't bought y
 
 ---
 
-## 18. Next Steps
+## 18. Epic 14: Post-Domain Infrastructure (borocean.com)
+
+> The user bought `borocean.com` on 2026-10-09. The domain is connected to Vercel; the API CORS setting and the Supabase Site URL/redirect settings were updated, all verified live. This epic collects the work deferred for lack of a domain. Sources: `docs/stories/story-1.2.md`, `story-1.7.md`, `story-5.4.md`, `docs/compliance.md` §4.
+>
+> **Issue found live (fixed the same day):** The "Continue with Google" / "Continue with Apple" buttons on the login page sent users to a raw JSON error page ("provider is not enabled"), because neither provider is enabled in Supabase. The login page now reads Supabase's public `/auth/v1/settings` and shows buttons only for enabled providers (`apps/web/src/lib/auth-providers.ts`, 5-minute cache). Enabling a provider makes its button appear without a deploy.
+>
+> **Findings (2026-10-09):** `borocean.com` has no MX record; its SPF record is `v=spf1 -all` ("no mail is sent from this domain"; Squarespace's default). It must be replaced when email is set up.
+
+### Story 14.1: Sending Email from the Domain (Resend) and Supabase SMTP
+
+As a **product owner**,
+I want sign-up confirmation, password reset and alert emails to come from `noreply@borocean.com` without the 2-emails-per-hour cap,
+So that users don't get "Too many attempts" while signing up and emails don't land in spam.
+
+**Recommended decision:** **Resend** as the single provider. The code already uses Resend (Story 5.4), and Resend also offers SMTP for Supabase (`smtp.resend.com`). That means one DNS verification and one dashboard. Free plan: 3,000 emails a month, 100 a day. The earlier note suggested Brevo (300 a day); if daily sign-up + alert volume starts exceeding 100, Brevo or Resend's paid plan is considered.
+
+**Acceptance Criteria:**
+
+- **Given** a Resend account, **When** `borocean.com` is added and its DKIM/SPF/MX (bounce) records are entered in Squarespace DNS, **Then** the domain shows as "Verified" in Resend; the existing `v=spf1 -all` record is replaced with Resend's SPF record. A `_dmarc` record (starting with `p=none`) is added as well.
+- **Given** Supabase prod → Authentication → SMTP Settings, **When** Resend's SMTP details (sender `Borocean <noreply@borocean.com>`) are entered, **Then** confirmation and reset emails come from this address; Rate Limits → email sending is raised from 2 per hour to a reasonable value (e.g. 30).
+- **And** the Supabase email templates (confirmation, password reset) are made Turkish and Borocean-branded.
+- **And** a real sign-up and password reset are tried end to end in production with a test address, checking that the email doesn't land in spam ("SPF/DKIM PASS" in Gmail).
+
+### Story 14.2: Turning On Alert Emails in Production
+
+As a **user**,
+I want to receive an email when my price and signal alerts trigger,
+So that the "Email notifications" setting actually works.
+
+**Acceptance Criteria:**
+
+- **Given** the domain verified in Story 14.1, **When** `RESEND_API_KEY` and `NOTIFICATION_FROM_EMAIL=Borocean <noreply@borocean.com>` are set on Render, **Then** emails are sent for triggered alerts (Story 5.4's code unchanged).
+- **And** the email is in the user's language (Turkish/English) and carries the "not investment advice" notice, with a link to notification settings at the bottom.
+- **And** no email is sent for portfolio updates (Epic 13 decision: mobile push only).
+
+### Story 14.3: Company Contact Addresses (KVKK and Support)
+
+As a **product owner**,
+I want to use `@borocean.com` addresses for KVKK requests and support,
+So that my personal Gmail address isn't published in the legal texts and on the site.
+
+**Acceptance Criteria:**
+
+- **Given** Squarespace Domains' email forwarding (or another mailbox), **When** `kvkk@borocean.com` and `destek@borocean.com` are forwarded to the personal address, **Then** incoming emails arrive (MX records set up so they don't conflict with Resend's bounce record from Story 14.1).
+- **And** the contact address on `/kvkk`, `/privacy` and `/terms` is changed to `kvkk@borocean.com` (`components/legal/legal-page.tsx` → `CONTACT_EMAIL`).
+
+### Story 14.4: Sign In with Google (Web)
+
+As a **user**,
+I want to sign up and log in with my Google account in one click,
+So that I don't have to create a separate password.
+
+**Acceptance Criteria:**
+
+- **Given** a Google Cloud project, **When** the OAuth consent screen (app name Borocean, authorized domain `borocean.com`, privacy and terms links, only the `email`/`profile` scopes) and a Web OAuth client (redirect URI `https://ztchiibpegvmtdafyhxa.supabase.co/auth/v1/callback`) are created and the app is moved to "In production", **Then** Google allows sign-in for everyone without a test-user list. Because only basic scopes are used, Google's full verification isn't needed; brand verification may require verifying the domain in Search Console.
+- **Given** Supabase → Authentication → Providers → Google, **When** the client ID and secret are entered, **Then** the "Continue with Google" button appears on the login page on its own (the fix above) and sign-in works end to end in production.
+- **And** the name coming from Google is used as the username (`displayNameFrom` already reads `full_name`); the user can change it in settings.
+- **And** the "sign-in with a social account" item and the list of recipients in the KVKK privacy notice are updated to include Google.
+
+### Story 14.5: Sign In with Apple — Decision Pending
+
+As a **product owner**,
+I want to decide whether to turn on Sign in with Apple,
+So that we turn on a feature with a yearly cost when it's needed.
+
+**Acceptance Criteria:**
+
+- **Given** an Apple Developer Program membership (99 USD a year), **When** a Services ID (with the `borocean.com` domain and the Supabase callback URL) and a Sign in with Apple key are created and entered in Supabase, **Then** the "Continue with Apple" button appears on its own.
+- **And** note: when the iOS app ships to the App Store, Sign in with Apple becomes mandatory if another social sign-in (Google) is offered; this story becomes mandatory at that point. Mobile release is out of scope for now.
+
+### Story 14.6: Domain Consolidation and Basic SEO
+
+As a **product owner**,
+I want the site to appear at a single address (`borocean.com`) and be listed properly by search engines,
+So that the `www`, `vercel.app` and `onrender.com` addresses don't look scattered.
+
+**Acceptance Criteria:**
+
+- **Given** the Vercel domain settings, **When** requests come to `www.borocean.com` and `web-three-kappa-87.vercel.app`, **Then** they get a permanent (308) redirect to `https://borocean.com`. Right now `www` returns 200 without redirecting.
+- **And** title, description, Open Graph image and `metadataBase` via Next.js `metadata`; `robots.txt` and `sitemap.xml` (public pages only: home, login, legal texts) are added.
+- **And** optional: `api.borocean.com` for the API (Render's free plan supports custom domains). If changed, `NEXT_PUBLIC_API_URL`, mobile `EXPO_PUBLIC_API_URL` and the URL in Supabase's `trigger_insights_run()` must be updated together.
+
+### Epic 14 — Suggested Order and Who Does What
+
+| Order | Story | You (dashboard/DNS work) | Me (code/verification) |
+|---|---|---|---|
+| 1 | 14.1 Email | Resend account, DNS records, Supabase SMTP and rate limit | Record checks, template copy, end-to-end test in production |
+| 2 | 14.2 Alert email | Two environment variables on Render | Email copy (language, notice, settings link), test |
+| 3 | 14.3 Contact addresses | Squarespace email forwarding | Address on the legal pages |
+| 4 | 14.4 Google sign-in | Google Cloud consent screen + client, Supabase provider | KVKK notice, end-to-end test in production |
+| 5 | 14.6 Domain/SEO | `www` redirect in Vercel | metadata, robots, sitemap |
+| — | 14.5 Apple | 99 USD/year decision | — |
+
+14.1 is the most urgent: production email sending is capped at ~2 per hour, which means a third person trying to sign up within the same hour gets an error.
+
+---
+
+## 19. Next Steps
 
 *(Updated 2026-09-28.)*
 
@@ -969,5 +1071,5 @@ The items below are for Epic 11 and general work.
 1. **Before starting Epic 11, the open questions in §15 must be settled with the user:** the data source (Twelve Data quota or CoinGecko), the starting universe (top ~100 assets, USD pairs, stablecoins), and whether freemium limits are shared between stocks and crypto. Epic 11 stories must follow `docs/compliance.md` (no buy/sell direction for crypto either).
 2. **Suggested Epic 11 order:** Sprint 1 — 11.1 (data adapter) + 11.2 (search and detail); Sprint 2 — 11.3 (indicators/signals) + 11.4 (watchlist, alerts, portfolio; fractional quantities); Sprint 3 — 11.5 (simulation) + 11.6 (screening/comparison) + 11.7 (AI reports scope decision).
 3. **Open legal items** (`docs/compliance.md` §4): lawyer review, the data controller's postal address, the KVKK art. 9 cross-border transfer mechanism, commercial/redistribution licenses from the data providers (before a paid tier opens).
-4. **Unlocked together once a custom domain is bought:** Google OAuth (the consent screen rejects `vercel.app`), Apple Sign-In (also needs an Apple Developer Program membership), Supabase custom SMTP (Brevo), and `RESEND_API_KEY`/`NOTIFICATION_FROM_EMAIL` on Render for email alert notifications.
+4. **Custom domain bought (2026-10-09) — these items moved to Epic 14 (§18):** Google OAuth (the consent screen rejects `vercel.app`), Apple Sign-In (also needs an Apple Developer Program membership), Supabase custom SMTP (Brevo), and `RESEND_API_KEY`/`NOTIFICATION_FROM_EMAIL` on Render for email alert notifications.
 5. **Mobile device verification:** the "mobile device/simulator verification" items left open in most stories' DoD can't be done in this development environment; the user needs to do one batch pass on a real device (or with an EAS development build). On-device push notifications (Story 5.4) also wait on `eas init` + a development build.

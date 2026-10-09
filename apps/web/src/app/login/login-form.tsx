@@ -11,15 +11,18 @@ import {
 } from "@/components/auth/button-styles";
 import { Notice } from "@/components/auth/notice";
 import { authenticate, type AuthFormState } from "./actions";
+import type { OAuthProvider } from "@/lib/auth-providers";
 import { SocialButtons } from "./social-buttons";
 import { SubmitButton } from "./submit-button";
 
 export function LoginForm({
   messages,
   legal,
+  providers,
 }: {
   messages: Messages["auth"];
   legal: Messages["legal"];
+  providers: OAuthProvider[];
 }) {
   const [state, formAction] = useActionState<AuthFormState, FormData>(
     authenticate,
@@ -122,13 +125,17 @@ export function LoginForm({
         </div>
       </form>
 
-      <div className="my-5 flex items-center gap-3 text-xs uppercase tracking-wide text-text-tertiary">
-        <span className="h-px flex-1 bg-border-subtle" />
-        {messages.orDivider}
-        <span className="h-px flex-1 bg-border-subtle" />
-      </div>
+      {providers.length > 0 && (
+        <>
+          <div className="my-5 flex items-center gap-3 text-xs uppercase tracking-wide text-text-tertiary">
+            <span className="h-px flex-1 bg-border-subtle" />
+            {messages.orDivider}
+            <span className="h-px flex-1 bg-border-subtle" />
+          </div>
 
-      <SocialButtons messages={messages} />
+          <SocialButtons messages={messages} providers={providers} />
+        </>
+      )}
 
       <p className="mt-5 text-center text-xs leading-relaxed text-text-tertiary">
         {legal.signupNotice}{" "}
