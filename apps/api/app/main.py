@@ -7,7 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
 from app import insight_runner, insights, market_data
-from app.account import delete_account
+from app.account import account_check_allowed, account_exists, delete_account
 from app.ai_combined import CombinedAIReport, get_combined_report
 from app.ai_fundamental import AIReportUnavailableError, FundamentalAIReport, get_fundamental_report
 from app.ai_technical import TechnicalAIReport, get_technical_report
@@ -160,6 +160,24 @@ def delete_me(claims: dict = Depends(get_current_claims)) -> Response:
     except psycopg.Error as exc:
         raise HTTPException(status_code=503, detail="Hesap şu an silinemiyor.") from exc
     return Response(status_code=204)
+
+
+class AccountExistsRequest(BaseModel):
+    email: str
+
+
+@app.post("/auth/account-exists")
+def post_account_exists(body: AccountExistsRequest) -> dict[str, bool | None]:
+    """Lets the login screen say "no account found" after a failed sign-in (user request,
+    2026-10-09). Rate-limited; `exists` is null when the answer is withheld (limit hit,
+    malformed address, database down), and callers fall back to their generic behaviour."""
+    email = body.email.strip().lower()
+    if not email or "@" not in email or len(email) > 320 or not account_check_allowed(email):
+        return {"exists": None}
+    try:
+        return {"exists": account_exists(email)}
+    except psycopg.Error:
+        return {"exists": None}
 
 
 SearchResponse = dict[str, list[SymbolResult] | list[str]]

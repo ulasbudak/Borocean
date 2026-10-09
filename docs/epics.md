@@ -203,6 +203,13 @@ So that hisse hakkında hızlı bir ilk izlenim edinebileyim.
 
 - [x] **Tamamlandı** — bkz. **`docs/stories/story-1.8.md`**. Kullanıcı isteği (2026-10-09). Kayıtta kullanıcı adı soruluyor (`user_metadata.display_name`). Sitede e-posta yerine ad görünüyor ve ayarlardan değiştirilebiliyor (web + mobil). Panel'deki hızlı erişim menüsü en üste taşındı.
 
+### Story 1.9: Ayrı Giriş ve Kayıt Ekranları, Kayıtta Onay
+
+- [x] **Tamamlandı** — bkz. **`docs/stories/story-1.9.md`**. Kullanıcı isteği (2026-10-09).
+  - Giriş ve kayıt ayrı ekranlar (`/login`, `/signup`; mobilde iki mod).
+  - Girişte kayıtsız e-posta için "kayıtlı hesap bulunamadı", kayıtlı e-posta için "şifre hatalı" (hız sınırlı API kontrolü).
+  - Kayıtta Kullanım Koşulları + KVKK Aydınlatma Metni için zorunlu onay kutusu; onay tarihi ve metin sürümü saklanıyor.
+
 ---
 
 ## 6. Epic 2: Temel Analiz (Fundamental)

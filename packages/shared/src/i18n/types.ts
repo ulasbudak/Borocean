@@ -8,6 +8,9 @@ export interface AuthErrorMessages {
   samePassword: string;
   passwordMismatch: string;
   displayNameInvalid: string;
+  accountNotFound: string;
+  wrongPassword: string;
+  consentRequired: string;
   sessionMissing: string;
   generic: string;
 }
@@ -41,6 +44,13 @@ export interface Messages {
     forgotPasswordBrowserHint: string;
     displayName: string;
     displayNameHint: string;
+    signupTitle: string;
+    signupSubtitle: string;
+    noAccount: string;
+    createAccountLink: string;
+    haveAccount: string;
+    loginLink: string;
+    consentText: string;
     forgotPasswordTitle: string;
     forgotPasswordSubtitle: string;
     sendResetLink: string;

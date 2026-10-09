@@ -9,6 +9,7 @@ import {
 } from "react-native";
 import {
   DISPLAY_NAME_MAX,
+  LEGAL_VERSION,
   authErrorKey,
   isValidDisplayName,
   normalizeDisplayName,
@@ -17,18 +18,31 @@ import { supabase } from "../lib/supabase";
 import { useLocale } from "../lib/locale-context";
 import { useTheme, radius, spacing, type ThemeColors } from "../lib/theme";
 import { openWebPage } from "../lib/web-links";
+import { checkAccount } from "../lib/account-client";
 
+type Mode = "login" | "signup";
+
+/** Log-in and sign-up are separate modes; sign-up asks for a username and consent. */
 export function AuthScreen() {
   const { messages } = useLocale();
+  const t = messages.auth;
   const { colors } = useTheme();
   const styles = makeStyles(colors);
+  const [mode, setMode] = useState<Mode>("login");
   const [displayName, setDisplayName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [consent, setConsent] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [showResetHint, setShowResetHint] = useState(false);
+
+  function switchMode(next: Mode) {
+    setMode(next);
+    setError(null);
+    setNotice(null);
+  }
 
   function openPasswordReset() {
     setShowResetHint(true);
@@ -39,11 +53,17 @@ export function AuthScreen() {
     setLoading(true);
     setError(null);
     setNotice(null);
-    const { error } = await supabase.auth.signInWithPassword({
-      email: email.trim(),
-      password,
-    });
-    if (error) setError(messages.auth.errors[authErrorKey(error.code)]);
+    const address = email.trim();
+    const { error } = await supabase.auth.signInWithPassword({ email: address, password });
+    if (error) {
+      const key = authErrorKey(error.code);
+      if (key === "invalidCredentials") {
+        const exists = await checkAccount(address);
+        setError(exists === false ? t.errors.accountNotFound : t.errors.wrongPassword);
+      } else {
+        setError(t.errors[key]);
+      }
+    }
     setLoading(false);
   }
 
@@ -51,43 +71,64 @@ export function AuthScreen() {
     setError(null);
     setNotice(null);
     if (!isValidDisplayName(displayName)) {
-      setError(messages.auth.errors.displayNameInvalid);
+      setError(t.errors.displayNameInvalid);
+      return;
+    }
+    if (!consent) {
+      setError(t.errors.consentRequired);
       return;
     }
     setLoading(true);
+    const address = email.trim();
+    if ((await checkAccount(address)) === true) {
+      setError(t.errors.userAlreadyExists);
+      setLoading(false);
+      return;
+    }
     const { data, error } = await supabase.auth.signUp({
-      email: email.trim(),
+      email: address,
       password,
-      options: { data: { display_name: normalizeDisplayName(displayName) } },
+      options: {
+        data: {
+          display_name: normalizeDisplayName(displayName),
+          legal_accepted_at: new Date().toISOString(),
+          legal_version: LEGAL_VERSION,
+        },
+      },
     });
     if (error) {
-      setError(messages.auth.errors[authErrorKey(error.code)]);
+      setError(t.errors[authErrorKey(error.code)]);
     } else if (!data.session) {
       // Email confirmation is on: the account activates from the emailed link.
-      setNotice(
-        `${messages.auth.checkEmailBody.replace("{email}", email.trim())} ${messages.auth.checkEmailHint}`
-      );
+      setNotice(`${t.checkEmailBody.replace("{email}", address)} ${t.checkEmailHint}`);
     }
     setLoading(false);
   }
+
+  const consentParts = t.consentText.split(/(\{terms\}|\{kvkk\})/);
 
   return (
     <View style={styles.container}>
       <View style={styles.card}>
         <Text style={styles.title}>{messages.common.appName}</Text>
+        <Text style={styles.subtitle}>{mode === "login" ? t.title : t.signupTitle}</Text>
+        {mode === "signup" && (
+          <>
+            <TextInput
+              style={styles.input}
+              placeholder={t.displayName}
+              placeholderTextColor={colors.textTertiary}
+              autoCapitalize="words"
+              maxLength={DISPLAY_NAME_MAX}
+              value={displayName}
+              onChangeText={setDisplayName}
+            />
+            <Text style={styles.fieldHint}>{t.displayNameHint}</Text>
+          </>
+        )}
         <TextInput
           style={styles.input}
-          placeholder={messages.auth.displayName}
-          placeholderTextColor={colors.textTertiary}
-          autoCapitalize="words"
-          maxLength={DISPLAY_NAME_MAX}
-          value={displayName}
-          onChangeText={setDisplayName}
-        />
-        <Text style={styles.fieldHint}>{messages.auth.displayNameHint}</Text>
-        <TextInput
-          style={styles.input}
-          placeholder={messages.auth.email}
+          placeholder={t.email}
           placeholderTextColor={colors.textTertiary}
           autoCapitalize="none"
           keyboardType="email-address"
@@ -96,45 +137,70 @@ export function AuthScreen() {
         />
         <TextInput
           style={styles.input}
-          placeholder={messages.auth.password}
+          placeholder={t.password}
           placeholderTextColor={colors.textTertiary}
           secureTextEntry
           autoCapitalize="none"
           value={password}
           onChangeText={setPassword}
+          returnKeyType="go"
+          onSubmitEditing={mode === "login" ? signInWithEmail : undefined}
         />
+        {mode === "signup" && (
+          <TouchableOpacity
+            style={styles.consentRow}
+            onPress={() => setConsent((v) => !v)}
+            accessibilityRole="checkbox"
+            accessibilityState={{ checked: consent }}
+          >
+            <View style={[styles.checkbox, consent && styles.checkboxChecked]}>
+              {consent && <Text style={styles.checkmark}>✓</Text>}
+            </View>
+            <Text style={styles.consentText}>
+              {consentParts.map((part, i) =>
+                part === "{terms}" ? (
+                  <Text key={i} style={styles.inlineLink} onPress={() => openWebPage("terms")}>
+                    {messages.legal.termsTitle}
+                  </Text>
+                ) : part === "{kvkk}" ? (
+                  <Text key={i} style={styles.inlineLink} onPress={() => openWebPage("kvkk")}>
+                    {messages.legal.kvkkTitle}
+                  </Text>
+                ) : (
+                  <Text key={i}>{part}</Text>
+                )
+              )}
+            </Text>
+          </TouchableOpacity>
+        )}
         {error && <Text style={styles.error}>{error}</Text>}
         {notice && <Text style={styles.notice}>{notice}</Text>}
         {loading ? (
           <ActivityIndicator color={colors.accent} />
         ) : (
-          <View style={styles.buttonRow}>
-            <TouchableOpacity style={styles.button} onPress={signInWithEmail}>
-              <Text style={styles.buttonText}>{messages.auth.login}</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.button, styles.secondaryButton]}
-              onPress={signUpWithEmail}
-            >
-              <Text style={[styles.buttonText, styles.secondaryButtonText]}>
-                {messages.auth.signup}
-              </Text>
-            </TouchableOpacity>
-          </View>
+          <TouchableOpacity
+            style={styles.button}
+            onPress={mode === "login" ? signInWithEmail : signUpWithEmail}
+          >
+            <Text style={styles.buttonText}>{mode === "login" ? t.login : t.signup}</Text>
+          </TouchableOpacity>
         )}
-        <TouchableOpacity onPress={openPasswordReset}>
-          <Text style={styles.link}>{messages.auth.forgotPassword}</Text>
+        {mode === "login" && (
+          <>
+            <TouchableOpacity onPress={openPasswordReset}>
+              <Text style={styles.link}>{t.forgotPassword}</Text>
+            </TouchableOpacity>
+            {showResetHint && <Text style={styles.hint}>{t.forgotPasswordBrowserHint}</Text>}
+          </>
+        )}
+        <TouchableOpacity onPress={() => switchMode(mode === "login" ? "signup" : "login")}>
+          <Text style={styles.hint}>
+            {mode === "login" ? t.noAccount : t.haveAccount}{" "}
+            <Text style={styles.inlineLink}>
+              {mode === "login" ? t.createAccountLink : t.loginLink}
+            </Text>
+          </Text>
         </TouchableOpacity>
-        {showResetHint && <Text style={styles.hint}>{messages.auth.forgotPasswordBrowserHint}</Text>}
-        <Text style={styles.hint}>{messages.legal.signupNotice}</Text>
-        <View style={styles.legalRow}>
-          <TouchableOpacity onPress={() => openWebPage("terms")}>
-            <Text style={styles.legalLink}>{messages.legal.termsTitle}</Text>
-          </TouchableOpacity>
-          <TouchableOpacity onPress={() => openWebPage("kvkk")}>
-            <Text style={styles.legalLink}>{messages.legal.kvkkTitle}</Text>
-          </TouchableOpacity>
-        </View>
       </View>
     </View>
   );
@@ -172,29 +238,15 @@ function makeStyles(colors: ThemeColors) {
       paddingVertical: spacing[3],
       color: colors.textPrimary,
     },
-    buttonRow: {
-      flexDirection: "row",
-      gap: spacing[3],
-      marginTop: spacing[2],
-    },
     button: {
-      flex: 1,
       backgroundColor: colors.accent,
       paddingVertical: spacing[3],
       borderRadius: radius.md,
       alignItems: "center",
     },
-    secondaryButton: {
-      backgroundColor: colors.surfaceElevated,
-      borderWidth: 1,
-      borderColor: colors.borderDefault,
-    },
     buttonText: {
       color: colors.accentText,
       fontWeight: "600",
-    },
-    secondaryButtonText: {
-      color: colors.textPrimary,
     },
     error: {
       color: colors.negative,
@@ -211,6 +263,45 @@ function makeStyles(colors: ThemeColors) {
       textAlign: "center",
       marginTop: spacing[1],
     },
+    subtitle: {
+      textAlign: "center",
+      color: colors.textSecondary,
+      fontWeight: "600",
+      marginTop: -spacing[2],
+    },
+    consentRow: {
+      flexDirection: "row",
+      alignItems: "flex-start",
+      gap: spacing[2],
+    },
+    checkbox: {
+      width: 20,
+      height: 20,
+      borderRadius: 4,
+      borderWidth: 1,
+      borderColor: colors.borderDefault,
+      alignItems: "center",
+      justifyContent: "center",
+      marginTop: 1,
+    },
+    checkboxChecked: {
+      backgroundColor: colors.accent,
+      borderColor: colors.accent,
+    },
+    checkmark: {
+      color: colors.accentText,
+      fontSize: 13,
+      fontWeight: "700",
+    },
+    consentText: {
+      flex: 1,
+      fontSize: 12,
+      color: colors.textSecondary,
+    },
+    inlineLink: {
+      color: colors.accent,
+      fontWeight: "600",
+    },
     fieldHint: {
       color: colors.textTertiary,
       fontSize: 11,
@@ -220,17 +311,6 @@ function makeStyles(colors: ThemeColors) {
       color: colors.textTertiary,
       fontSize: 12,
       textAlign: "center",
-    },
-    legalRow: {
-      flexDirection: "row",
-      justifyContent: "center",
-      flexWrap: "wrap",
-      gap: spacing[4],
-    },
-    legalLink: {
-      color: colors.textSecondary,
-      fontSize: 12,
-      textDecorationLine: "underline",
     },
   });
 }

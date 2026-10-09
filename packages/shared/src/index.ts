@@ -8,3 +8,4 @@ export * from "./auth/errors";
 export * from "./auth/display-name";
 export * from "./exchanges";
 export * from "./insights";
+export * from "./legal";

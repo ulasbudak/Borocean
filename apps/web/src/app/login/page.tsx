@@ -30,7 +30,7 @@ export default async function LoginPage({
         </div>
       )}
 
-      <LoginForm messages={t.auth} legal={t.legal} providers={providers} />
+      <LoginForm messages={t.auth} providers={providers} />
     </AuthShell>
   );
 }

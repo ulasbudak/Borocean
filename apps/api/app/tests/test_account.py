@@ -94,3 +94,38 @@ def test_delete_me_returns_503_when_database_is_down(monkeypatch):
         main.app.dependency_overrides.pop(get_current_claims, None)
 
     assert response.status_code == 503
+
+
+def test_account_check_is_rate_limited_per_email_and_globally(monkeypatch):
+    from collections import deque
+
+    monkeypatch.setattr(account, "_checks_by_email", {})
+    monkeypatch.setattr(account, "_checks_global", deque())
+    for _ in range(account.ACCOUNT_CHECK_PER_EMAIL):
+        assert account.account_check_allowed("a@x.com", now=0.0)
+    assert not account.account_check_allowed("a@x.com", now=1.0)
+    assert account.account_check_allowed("a@x.com", now=account.ACCOUNT_CHECK_PER_EMAIL_WINDOW + 1)
+
+    monkeypatch.setattr(account, "_checks_by_email", {})
+    monkeypatch.setattr(account, "_checks_global", deque())
+    for i in range(account.ACCOUNT_CHECK_GLOBAL):
+        assert account.account_check_allowed(f"u{i}@x.com", now=0.0)
+    assert not account.account_check_allowed("new@x.com", now=0.0)
+
+
+def test_account_exists_endpoint(monkeypatch):
+    monkeypatch.setattr(main, "account_check_allowed", lambda email: True)
+    monkeypatch.setattr(main, "account_exists", lambda email: email == "known@x.com")
+
+    assert client.post("/auth/account-exists", json={"email": " Known@X.com "}).json() == {
+        "exists": True
+    }
+    assert client.post("/auth/account-exists", json={"email": "nobody@x.com"}).json() == {
+        "exists": False
+    }
+    # Malformed input and rate-limited calls withhold the answer.
+    assert client.post("/auth/account-exists", json={"email": "nope"}).json() == {"exists": None}
+    monkeypatch.setattr(main, "account_check_allowed", lambda email: False)
+    assert client.post("/auth/account-exists", json={"email": "nobody@x.com"}).json() == {
+        "exists": None
+    }

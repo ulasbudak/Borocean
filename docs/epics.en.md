@@ -205,6 +205,13 @@ So that I can get a quick first impression of the stock.
 
 - [x] **Done** — see **`docs/stories/story-1.8.md`**. User request (2026-10-09). Sign-up asks for a username (`user_metadata.display_name`). The site shows it instead of the email address, and it can be changed in settings (web + mobile). The dashboard's quick-access menu moved to the top.
 
+### Story 1.9: Separate Login and Sign-Up Screens, Consent at Sign-Up
+
+- [x] **Done** — see **`docs/stories/story-1.9.md`**. User request (2026-10-09).
+  - Login and sign-up are separate screens (`/login`, `/signup`; two modes on mobile).
+  - Login says "no account found" for an unknown email and "incorrect password" for a known one (rate-limited API check).
+  - Sign-up has a required consent checkbox for the Terms of Use + KVKK Privacy Notice; the consent time and text version are stored.
+
 ---
 
 ## 6. Epic 2: Fundamental Analysis

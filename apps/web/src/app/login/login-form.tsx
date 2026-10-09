@@ -2,73 +2,42 @@
 
 import { useActionState } from "react";
 import Link from "next/link";
-import { Lock, Mail, User } from "lucide-react";
+import { Lock, Mail } from "lucide-react";
 import type { Messages } from "@borocean/shared";
 import { Field, IconInput, Label } from "@/components/ui/input";
-import {
-  primaryButtonClass,
-  secondaryButtonClass,
-} from "@/components/auth/button-styles";
+import { primaryButtonClass } from "@/components/auth/button-styles";
 import { Notice } from "@/components/auth/notice";
-import { authenticate, type AuthFormState } from "./actions";
 import type { OAuthProvider } from "@/lib/auth-providers";
+import { signIn, type AuthFormState } from "./actions";
 import { SocialButtons } from "./social-buttons";
 import { SubmitButton } from "./submit-button";
 
+/** Log-in only: Enter or "Log In" signs in; sign-up lives on its own page (/signup). */
 export function LoginForm({
   messages,
-  legal,
   providers,
 }: {
   messages: Messages["auth"];
-  legal: Messages["legal"];
   providers: OAuthProvider[];
 }) {
-  const [state, formAction] = useActionState<AuthFormState, FormData>(
-    authenticate,
-    {
-      email: "",
-    },
-  );
-
-  if (state.checkEmail) {
-    return (
-      <div className="flex flex-col gap-4">
-        <Notice tone="success">
-          <p className="font-medium">{messages.checkEmailTitle}</p>
-          <p className="mt-1">
-            {messages.checkEmailBody.replace("{email}", state.email)}
-          </p>
-        </Notice>
-        <p className="text-xs text-text-tertiary">{messages.checkEmailHint}</p>
-        {/* A plain anchor, not <Link>: this is already /login, and a client-side navigation
-            would keep the action state (and this screen) instead of showing the form again. */}
-        <a href="/login" className={`${secondaryButtonClass} text-center`}>
-          {messages.backToLogin}
-        </a>
-      </div>
-    );
-  }
+  const [state, formAction] = useActionState<AuthFormState, FormData>(signIn, { email: "" });
 
   return (
     <>
       <form action={formAction} className="flex flex-col gap-4">
         {state.error && (
-          <Notice tone="error">{messages.errors[state.error]}</Notice>
+          <Notice tone="error">
+            {messages.errors[state.error]}
+            {state.error === "accountNotFound" && (
+              <>
+                {" "}
+                <Link href="/signup" className="font-medium underline">
+                  {messages.createAccountLink}
+                </Link>
+              </>
+            )}
+          </Notice>
         )}
-        <Field>
-          <Label htmlFor="displayName">{messages.displayName}</Label>
-          <IconInput
-            icon={<User size={16} />}
-            id="displayName"
-            name="displayName"
-            type="text"
-            autoComplete="nickname"
-            maxLength={30}
-            defaultValue={state.displayName}
-          />
-          <p className="mt-1 text-xs text-text-tertiary">{messages.displayNameHint}</p>
-        </Field>
         <Field>
           <Label htmlFor="email">{messages.email}</Label>
           <IconInput
@@ -105,24 +74,9 @@ export function LoginForm({
             minLength={6}
           />
         </Field>
-        <div className="mt-2 flex flex-col gap-2">
-          <SubmitButton
-            name="intent"
-            value="signin"
-            pendingText={messages.loggingIn}
-            className={primaryButtonClass}
-          >
-            {messages.login}
-          </SubmitButton>
-          <SubmitButton
-            name="intent"
-            value="signup"
-            pendingText={messages.signingUp}
-            className={secondaryButtonClass}
-          >
-            {messages.signup}
-          </SubmitButton>
-        </div>
+        <SubmitButton pendingText={messages.loggingIn} className={`mt-2 ${primaryButtonClass}`}>
+          {messages.login}
+        </SubmitButton>
       </form>
 
       {providers.length > 0 && (
@@ -132,19 +86,14 @@ export function LoginForm({
             {messages.orDivider}
             <span className="h-px flex-1 bg-border-subtle" />
           </div>
-
           <SocialButtons messages={messages} providers={providers} />
         </>
       )}
 
-      <p className="mt-5 text-center text-xs leading-relaxed text-text-tertiary">
-        {legal.signupNotice}{" "}
-        <Link href="/terms" className="underline hover:text-text-primary">
-          {legal.termsTitle}
-        </Link>
-        {" · "}
-        <Link href="/kvkk" className="underline hover:text-text-primary">
-          {legal.kvkkTitle}
+      <p className="mt-6 text-center text-sm text-text-tertiary">
+        {messages.noAccount}{" "}
+        <Link href="/signup" className="font-medium text-accent hover:underline">
+          {messages.createAccountLink}
         </Link>
       </p>
     </>
