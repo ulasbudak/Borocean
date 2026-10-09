@@ -26,6 +26,11 @@ export interface Messages {
   home: {
     goToDashboard: string;
     loginOrSignup: string;
+    heroTitle: string;
+    heroText: string;
+    featuresTitle: string;
+    features: { title: string; text: string }[];
+    freeNote: string;
   };
   auth: {
     title: string;

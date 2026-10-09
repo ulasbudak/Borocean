@@ -1,7 +1,8 @@
 import { CONTACT_EMAIL, LegalPage } from "@/components/legal/legal-page";
 
 export const metadata = {
-  title: "KVKK Aydınlatma Metni — Borocean",
+  title: "KVKK Aydınlatma Metni",
+  alternates: { canonical: "/kvkk" },
 };
 
 // Story 12.2. The data inventory below mirrors what the app actually stores

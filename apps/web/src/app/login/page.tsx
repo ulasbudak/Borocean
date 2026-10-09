@@ -5,6 +5,13 @@ import { Notice } from "@/components/auth/notice";
 import { enabledOAuthProviders } from "@/lib/auth-providers";
 import { LoginForm } from "./login-form";
 
+
+export const metadata = {
+  title: "Giriş Yap",
+  description: "Borocean hesabına giriş yap.",
+  alternates: { canonical: "/login" },
+};
+
 export default async function LoginPage({
   searchParams,
 }: {

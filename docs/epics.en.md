@@ -1045,6 +1045,14 @@ So that we turn on a feature with a yearly cost when it's needed.
 
 ### Story 14.6: Domain Consolidation and Basic SEO
 
+- [x] **Done (2026-10-09).**
+  - **Icons:** the default Next.js tab icon was replaced with the Borocean logo (`icon.svg`, `apple-icon.png`, `favicon.ico`); unused template SVGs were deleted.
+  - **Files for search engines:** `robots.txt` (sign-in-only pages excluded), `sitemap.xml` (6 public pages), share image (`opengraph-image`).
+  - **Page metadata:** site-wide title template, description, keywords, canonical URL, Open Graph/Twitter data; own titles for the login, sign-up and legal pages.
+  - **Home page:** a crawlable heading, intro text and a 6-feature section; `WebApplication` structured data.
+  - **Single address:** `www.borocean.com` and `web-three-kappa-87.vercel.app` redirect to `borocean.com` with 308 (`proxy.ts`).
+  - **User's part:** verify the domain in Google Search Console and submit the sitemap.
+
 As a **product owner**,
 I want the site to appear at a single address (`borocean.com`) and be listed properly by search engines,
 So that the `www`, `vercel.app` and `onrender.com` addresses don't look scattered.

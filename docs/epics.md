@@ -1043,6 +1043,14 @@ So that yıllık maliyeti olan bir özelliği ihtiyaç olduğunda açalım.
 
 ### Story 14.6: Alan Adı Düzeni ve Temel SEO
 
+- [x] **Tamamlandı (2026-10-09).**
+  - **İkonlar:** Next.js'in varsayılan sekme ikonu Borocean logosuyla değişti (`icon.svg`, `apple-icon.png`, `favicon.ico`); kullanılmayan şablon SVG'leri silindi.
+  - **Arama motorları için dosyalar:** `robots.txt` (giriş gerektiren sayfalar dışarıda), `sitemap.xml` (herkese açık 6 sayfa), paylaşım görseli (`opengraph-image`).
+  - **Sayfa bilgileri:** Site geneli başlık şablonu, açıklama, anahtar kelimeler, canonical adres, Open Graph/Twitter bilgileri; giriş, kayıt ve hukuki sayfalara kendi başlıkları.
+  - **Ana sayfa:** Arama motorunun okuyabileceği başlık, tanıtım metni ve 6 özelliklik bölüm; `WebApplication` yapılandırılmış verisi.
+  - **Tek adres:** `www.borocean.com` ve `web-three-kappa-87.vercel.app` 308 ile `borocean.com`'a yönleniyor (`proxy.ts`).
+  - **Kullanıcı işi:** Google Search Console'da alan adını doğrulayıp site haritasını göndermek.
+
 As a **ürün sahibi**,
 I want sitenin tek bir adreste (`borocean.com`) görünmesini ve arama motorlarında düzgün listelenmesini,
 So that `www`, `vercel.app` ve `onrender.com` adresleri dağınık görünmesin.

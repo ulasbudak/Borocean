@@ -4,6 +4,13 @@ import { AuthShell } from "@/components/auth/auth-shell";
 import { enabledOAuthProviders } from "@/lib/auth-providers";
 import { SignupForm } from "./signup-form";
 
+
+export const metadata = {
+  title: "Kayıt Ol",
+  description: "Ücretsiz Borocean hesabı oluştur: hisse analizi, portföy takibi ve yapay zeka destekli raporlar.",
+  alternates: { canonical: "/signup" },
+};
+
 export default async function SignupPage() {
   const locale = await getLocale();
   const t = messages[locale];

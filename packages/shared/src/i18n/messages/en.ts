@@ -11,6 +11,19 @@ export const en: Messages = {
   home: {
     goToDashboard: "Go to dashboard",
     loginOrSignup: "Log in / Sign up",
+    heroTitle: "Stock analysis, portfolio tracking and AI reports in one app",
+    heroText:
+      "Borocean is a research tool for analyzing US-listed stocks with publicly available data, from both a fundamental and a technical angle. It doesn't give buy/sell recommendations; it makes the data easier to read.",
+    featuresTitle: "What you can do",
+    features: [
+      { title: "Fundamentals and sector comparison", text: "Compare P/E, P/B, ROE, leverage and margins with the sector average; see five years of financials on a chart." },
+      { title: "Technical analysis", text: "Study price action with candlestick charts, 30+ indicators, drawing tools and rule-based signals." },
+      { title: "Screening and comparison", text: "Screen stocks with fundamental and technical criteria combined, save screens, compare stocks side by side." },
+      { title: "Watchlists and alerts", text: "Set price and indicator alerts on the stocks you follow and get notified when they trigger." },
+      { title: "Portfolio tracking", text: "Track the value and profit/loss of your positions; important updates on your holdings arrive every morning." },
+      { title: "Simulation and AI reports", text: "Try trading with a virtual budget; read AI analysis reports and a daily sector bulletin based on public data." },
+    ],
+    freeNote: "Free. Signing up takes a minute.",
   },
   auth: {
     title: "Log In",

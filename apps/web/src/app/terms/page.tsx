@@ -2,7 +2,8 @@ import Link from "next/link";
 import { CONTACT_EMAIL, LegalPage } from "@/components/legal/legal-page";
 
 export const metadata = {
-  title: "Kullanım Koşulları — Borocean",
+  title: "Kullanım Koşulları",
+  alternates: { canonical: "/terms" },
 };
 
 // Story 12.1/12.2. Section 2 is the SPK-facing core: what the app does and deliberately

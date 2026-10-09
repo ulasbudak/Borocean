@@ -2,7 +2,8 @@ import Link from "next/link";
 import { CONTACT_EMAIL, LegalPage } from "@/components/legal/legal-page";
 
 export const metadata = {
-  title: "Gizlilik Politikası — Borocean",
+  title: "Gizlilik Politikası",
+  alternates: { canonical: "/privacy" },
 };
 
 export default function PrivacyPage() {

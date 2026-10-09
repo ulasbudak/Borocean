@@ -11,6 +11,19 @@ export const tr: Messages = {
   home: {
     goToDashboard: "Panele git",
     loginOrSignup: "Giriş Yap / Kayıt Ol",
+    heroTitle: "Hisse analizi, portföy takibi ve yapay zeka raporları tek uygulamada",
+    heroText:
+      "Borocean, ABD borsalarındaki hisseleri kamuya açık verilerle temel ve teknik analiz açısından incelemen için bir araştırma aracı. Al/sat önerisi vermez; verileri anlaşılır hale getirir.",
+    featuresTitle: "Neler yapabilirsin?",
+    features: [
+      { title: "Temel analiz ve sektör kıyaslaması", text: "F/K, PD/DD, ROE, borçluluk ve kâr marjlarını sektör ortalamasıyla karşılaştır; 5 yıllık finansal geçmişi grafikte gör." },
+      { title: "Teknik analiz", text: "Mum grafiği, 30'dan fazla gösterge, çizim araçları ve kural bazlı sinyallerle fiyat hareketini incele." },
+      { title: "Tarama ve karşılaştırma", text: "Temel ve teknik kriterleri birleştirerek hisse tara, taramaları kaydet, hisseleri yan yana karşılaştır." },
+      { title: "İzleme listesi ve alarmlar", text: "Takip ettiğin hisseler için fiyat ve gösterge alarmı kur; tetiklendiğinde bildirim al." },
+      { title: "Portföy takibi", text: "Pozisyonlarının değerini ve kâr/zararını izle; portföyündeki hisselerdeki önemli gelişmeler her sabah önüne gelsin." },
+      { title: "Simülasyon ve yapay zeka raporları", text: "Sanal bütçeyle alım-satım dene; kamuya açık verilere dayanan yapay zeka analiz raporlarını ve günlük sektör bültenini oku." },
+    ],
+    freeNote: "Ücretsiz. Kayıt olmak bir dakika sürer.",
   },
   auth: {
     title: "Giriş Yap",
