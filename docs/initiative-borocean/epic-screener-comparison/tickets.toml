@@ -1,0 +1,40 @@
+# Epic 4 — generated 2026-10-09 from docs/epics.md; entry ids match the legacy story numbers.
+
+[[entry]]
+id = 1
+type = "story"
+title = "Çoklu Kriter Tarama"
+description = "Aktif trader ister: piyasa değeri, F/K, RSI, hacim, sektör, borsa gibi kriterleri birleştirerek hisse taraması yapmak."
+verify = "Tüm kriterlere uyan hisseler bir tabloda listelenir (FR-030)."
+covers = ["FR-030"]
+after = []
+hitl = false
+risk = "low"
+references = ["docs/stories/story-4.1.md", "docs/epics.md#story-41"]
+# legacy id: Story 4.1
+
+[[entry]]
+id = 2
+type = "story"
+title = "Kayıtlı Taramalar"
+description = "Aktif trader ister: tarama kriter setimi bir isimle kaydedip tekrar çalıştırabilmek."
+verify = "Kriter seti kullanıcı hesabına bağlı olarak saklanır (FR-031)."
+covers = ["FR-031"]
+after = []
+hitl = false
+risk = "low"
+references = ["docs/stories/story-4.2.md", "docs/epics.md#story-42"]
+# legacy id: Story 4.2
+
+[[entry]]
+id = 3
+type = "story"
+title = "Hisse Karşılaştırma Tablosu"
+description = "Kullanıcı ister: en az 4 hisseyi yan yana temel ve teknik metriklerle karşılaştırmak."
+verify = "Seçilen hisselerin temel ve teknik metrikleri yan yana bir tabloda gösterilir (FR-032)."
+covers = ["FR-032"]
+after = []
+hitl = false
+risk = "low"
+references = ["docs/stories/story-4.3.md", "docs/epics.md#story-43"]
+# legacy id: Story 4.3

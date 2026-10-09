@@ -1,0 +1,104 @@
+# Epic 11 — generated 2026-10-09 from docs/epics.md; entry ids match the legacy story numbers.
+
+[[entry]]
+id = 1
+type = "story"
+title = "Kripto Piyasa Verisi Adaptörü"
+description = "Geliştirici ister: kripto için arama, anlık fiyat ve mum verisini mevcut arayüzle sunan market_data adaptörü. Ayrıca AD-18'i uygular: exchange='CRYPTO' tek sahipli borsa listesine eklenir, 0001/0002/0003/0006/0007/0011'deki CHECK kısıtları tek migration ile genişletilir; AD-5'e göre market_data borsaya göre sağlayıcı seçer ve tanınmayan borsada ABD'ye düşmez (alerts.py sapması kapanır). Sonraki kripto story'leri buna dayanır."
+verify = "Bir test, /symbols/search?q=BTC'nin exchange=CRYPTO sonucu döndürdüğünü, overview/candles'ın hisse şekliyle yanıt verdiğini ve kripto çağrılarının Twelve Data hisse throttle'ını tüketmediğini doğrular; veri kaynağı kararı story'de yazılıdır."
+covers = ["FR-120"]
+after = []
+hitl = false
+risk = "high"
+unknown = "Veri kaynağı, başlangıç evreni ve hukuki görüş ihtiyacı kullanıcıyla netleşmeli (Epic 11 açık soruları)."
+references = ["docs/epics.md#story-111"]
+# legacy id: Story 11.1
+
+[[entry]]
+id = 2
+type = "story"
+title = "Kripto Arama ve Detay Sayfası"
+description = "Kullanıcı ister: bir kripto parayı arayıp detay sayfasında fiyatını, grafiğini ve temel piyasa bilgilerini görmek."
+verify = "BTC araması CRYPTO rozetiyle sonuç verir, /stock/CRYPTO/BTC web ve mobilde açılır, hisseye özgü bölümler gizlidir ve sayfa oynaklık notu ile 'yatırım tavsiyesi değildir' ibaresini taşır."
+covers = ["FR-121"]
+after = [1, "12.1"]
+hitl = false
+risk = "medium"
+references = ["docs/epics.md#story-112"]
+# legacy id: Story 11.2
+
+[[entry]]
+id = 3
+type = "story"
+title = "Kripto Teknik Göstergeler ve Sinyaller"
+description = "Aktif trader ister: mevcut gösterge ve sinyal motorunu kripto grafiklerinde kullanmak; 11.1'in CRYPTO şemasına ve 14.2'nin arka plan alarm çalıştırıcısına dayanır (sinyal alarmı zamanlamasını 7/24 yapar)."
+verify = "Bir kripto grafiğinde göstergeler ve sinyaller hesaplanır; bir kripto sinyal alarmı hafta sonu tetiklenir; hiçbir çıktı yönlendirme içermez."
+covers = ["FR-122"]
+after = [1, "3.2", "3.3", "3.5", "5.3", "14.2"]
+hitl = false
+risk = "medium"
+references = ["docs/epics.md#story-113"]
+# legacy id: Story 11.3
+
+[[entry]]
+id = 4
+type = "story"
+title = "İzleme Listesi, Fiyat Alarmı ve Portföyde Kripto"
+description = "Kullanıcı ister: kripto varlıkları izleme listesine ve portföye ekleyip fiyat alarmı kurmak; 11.1 şemasına ve 11.3'ün alarm çalıştırıcısı değişikliğine dayanır (fiyat alarmı zamanlamasını 7/24 yapar)."
+verify = "Bir kripto varlık izleme listesine eklenir, fiyat alarmı 7/24 tetiklenir ve portföye 0.0025 gibi kesirli miktarla eklenip değeri ve kâr/zararı doğru hesaplanır."
+covers = ["FR-123"]
+after = [2, 3, "5.1", "5.2", "6.1", "14.2"]
+hitl = false
+risk = "medium"
+references = ["docs/epics.md#story-114"]
+# legacy id: Story 11.4
+
+[[entry]]
+id = 5
+type = "story"
+title = "Simülasyonda Kripto Alım-Satım"
+description = "Kullanıcı ister: simülasyonlarda kripto alıp satmak; 11.1 şemasına ve 11.2 detay sayfasına dayanır."
+verify = "Emir o anki gerçek kripto fiyatından yürütülür; kesirli miktar desteklenir (FR-124)."
+covers = ["FR-124"]
+after = [2, "10.1", "10.3"]
+hitl = false
+risk = "medium"
+references = ["docs/epics.md#story-115"]
+# legacy id: Story 11.5
+
+[[entry]]
+id = 6
+type = "story"
+title = "Kripto Tarama ve Karşılaştırma"
+description = "Kullanıcı ister: kripto varlıkları piyasa değeri, hacim ve fiyat değişimine göre tarayıp karşılaştırmak."
+verify = "Hisseye özgü kriterler (F/K, ROE, borç/özsermaye, sektör) gizlenir; piyasa değeri, 24s hacim, 24s/7g değişim ve RSI kriterleri sunulur (FR-125)."
+covers = ["FR-125"]
+after = [1, "4.1", "4.3"]
+hitl = false
+risk = "medium"
+references = ["docs/epics.md#story-116"]
+# legacy id: Story 11.6
+
+[[entry]]
+id = 7
+type = "story"
+title = "Kripto için AI Raporları (Kapsam Kararı)"
+description = "Ürün sahibi ister: Epic 9'un AI raporlarının kriptoya nasıl uyarlanacağına (veya uyarlanmayacağına) karar vermek."
+verify = "Kripto AI raporu kararı story'de yazılıdır; seçilen yolda rapor ya kriptoya özgü girdilerle ve uyum kurallarıyla üretilir ya da 'desteklenmiyor' gösterilir."
+covers = ["FR-126"]
+after = [2, "9.1", "9.2"]
+hitl = false
+risk = "medium"
+references = ["docs/epics.md#story-117"]
+# legacy id: Story 11.7
+
+[[entry]]
+id = 8
+type = "story"
+title = "Refactor sweep"
+description = "Epic boyunca ertelenen temizlik ve inceleme bulgularını kapatır; kapsamı başlarken planlardan belirlenir."
+verify = "Tüm testler ve lint yeşil; ertelenen bulgular listesi boş."
+covers = []
+after = [1, 2, 3, 4, 5, 6, 7]
+hitl = false
+risk = "low"

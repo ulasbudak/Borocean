@@ -1,0 +1,92 @@
+# Epic 3 — generated 2026-10-09 from docs/epics.md; entry ids match the legacy story numbers.
+
+[[entry]]
+id = 1
+type = "story"
+title = "İnteraktif Fiyat Grafiği"
+description = "Kullanıcı ister: mum/çizgi/bar grafik türleri arasında geçiş yapıp farklı zaman dilimlerinde fiyat grafiğini incelemek."
+verify = "TradingView Lightweight Charts ile mum grafiği varsayılan olarak gösterilir (AD-9)."
+covers = ["FR-020"]
+after = []
+hitl = false
+risk = "low"
+references = ["docs/stories/story-3.1.md", "docs/epics.md#story-31"]
+# legacy id: Story 3.1
+
+[[entry]]
+id = 2
+type = "story"
+title = "Çekirdek İndikatörler"
+description = "Kullanıcı ister: grafiğe SMA/EMA, RSI, MACD, Bollinger Bantları, Hacim, Stokastik gibi çekirdek indikatörleri ekleyebilmek."
+verify = "Indikatör grafiğe overlay/alt panel olarak eklenir (FR-021)."
+covers = ["FR-021"]
+after = []
+hitl = false
+risk = "low"
+references = ["docs/stories/story-3.2.md", "docs/epics.md#story-32"]
+# legacy id: Story 3.2
+
+[[entry]]
+id = 3
+type = "story"
+title = "Geniş İndikatör Kütüphanesi"
+description = "Aktif trader ister: ADX, Fibonacci Retracement, Ichimoku, ATR, OBV, Parabolic SAR, Williams %R gibi ileri seviye indikatörlere erişmek."
+verify = "En az 30 indikatör aranabilir bir liste halinde sunulur (FR-022)."
+covers = ["FR-022"]
+after = []
+hitl = false
+risk = "low"
+references = ["docs/stories/story-3.3.md", "docs/epics.md#story-33"]
+# legacy id: Story 3.3
+
+[[entry]]
+id = 4
+type = "story"
+title = "Manuel Çizim Araçları"
+description = "Aktif trader ister: grafik üzerine trend çizgisi ve yatay destek/direnç çizgisi çizebilmek."
+verify = "Çizgi grafiğe eklenir ve kalıcı olarak saklanır (FR-023)."
+covers = ["FR-023"]
+after = []
+hitl = false
+risk = "low"
+references = ["docs/stories/story-3.4.md", "docs/epics.md#story-34"]
+# legacy id: Story 3.4
+
+[[entry]]
+id = 5
+type = "story"
+title = "Kural Bazlı Otomatik Sinyal Üretimi"
+description = "Aktif trader ister: RSI/MACD/hareketli ortalama kesişimi gibi hazır kurallara göre otomatik üretilen sinyalleri görmek."
+verify = "Backend `technical` modülü bir sinyal kaydı üretir ve hisse detay sayfasında gösterilir (FR-024)."
+covers = ["FR-024", "FR-025"]
+after = []
+hitl = false
+risk = "low"
+references = ["docs/stories/story-3.5.md", "docs/epics.md#story-35"]
+# legacy id: Story 3.5
+
+[[entry]]
+id = 6
+type = "story"
+title = "Özet Değerlendirme Skoru"
+description = "Yeni/amatör yatırımcı ister: karmaşık metriklere girmeden hissenin genel durumunu özetleyen basit bir skor/etiket görmek."
+verify = "1-100 arası bir skor veya Al/Nötr/Sat etiketi gösterilir (FR-003)."
+covers = ["FR-003"]
+after = []
+hitl = false
+risk = "low"
+references = ["docs/stories/story-3.6.md", "docs/epics.md#story-36"]
+# legacy id: Story 3.6
+
+[[entry]]
+id = 7
+type = "story"
+title = "Gelişmiş Al/Sat Önerisi Motoru"
+description = "Kullanıcı ister: özet skorun yalnızca bir sayı değil, kaç göstergenin hangi yönde olduğunu ve bunun okunabilir bir gerekçesini de görmek."
+verify = "Bu 6 yeni kural türü de sinyal listesinde (Story 3.5) görünür."
+covers = ["FR-003", "FR-024"]
+after = []
+hitl = false
+risk = "low"
+references = ["docs/stories/story-3.7.md", "docs/epics.md#story-37"]
+# legacy id: Story 3.7

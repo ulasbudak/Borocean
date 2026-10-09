@@ -1,0 +1,118 @@
+# Epic 1 — generated 2026-10-09 from docs/epics.md; entry ids match the legacy story numbers.
+
+[[entry]]
+id = 1
+type = "story"
+title = "Proje İskeleti ve Temel Altyapı Kurulumu"
+description = "Proje İskeleti ve Temel Altyapı Kurulumu."
+verify = "Story dosyasındaki kabul kriterleri karşılanır (docs/stories/story-1.1.md)."
+covers = []
+after = []
+hitl = true
+risk = "low"
+references = ["docs/stories/story-1.md", "docs/epics.md#story-11"]
+# legacy id: Story 1.1
+
+[[entry]]
+id = 2
+type = "story"
+title = "Kullanıcı Kaydı ve Girişi"
+description = "Yeni kullanıcı ister: e-posta veya Google/Apple hesabımla kayıt olup giriş yapabilmek."
+verify = "Supabase Auth üzerinde hesap oluşturulur ve kullanıcı oturum açmış olarak yönlendirilir."
+covers = ["FR-060"]
+after = []
+hitl = false
+risk = "low"
+references = ["docs/stories/story-1.2.md", "docs/epics.md#story-12"]
+# legacy id: Story 1.2
+
+[[entry]]
+id = 3
+type = "story"
+title = "Dil Seçimi ve Yerelleştirme Temeli"
+description = "Kullanıcı ister: uygulama dilini Türkçe veya İngilizce olarak seçebilmek."
+verify = "Uygulama o dilde açılır; desteklenmeyen bir dilse İngilizce varsayılan olur."
+covers = ["FR-090", "FR-091"]
+after = []
+hitl = false
+risk = "low"
+references = ["docs/stories/story-1.3.md", "docs/epics.md#story-13"]
+# legacy id: Story 1.3
+
+[[entry]]
+id = 4
+type = "story"
+title = "Hisse Arama"
+description = "Kullanıcı ister: sembol veya şirket adına göre ABD ve BIST hisselerini arayabilmek."
+verify = "Eşleşen sonuçlar borsa etiketiyle (NASDAQ/NYSE/BIST) 1 saniyenin altında listelenir (NFR-1)."
+covers = ["FR-001"]
+after = []
+hitl = false
+risk = "low"
+references = ["docs/stories/story-1.4.md", "docs/epics.md#story-14"]
+# legacy id: Story 1.4
+
+[[entry]]
+id = 5
+type = "story"
+title = "Hisse Genel Bakış Kartı"
+description = "Kullanıcı ister: bir hisseyi açtığımda güncel fiyat, günlük değişim, piyasa değeri ve şirket bilgilerini görmek."
+verify = "Güncel fiyat, günlük değişim (% ve mutlak), piyasa değeri, sektör ve endüstri bilgisi gösterilir."
+covers = ["FR-002"]
+after = []
+hitl = false
+risk = "low"
+references = ["docs/stories/story-1.5.md", "docs/epics.md#story-15"]
+# legacy id: Story 1.5
+
+[[entry]]
+id = 6
+type = "story"
+title = "BIST'in Geçici Olarak Devre Dışı Bırakılması"
+description = "Detaylı kabul kriterleri ve görev tanımı için bkz."
+verify = "Story dosyasındaki kabul kriterleri karşılanır (docs/stories/story-1.6.md)."
+covers = ["FR-001"]
+after = []
+hitl = false
+risk = "low"
+references = ["docs/stories/story-1.6.md", "docs/epics.md#story-16"]
+# legacy id: Story 1.6
+
+[[entry]]
+id = 7
+type = "story"
+title = "Satır İçi Giriş Hataları, E-posta Onay Bildirimi ve Şifre Sıfırlama"
+description = "Detaylı kabul kriterleri ve görev tanımı için bkz."
+verify = "Story dosyasındaki kabul kriterleri karşılanır (docs/stories/story-1.7.md)."
+covers = ["FR-060"]
+after = []
+hitl = false
+risk = "low"
+references = ["docs/stories/story-1.7.md", "docs/epics.md#story-17"]
+# legacy id: Story 1.7
+
+[[entry]]
+id = 8
+type = "story"
+title = "Kullanıcı Adı ve Panelde Üst Menü"
+description = "bkz."
+verify = "Story dosyasındaki kabul kriterleri karşılanır (docs/stories/story-1.8.md)."
+covers = ["FR-060"]
+after = []
+hitl = false
+risk = "low"
+references = ["docs/stories/story-1.8.md", "docs/epics.md#story-18"]
+# legacy id: Story 1.8
+
+[[entry]]
+id = 9
+type = "story"
+title = "Ayrı Giriş ve Kayıt Ekranları, Kayıtta Onay"
+description = "bkz."
+verify = "Story dosyasındaki kabul kriterleri karşılanır (docs/stories/story-1.9.md)."
+covers = ["FR-060"]
+after = []
+hitl = false
+risk = "low"
+references = ["docs/stories/story-1.9.md", "docs/epics.md#story-19"]
+# legacy id: Story 1.9

@@ -11,6 +11,8 @@ translationOf: docs/architecture.md
 
 # Borocean — System Architecture
 
+> **2026-10-09:** Superseded by `docs/initiative-borocean/architecture-borocean/architecture-borocean.md` (code-verified spine; AD-1…AD-9 ids kept, AD-10…AD-18 added). This document stays as the pre-code design record.
+
 *This is the English translation of [`docs/architecture.md`](architecture.md), which remains the source of truth. If the two ever disagree, the Turkish version wins until this file is re-synced.*
 
 ## 1. Architectural Paradigm

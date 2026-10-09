@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Borocean — Mobil Portföy (sabah push'u sonrası) · key screen mock</title>
+<style>
+/*
+  KEY SCREEN: Mobile PortfolioScreen opened from the morning push (EXPERIENCE › Key Flows › Flow 1,
+  steps 2–3): Ayşe tapped the NVDA "Yeni gelişme" badge, so the NVDA InsightCard is expanded and that
+  update is now read; AAPL still carries the unread (accent) badge. Dark mode (follows OS).
+  Rendered as a full-scroll capture so the whole screen is visible. Numbers are illustrative.
+
+  Governing spine sections:
+  - DESIGN.md › colors (dark), rounded (card = lg 14), spacing (screen edge spacing.4), components.card /
+    change-value / disclaimer; Components: Gelişme kartı (events, AI note, source-linked headlines,
+    unread badge, no directive language); Colors (tone line colors describe the data effect only).
+  - EXPERIENCE.md › Information Architecture (Portföy row; mobile = HomeScreen state flags, "← Panele dön");
+    Component Patterns: Gelişme kartı, Değişim değeri; State Patterns: Okunmamış gelişme;
+    Voice and Tone ("Ne oldu / Veride neyi değiştiriyor / Riskler"); Compliance in the UI;
+    Accessibility Floor (44pt touch targets — assumption); Responsive & Platform (mobile app row);
+    Key Flows › Flow 1 (Ayşe, 08:40, metro).
+  Code grounding: apps/mobile/screens/PortfolioScreen.tsx, InsightViews.tsx (InsightCard / InsightList),
+  apps/api/app/insight_runner.py (NOTE_SYSTEM_PROMPT headings, tone line, push data),
+  apps/api/app/insight_text.py (push_text), packages/shared/src/i18n/messages/tr.ts (insights, portfolio).
+  Known drift: shipped PortfolioScreen's ScrollView has no horizontal padding; the spine says
+  spacing.4 screen edges. This mock follows the spine (16px).
+*/
+:root{
+  --canvas:#0A0B0D; --surface:#121417; --surface-hover:#1A1D21; --surface-elevated:#1E2126;
+  --border-subtle:#23262B; --border-default:#2E3239;
+  --text-primary:#F4F5F7; --text-secondary:#9CA3AF; --text-tertiary:#6B7280;
+  --accent:#3B82F6; --accent-text:#EFF6FF; --positive:#34D399; --negative:#F87171; --warning:#F59E0B;
+  --r-md:10px; --r-lg:14px;
+  --font: -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#050607;font-family:var(--font);color:var(--text-primary);padding:32px;-webkit-font-smoothing:antialiased;display:flex;gap:40px;justify-content:center;align-items:flex-start;flex-wrap:wrap}
+.num{font-variant-numeric:tabular-nums}
+
+/* context panel (outside the device) */
+.ctx{width:300px;font-size:12px;line-height:18px;color:#7b828c}
+.ctx h2{font-size:13px;color:#c9cdd3;margin-bottom:8px;font-weight:600}
+.push{margin:12px 0 20px;background:rgba(40,43,48,.92);border-radius:16px;padding:10px 12px;color:#e9ebee;box-shadow:0 10px 30px rgba(0,0,0,.5)}
+.push .app{display:flex;align-items:center;gap:6px;font-size:11px;color:#a5abb3;margin-bottom:4px}
+.push .app i{width:16px;height:16px;border-radius:4px;background:var(--accent);display:inline-block}
+.push .app span:last-child{margin-left:auto}
+.push b{font-size:13px;display:block}
+.push p{font-size:13px;line-height:17px}
+.ctx ol{padding-left:16px}
+
+/* device */
+.phone{width:390px;border-radius:52px;padding:12px;background:#1b1d20;box-shadow:0 0 0 2px #2a2d31,0 40px 90px rgba(0,0,0,.7)}
+.screen{border-radius:42px;overflow:hidden;background:var(--canvas)}
+.status{height:50px;display:flex;align-items:center;justify-content:space-between;padding:0 30px 0 34px;font-size:15px;font-weight:600;position:relative}
+.island{position:absolute;left:50%;top:11px;transform:translateX(-50%);width:120px;height:34px;border-radius:20px;background:#000}
+.status .sys{display:flex;gap:6px;align-items:center;font-size:12px}
+.batt{width:24px;height:11px;border:1.5px solid #e5e7eb;border-radius:3px;position:relative}
+.batt::after{content:"";position:absolute;left:1px;top:1px;bottom:1px;width:15px;background:#e5e7eb;border-radius:1px}
+
+/* ScrollView content: gap spacing[3] */
+.content{padding:8px 16px 40px;display:flex;flex-direction:column;gap:12px}
+.backlink{color:var(--accent);font-weight:600;font-size:15px;min-height:28px;display:flex;align-items:center}
+.title{font-size:20px;font-weight:700}
+.create{display:flex;gap:8px}
+.input{flex:1;border:1px solid var(--border-default);background:var(--surface-elevated);border-radius:var(--r-md);padding:8px 12px;color:var(--text-tertiary);font-size:15px}
+.cbtn{flex:1;background:var(--accent);border-radius:var(--r-md);display:flex;align-items:center;justify-content:center;color:var(--accent-text);font-weight:600;font-size:15px;opacity:.5}
+
+.card{background:var(--surface);border:1px solid var(--border-subtle);border-radius:var(--r-lg);padding:16px;display:flex;flex-direction:column;gap:8px}
+.sec{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.4px;color:var(--text-tertiary)}
+.hint{font-size:12px;line-height:16px;color:var(--text-tertiary);margin-top:2px}
+
+/* InsightList */
+.li{border-top:1px solid var(--border-subtle);padding:8px 0}
+.srow{display:flex;align-items:center;gap:8px;min-height:28px}
+.dot{width:8px;height:8px;border-radius:4px;flex-shrink:0}
+.dot.unread{background:var(--accent)}
+.sym{font-weight:700;color:var(--text-primary);font-size:15px}
+.sum{flex:1;font-size:13px;color:var(--text-secondary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.meta{font-size:11px;color:var(--text-tertiary)}
+
+/* portfolio card */
+.chead{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px}
+.ctitle{font-size:15px;font-weight:700}
+.totals{display:flex;gap:8px;margin-top:2px;font-size:12px;flex-wrap:wrap}
+.totals .tv{color:var(--text-tertiary)}
+.del{font-size:12px;color:var(--text-tertiary)}
+.pos{padding:8px 0;border-top:1px solid var(--border-subtle);display:flex;flex-direction:column;gap:2px}
+.phead{display:flex;align-items:center;gap:8px;min-height:30px}
+.exb{font-size:10px;font-weight:700;color:var(--text-tertiary);background:var(--surface-hover);padding:2px 6px;border-radius:4px}
+.ib{border-radius:9999px;padding:2px 8px;background:var(--surface-hover);font-size:11px;font-weight:600;color:var(--text-secondary)}
+.ib.new{background:rgba(59,130,246,.15);color:var(--accent)}
+.x{margin-left:auto;color:var(--text-tertiary);padding:0 4px}
+.pmeta{font-size:12px;color:var(--text-secondary)}
+.pnl{font-size:12px}
+.up{color:var(--positive)}.down{color:var(--negative)}
+
+/* InsightCard */
+.ic{display:flex;flex-direction:column;gap:8px;padding:8px 0}
+.mrow{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.sev{font-size:11px;font-weight:600;color:var(--warning)}
+.ev{font-size:13px;line-height:18px;color:var(--text-primary)}
+.note{background:var(--surface-hover);border-radius:var(--r-md);padding:12px;display:flex;flex-direction:column;gap:4px}
+.note p{font-size:13px;line-height:18px;color:var(--text-secondary);white-space:pre-line}
+.tone{font-size:11px;font-weight:600}
+.hl{font-size:13px;line-height:18px;color:var(--text-secondary);padding:3px 0}
+.atb{margin-top:8px;border:1px solid var(--border-default);border-radius:var(--r-md);padding:8px;text-align:center;color:var(--text-secondary);font-weight:600;font-size:13px}
+.home{height:34px;display:flex;align-items:center;justify-content:center}
+.home i{width:134px;height:5px;border-radius:3px;background:#e5e7eb;display:block}
+</style>
+</head>
+<body>
+
+<aside class="ctx">
+  <h2>Flow 1 — Sabah kontrolü</h2>
+  <p>08:40, metroda. Günlük sabah push'u (insight_text.push_text):</p>
+  <div class="push">
+    <div class="app"><i></i><span>BOROCEAN</span><span>08:40</span></div>
+    <b>Portföyünde 2 gelişme</b>
+    <p>NVDA: Bilanço açıklandı (2026 Q3 dönemi), beklentiden sapma +%6,4, AAPL: Hacim, 20 günlük ortalamanın 2,4 katı</p>
+  </div>
+  <ol>
+    <li>Push'a dokunur → uygulama Portföy ekranını açar (push data <code>portfolio_insights</code>).</li>
+    <li>NVDA ve AAPL satırlarında "Yeni gelişme" rozeti.</li>
+    <li>NVDA rozetine dokunur → gelişme kartı açılır, okundu sayılır (rozet nötr tona döner).</li>
+    <li>Başlığa dokunursa haber tarayıcıda açılır.</li>
+  </ol>
+  <p style="margin-top:12px">Sayılar ve haber başlıkları illüstratiftir.</p>
+</aside>
+
+<div class="phone"><div class="screen">
+  <div class="status"><span class="num">08:41</span><div class="island"></div><span class="sys">●●●● <span class="batt"></span></span></div>
+
+  <div class="content">
+    <div class="backlink">← Panele dön</div>
+    <div class="title">Portföyler</div>
+
+    <div class="create">
+      <div class="input">Yeni portföy adı</div>
+      <div class="cbtn">Portföy oluştur</div>
+    </div>
+
+    <!-- Story 13.4 strip -->
+    <div class="card">
+      <div class="sec">Son 7 günün gelişmeleri</div>
+      <div>
+        <div class="li"><div class="srow"><span class="dot"></span><span class="sym">NVDA</span><span class="sum">Bilanço açıklandı (2026 Q3 dönemi), beklentiden sapma +%6,4 +1</span><span class="meta">▼</span></div></div>
+        <div class="li"><div class="srow"><span class="dot unread"></span><span class="sym">AAPL</span><span class="sum">Hacim, 20 günlük ortalamanın 2,4 katı</span><span class="meta">▼</span></div></div>
+      </div>
+      <div class="hint">Gelişmeler, kamuya açık verilerden sabit kurallarla her sabah tespit edilir; ne yapman gerektiğini söylemez. Yatırım tavsiyesi değildir. Haberler kaynağına aittir.</div>
+    </div>
+
+    <!-- Portfolio card -->
+    <div class="card">
+      <div class="chead">
+        <div style="flex:1">
+          <div class="ctitle">Uzun vade</div>
+          <div class="totals num"><span class="tv">Toplam Değer: $24.624,70</span><span class="up">$4.167,30 (+%20,4)</span></div>
+        </div>
+        <span class="del">Portföyü sil</span>
+      </div>
+
+      <!-- NVDA: badge tapped → read, card expanded -->
+      <div class="pos">
+        <div class="phead"><span class="exb">US</span><span class="sym">NVDA</span><span class="ib">Yeni gelişme</span><span class="x">✕</span></div>
+        <div class="pmeta num">Adet: 40 · Ort. Maliyet: $118,20</div>
+        <div class="pnl up num">$7.412,00 · $2.684,00 (+%56,8)</div>
+
+        <div class="ic">
+          <div class="mrow"><span class="meta num">2026-10-09</span><span class="sev">Çok önemli</span></div>
+          <div class="ev">• Bilanço açıklandı (2026 Q3 dönemi), beklentiden sapma +%6,4</div>
+          <div class="ev">• Günlük değişim -%4,8</div>
+          <div class="note">
+            <p>Ne oldu:
+NVIDIA 2026 Q3 dönemi bilançosunu açıkladı; hisse başına kâr beklentiden %6,4 yüksek geldi. Hisse aynı gün %4,8 geriledi.
+Veride neyi değiştiriyor:
+Net kâr marjı önceki çeyreğe yakın kaldı; gelir büyümesi bir önceki çeyreğe göre yavaşladı.
+Dikkat edilebilecek riskler:
+Gelir büyümesindeki yavaşlama ve gelirin az sayıda büyük müşteride yoğunlaşması.
+Bu içerik yatırım tavsiyesi değildir. Yalnızca kamuya açık verilerin analizi ve bilgilendirme amacı taşır.</p>
+            <span class="tone" style="color:var(--warning)">Veriye etkisi: karışık</span>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:4px">
+            <span class="meta">İlgili haber başlıkları</span>
+            <div class="hl">Nvidia quarterly revenue rises as data center sales grow <span class="meta">— Reuters ↗</span></div>
+            <div class="hl">Nvidia shares slip after third-quarter results <span class="meta">— CNBC ↗</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- AAPL: still unread -->
+      <div class="pos">
+        <div class="phead"><span class="exb">US</span><span class="sym">AAPL</span><span class="ib new">Yeni gelişme</span><span class="x">✕</span></div>
+        <div class="pmeta num">Adet: 35 · Ort. Maliyet: $172,40</div>
+        <div class="pnl up num">$8.141,00 · $2.107,00 (+%34,9)</div>
+      </div>
+
+      <!-- MSFT: no update -->
+      <div class="pos">
+        <div class="phead"><span class="exb">US</span><span class="sym">MSFT</span><span class="x">✕</span></div>
+        <div class="pmeta num">Adet: 22 · Ort. Maliyet: $440,70</div>
+        <div class="pnl down num">$9.071,70 · -$623,70 (-%6,4)</div>
+      </div>
+
+      <div class="atb">İşlem Ekle</div>
+    </div>
+  </div>
+  <div class="home"><i></i></div>
+</div></div>
+
+</body>
+</html>

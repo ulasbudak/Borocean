@@ -1,0 +1,53 @@
+# Epic 5 — generated 2026-10-09 from docs/epics.md; entry ids match the legacy story numbers.
+
+[[entry]]
+id = 1
+type = "story"
+title = "İzleme Listesi Oluşturma ve Yönetimi"
+description = "Kullanıcı ister: takip etmek istediğim hisseleri bir veya birden fazla izleme listesine eklemek."
+verify = "Hisse seçilen (veya varsayılan) izleme listesine eklenir (FR-040)."
+covers = ["FR-040"]
+after = []
+hitl = false
+risk = "low"
+references = ["docs/stories/story-5.1.md", "docs/epics.md#story-51"]
+# legacy id: Story 5.1
+
+[[entry]]
+id = 2
+type = "story"
+title = "Fiyat Alarmı Kurma"
+description = "Kullanıcı ister: bir hisse için fiyat eşiği bazlı alarm kurmak."
+verify = "Alarm backend `alerts` modülünde kaydedilir (FR-041)."
+covers = ["FR-041"]
+after = []
+hitl = false
+risk = "low"
+references = ["docs/stories/story-5.2.md", "docs/epics.md#story-52"]
+# legacy id: Story 5.2
+
+[[entry]]
+id = 3
+type = "story"
+title = "İndikatör/Sinyal Alarmı Kurma"
+description = "Aktif trader ister: RSI/MACD gibi bir indikatör koşuluna göre alarm kurmak."
+verify = "Alarm kaydedilir (FR-042)."
+covers = ["FR-042"]
+after = []
+hitl = false
+risk = "low"
+references = ["docs/stories/story-5.3.md", "docs/epics.md#story-53"]
+# legacy id: Story 5.3
+
+[[entry]]
+id = 4
+type = "story"
+title = "Alarm Bildirimleri — Push ve E-posta"
+description = "Kullanıcı ister: bir alarm tetiklendiğinde push bildirimi ve/veya e-posta almak."
+verify = "Expo Push ile anlık bildirim gönderilir (FR-043, FR-070)."
+covers = ["FR-043", "FR-070"]
+after = []
+hitl = false
+risk = "low"
+references = ["docs/stories/story-5.4.md", "docs/epics.md#story-54"]
+# legacy id: Story 5.4

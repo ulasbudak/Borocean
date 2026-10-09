@@ -1,0 +1,100 @@
+# Borocean — epics in build order. Epic ids match the legacy numbering in docs/epics.md.
+
+[[epic]]
+id = 1
+slug = "epic-auth-discovery-foundation"
+title = "Kimlik doğrulama, hisse keşfi ve temel altyapı"
+covers = ["FR-060", "FR-090", "FR-091", "FR-001", "FR-002"]
+
+[[epic]]
+id = 2
+slug = "epic-fundamental-analysis"
+title = "Temel analiz"
+covers = ["FR-010", "FR-011", "FR-013"]
+
+[[epic]]
+id = 3
+slug = "epic-technical-analysis-score"
+title = "Teknik analiz ve özet değerlendirme skoru"
+covers = ["FR-020", "FR-021", "FR-022", "FR-023", "FR-024", "FR-003"]
+
+[[epic]]
+id = 4
+slug = "epic-screener-comparison"
+title = "Tarama ve karşılaştırma"
+covers = ["FR-030", "FR-031", "FR-032"]
+
+[[epic]]
+id = 5
+slug = "epic-watchlist-alerts-notifications"
+title = "İzleme listesi, alarmlar ve bildirimler"
+covers = ["FR-040", "FR-041", "FR-042", "FR-043", "FR-070"]
+
+[[epic]]
+id = 6
+slug = "epic-portfolio-tracking"
+title = "Portföy takibi"
+covers = ["FR-050", "FR-051", "FR-052"]
+
+[[epic]]
+id = 7
+slug = "epic-personalization"
+title = "Kişiselleştirme"
+covers = ["FR-061", "FR-062"]
+
+[[epic]]
+id = 8
+slug = "epic-freemium-monetization"
+title = "Abonelik ve monetizasyon (freemium)"
+covers = ["FR-080", "FR-081", "FR-082", "FR-083"]
+
+[[epic]]
+id = 9
+slug = "epic-ai-commentary-patterns"
+title = "AI destekli yorum ve örüntü tanıma"
+covers = ["FR-100", "FR-101"]
+
+[[epic]]
+id = 10
+slug = "epic-paper-trading"
+title = "Alım-satım simülasyonu"
+covers = ["FR-110", "FR-111", "FR-112"]
+
+[[epic]]
+id = 12
+slug = "epic-legal-compliance"
+title = "Hukuki uyum (SPK ve KVKK)"
+covers = ["FR-130", "FR-131"]
+
+[[epic]]
+id = 13
+slug = "epic-portfolio-insights"
+title = "Portföy gelişme takibi (arka plan AI taraması)"
+covers = ["FR-140", "FR-141", "FR-142", "FR-143", "FR-144", "FR-145", "FR-146"]
+after = [{ epic = 5, needs = "izleme listesi (13.7) ve push token'ları (5.4)" }, { epic = 6, needs = "portföy pozisyonları" }, { epic = 8, needs = "AI notu hakkı (FR-145)" }, { epic = 9, needs = "Gemini çağrısı ve PROMPT_VERSION deseni" }, { epic = 12, needs = "yönlendirme yasağı kuralları" }]
+
+[[epic]]
+id = 14
+slug = "epic-domain-infrastructure"
+title = "Alan adı sonrası altyapı (borocean.com)"
+covers = ["FR-060", "FR-043", "FR-070"]
+after = [{ epic = 1, needs = "kayıt/giriş akışı (1.9)" }, { epic = 5, needs = "alarm ve bildirim kodu (5.4)" }, { epic = 12, needs = "KVKK metinleri (12.2)" }]
+
+[[epic]]
+id = 15
+slug = "epic-codebase-review-fixes"
+title = "Kod inceleme bulgularının düzeltilmesi (2026-10-09)"
+covers = ["FR-001", "FR-030", "FR-042", "FR-043", "FR-050", "FR-061", "FR-100", "FR-101", "FR-111", "FR-112"]
+
+[[epic]]
+id = 16
+slug = "epic-ux-improvements"
+title = "UX iyileştirmeleri (2026-10-09 UX planı)"
+covers = []
+
+[[epic]]
+id = 11
+slug = "epic-crypto-market"
+title = "Kripto para piyasası"
+covers = ["FR-120", "FR-121", "FR-122", "FR-123", "FR-124", "FR-125", "FR-126"]
+after = [{ epic = 3, needs = "gösterge ve sinyal motoru" }, { epic = 4, needs = "tarama ve karşılaştırma" }, { epic = 5, needs = "izleme listesi ve alarmlar" }, { epic = 6, needs = "portföy" }, { epic = 9, needs = "AI raporları (11.7 kararı için)" }, { epic = 10, needs = "simülasyon" }, { epic = 12, needs = "yönlendirme yasağı (compliance.md §4 madde 7)" }, { epic = 14, needs = "arka plan alarm çalıştırıcısı (14.2)" }]

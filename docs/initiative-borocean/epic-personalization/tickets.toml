@@ -1,0 +1,40 @@
+# Epic 7 — generated 2026-10-09 from docs/epics.md; entry ids match the legacy story numbers.
+
+[[entry]]
+id = 1
+type = "story"
+title = "İlgi Profili ve Öne Çıkanlar"
+description = "Kullanıcı ister: ilgilendiğim sektör/hisseleri işaretlemek."
+verify = "Tercih kaydedilir (FR-061)."
+covers = ["FR-061"]
+after = []
+hitl = false
+risk = "low"
+references = ["docs/stories/story-7.1.md", "docs/epics.md#story-71"]
+# legacy id: Story 7.1
+
+[[entry]]
+id = 2
+type = "story"
+title = "Hisseye Kişisel Not Ekleme"
+description = "Kullanıcı ister: izlediğim bir hisseye kendi notumu eklemek."
+verify = "Not kullanıcıya özel olarak saklanır (FR-062)."
+covers = ["FR-062"]
+after = []
+hitl = false
+risk = "low"
+references = ["docs/stories/story-7.2.md", "docs/epics.md#story-72"]
+# legacy id: Story 7.2
+
+[[entry]]
+id = 3
+type = "story"
+title = "UI/UX tasarım sistemi — karanlık mod öncelikli fintech arayüzü"
+description = "Tüm ekranlar için ortak tasarım token'ları, tema ve bileşen desenleri."
+verify = "Web ve mobil ekranlar tokens.ts'teki ortak renk, aralık ve tipografiyi kullanır."
+covers = []
+after = []
+hitl = false
+risk = "low"
+references = ["docs/stories/story-ui-ux.md", "docs/epics.md#story-ui1"]
+# legacy id: Story UI.1

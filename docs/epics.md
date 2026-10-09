@@ -9,6 +9,8 @@ inputDocuments: ["docs/PRD.md", "docs/architecture.md"]
 
 # Borocean — Epic & Story Backlog
 
+> **2026-10-09:** Planlama ve durum takibi artık BMAD ticket ağacında: `docs/initiative-borocean/` (`tickets.py status`). Bu belge geçmiş kaydı olarak duruyor; epic ve story numaraları orada aynı.
+
 *İngilizce versiyon: [`docs/epics.en.md`](epics.en.md).*
 
 ## 1. Genel Bakış

@@ -1,0 +1,86 @@
+# Epic 16 — generated 2026-10-09 from docs/epics.md; entry ids match the legacy story numbers.
+
+[[entry]]
+id = 1
+type = "story"
+title = "Kontrastı WCAG AA'ya çıkarmak"
+description = "text-tertiary (iki mod), koyu accent-text/accent ve açık positive/warning token'ları ölçülerek yeniden seçilir; tokens.ts, globals.css ve mobil theme.ts birlikte güncellenir, DESIGN.md yenilenir."
+verify = "Kontrast ölçüm betiği her metin çifti için en az 4.5:1 verir; uyarı ibaresi iki modda okunur."
+covers = []
+after = []
+hitl = false
+risk = "low"
+references = ["docs/initiative-borocean/ux-borocean/ux-borocean.md", "docs/initiative-borocean/ux-borocean/EXPERIENCE.md"]
+
+[[entry]]
+id = 2
+type = "story"
+title = "Mobilde gerçek gezinme"
+description = "Durum bayraklı ekran geçişleri bir gezinme yığınına taşınır; Android geri tuşu, push ile ekran açma ve derin bağlantı çalışır."
+verify = "Android'de geri tuşu önceki ekrana döner; bir alarm push'u ilgili alarm ekranını açar; borocean:// bağlantısı hisse sayfasını açar."
+covers = []
+after = []
+hitl = false
+risk = "high"
+unknown = "Gezinme kütüphanesi seçimi ve mobil mağaza yayınının kapsamı kullanıcıyla netleşmeli."
+references = ["docs/initiative-borocean/ux-borocean/ux-borocean.md", "docs/initiative-borocean/ux-borocean/EXPERIENCE.md"]
+
+[[entry]]
+id = 3
+type = "story"
+title = "Web'de kalıcı gezinme"
+description = "Alt sayfalara Panel'deki hızlı erişimle aynı hedefleri taşıyan kompakt bir gezinme eklenir."
+verify = "Portföy sayfasından Panel'e dönmeden Alarmlar'a geçilir; mobil genişlikte yatay kaydırma olmaz."
+covers = []
+after = []
+hitl = false
+risk = "medium"
+references = ["docs/initiative-borocean/ux-borocean/ux-borocean.md", "docs/initiative-borocean/ux-borocean/EXPERIENCE.md"]
+
+[[entry]]
+id = 4
+type = "story"
+title = "İlk kullanım rehberi"
+description = "İlgi alanı, portföy ve izleme listesi boş olan kullanıcıya Panelde ilgi alanı seçimi ve ilk hisse araması önerilir."
+verify = "Yeni bir test hesabı Panelde rehberi görür; ilgi alanı seçince öne çıkanlar dolar ve rehber kaybolur."
+covers = []
+after = []
+hitl = false
+risk = "medium"
+references = ["docs/initiative-borocean/ux-borocean/ux-borocean.md", "docs/initiative-borocean/ux-borocean/EXPERIENCE.md"]
+
+[[entry]]
+id = 5
+type = "story"
+title = "Mobilde manuel tema seçimi"
+description = "Mobil ayarlara sistem/koyu/açık seçimi eklenir; tercih cihazda saklanır."
+verify = "Mobilde 'açık' seçilince sistem koyu olsa da uygulama açık açılır ve tercih yeniden başlatmada korunur."
+covers = []
+after = []
+hitl = false
+risk = "low"
+references = ["docs/initiative-borocean/ux-borocean/ux-borocean.md", "docs/initiative-borocean/ux-borocean/EXPERIENCE.md"]
+
+[[entry]]
+id = 7
+type = "story"
+title = "Yüzde biçimini dile uydurmak"
+description = "formatChange yüzdeyi Intl.NumberFormat ile dile göre biçimlendirir; web ve mobil aynı yardımcıyı kullanır."
+verify = "Türkçede değişim '+4,08 $ (+1,00%)' biçiminde, İngilizcede '+$4.08 (+1.00%)' biçiminde görünür (shared birim testi)."
+covers = []
+after = []
+hitl = false
+risk = "low"
+references = ["docs/initiative-borocean/ux-borocean/ux-borocean.md", "docs/initiative-borocean/ux-borocean/EXPERIENCE.md"]
+
+[[entry]]
+id = 6
+type = "story"
+title = "Erişilebilirlik denetimi"
+description = "Web'de axe taraması ve ekran okuyucu turu, mobilde VoiceOver/TalkBack turu; kritik bulgular düzeltilir."
+verify = "Denetim raporu docs altında; kritik bulgu sayısı sıfır."
+covers = []
+after = [1]
+hitl = false
+risk = "medium"
+references = ["docs/initiative-borocean/ux-borocean/ux-borocean.md", "docs/initiative-borocean/ux-borocean/EXPERIENCE.md"]

@@ -1,0 +1,92 @@
+# Epic 13 — generated 2026-10-09 from docs/epics.md; entry ids match the legacy story numbers.
+
+[[entry]]
+id = 1
+type = "story"
+title = "Olay Tespit Motoru ve Gelişme Veri Modeli"
+description = "Geliştirici ister: bir sembolün günlük verisinden deterministik olayları ve önem puanlarını üreten, test edilebilir bir motor ile bunları saklayan bir veri modeli."
+verify = "Karar notundaki tablodaki olay türleri için `{type, severity, facts}` listesi döner. `facts` yalnızca ölçülmüş değerleri içerir (örn. `{\"change_pct\": -7.2, \"threshold_pct\": 5.0}`) (FR-141)."
+covers = ["FR-141"]
+after = ["6.1"]
+hitl = false
+risk = "low"
+references = ["docs/stories/story-13.1.md", "docs/epics.md#story-131"]
+# legacy id: Story 13.1
+
+[[entry]]
+id = 2
+type = "story"
+title = "Günlük Arka Plan Çalıştırıcısı (`pg_cron` + `pg_net`)"
+description = "Ürün sahibi ister: portföylerdeki sembollerin her sabah, kimse uygulamayı açmadan taranmasını."
+verify = "pg_cron çağrısı 202 döner, tarama aynı gün ikinci kez çalıştırıldığında yeni kayıt üretmez; sırsız çağrı 401 alır."
+covers = ["FR-140"]
+after = [1]
+hitl = false
+risk = "low"
+references = ["docs/stories/story-13.2.md", "docs/epics.md#story-132"]
+# legacy id: Story 13.2
+
+[[entry]]
+id = 3
+type = "story"
+title = "Gelişmeler için AI Notu"
+description = "Kullanıcı (ai raporu hakkı olan) ister: tespit edilen gelişmenin kısa, anlaşılır bir açıklamasını okumak."
+verify = "Gemini'ye yalnızca olayların `facts` alanı ve sembolün temel verisi verilir. Not \"Ne oldu / Veride neyi değiştiriyor / Dikkat edilebilecek riskler\" yapısında üretilir ve olayın etkisi olumlu/olumsuz/nötr olarak sınıflandırılır (FR-142)."
+covers = ["FR-142", "FR-145"]
+after = [1, "8.1", "9.1", "12.1"]
+hitl = false
+risk = "low"
+references = ["docs/stories/story-13.3.md", "docs/epics.md#story-133"]
+# legacy id: Story 13.3
+
+[[entry]]
+id = 4
+type = "story"
+title = "Portföy Ekranında Gelişmeler"
+description = "Kullanıcı ister: portföyümde hangi hissede önemli bir gelişme olduğunu bir bakışta görmek."
+verify = "O pozisyon satırında \"Yeni gelişme\" rozeti görünür. Rozete tıklayınca olaylar, AI notu (varsa), tarih ve hisse sayfası bağlantısını içeren kart açılır (FR-143)."
+covers = ["FR-143"]
+after = [1, 3]
+hitl = false
+risk = "low"
+references = ["docs/stories/story-13.4.md", "docs/epics.md#story-134"]
+# legacy id: Story 13.4
+
+[[entry]]
+id = 5
+type = "story"
+title = "Panelde \"Portföyündeki Gelişmeler\" ve Hisse Sayfasında \"Son Gelişmeler\""
+description = "Kullanıcı ister: uygulamayı açtığımda portföyümdeki yeni gelişmeleri ana sayfada görmek."
+verify = "\"Portföyündeki Gelişmeler\" kartı okunmamış sayısını ve en son 3–5 gelişmeyi gösterir; karttan portföy ekranına ve hisse sayfasına gidilebilir (FR-144)."
+covers = ["FR-144"]
+after = [4]
+hitl = false
+risk = "low"
+references = ["docs/stories/story-13.5.md", "docs/epics.md#story-135"]
+# legacy id: Story 13.5
+
+[[entry]]
+id = 6
+type = "story"
+title = "Portföy Gelişmesi Mobil Bildirimi (Push)"
+description = "Mobil kullanıcı ister: portföyümdeki bir hissede önemli gelişme olduğunda telefonuma bildirim gelmesini."
+verify = "Kullanıcıya günde en fazla bir özet push gönderilir. Metin yalnızca olayları söyler (\"Portföyünde 2 gelişme: AAPL bilanço açıkladı, MSFT günlük %-6,1\") (FR-146)."
+covers = ["FR-146"]
+after = [2, "5.4"]
+hitl = false
+risk = "low"
+references = ["docs/stories/story-13.6.md", "docs/epics.md#story-136"]
+# legacy id: Story 13.6
+
+[[entry]]
+id = 7
+type = "story"
+title = "İzleme Listesindeki Hisselere Genişletme"
+description = "Kullanıcı ister: izleme listesindeki hisseler için de gelişmeleri görmek (FR-140 tarama evreninin izleme listesine genişletilmesi; opsiyonel)."
+verify = "İzleme listesindeki bir hisse için gelişme oluştuğunda izleme listesi ekranında ve Paneldeki kartta ayrı etiketle görünür; günlük tarama tavanı aşılmaz."
+covers = ["FR-140"]
+after = [2, 4, 5, "5.1"]
+hitl = false
+risk = "medium"
+references = ["docs/epics.md#story-137"]
+# legacy id: Story 13.7

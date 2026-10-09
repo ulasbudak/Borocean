@@ -1,0 +1,80 @@
+# Epic 14 — generated 2026-10-09 from docs/epics.md; entry ids match the legacy story numbers.
+
+[[entry]]
+id = 1
+type = "story"
+title = "Alan Adından E-posta Gönderimi (Resend) ve Supabase SMTP"
+description = "Ürün sahibi ister: kayıt onayı, şifre sıfırlama ve alarm e-postalarının `noreply@borocean.com` adresinden, saatlik 2 e-posta sınırına takılmadan gitmesini."
+verify = "Alan adı Resend'de \"Verified\" olur. Resend'in SPF ve bounce (MX) kayıtları `send.borocean.com` alt alan adına girildiği için kök alan adındaki `v=spf1 -all` kaydının değiştirilmesi gerekmez. Ek olarak `_dmarc` kaydı (`p=none` ile başlayarak) eklenir."
+covers = ["FR-043", "FR-070"]
+after = []
+hitl = false
+risk = "low"
+references = ["docs/epics.md#story-141"]
+# legacy id: Story 14.1
+
+[[entry]]
+id = 2
+type = "story"
+title = "Alarm E-posta Bildirimlerinin Canlıda Açılması"
+description = "Kullanıcı ister: fiyat ve sinyal alarmlarım tetiklendiğinde e-posta almak."
+verify = "Canlıda kurulan bir fiyat alarmı, sayfa açılmadan cron çalışmasında tetiklenir ve kullanıcının dilinde, ayar bağlantısı ve uyarı ibaresi taşıyan e-posta gelir."
+covers = ["FR-043", "FR-070"]
+after = [1, "5.4"]
+hitl = false
+risk = "low"
+references = ["docs/epics.md#story-142"]
+# legacy id: Story 14.2
+
+[[entry]]
+id = 3
+type = "story"
+title = "Kurumsal İletişim Adresleri (KVKK ve Destek)"
+description = "Ürün sahibi ister: KVKK başvuruları ve destek için `@borocean.com` adresleri kullanmak."
+verify = "Gelen e-postalar ulaşır (MX kayıtları Story 14.1'deki Resend bounce kaydıyla çakışmayacak şekilde kurulur)."
+covers = []
+after = [1]
+hitl = true
+risk = "low"
+references = ["docs/epics.md#story-143"]
+# legacy id: Story 14.3
+
+[[entry]]
+id = 4
+type = "story"
+title = "Google ile Giriş (Web)"
+description = "Kullanıcı ister: Google hesabıyla tek tıkla kayıt olup giriş yapmak. Sosyal kayıtta da kullanım koşulları/KVKK onayı saklanır (CR D1) ve KVKK aydınlatma metnindeki 'sosyal hesapla giriş' maddesi ile aktarılan taraflar listesi Google'ı içerecek şekilde güncellenir (compliance.md §4 madde 6)."
+verify = "Canlıda 'Google ile devam et' ile yeni bir hesap açılır, Panele girilir, kullanıcı adı Google adından gelir ve onay meta verisi (legal_accepted_at/version) kayıtlıdır."
+covers = ["FR-060"]
+after = [6, "1.9", "12.2"]
+hitl = true
+risk = "medium"
+references = ["docs/epics.md#story-144"]
+# legacy id: Story 14.4
+
+[[entry]]
+id = 5
+type = "story"
+title = "Apple ile Giriş"
+description = "Ürün sahibi ister: Apple ile girişi açıp açmamaya karar vermek."
+verify = "Karar story'de yazılıdır; açılırsa canlıda 'Apple ile devam et' ile giriş uçtan uca çalışır."
+covers = ["FR-060"]
+after = []
+hitl = true
+risk = "low"
+unknown = "Yıllık 99 USD Apple Developer üyeliğine kullanıcı karar verecek."
+references = ["docs/epics.md#story-145"]
+# legacy id: Story 14.5
+
+[[entry]]
+id = 6
+type = "story"
+title = "Alan Adı Düzeni ve Temel SEO"
+description = "Ürün sahibi ister: sitenin tek bir adreste (`borocean.com`) görünmesini ve arama motorlarında düzgün listelenmesini."
+verify = "www.borocean.com ve vercel.app adresleri 308 ile borocean.com'a gider; robots.txt ve sitemap.xml yayında ve Search Console site haritasını kabul eder."
+covers = []
+after = []
+hitl = false
+risk = "low"
+references = ["docs/epics.md#story-146"]
+# legacy id: Story 14.6

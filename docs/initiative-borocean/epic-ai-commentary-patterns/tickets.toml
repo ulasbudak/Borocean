@@ -1,0 +1,53 @@
+# Epic 9 — generated 2026-10-09 from docs/epics.md; entry ids match the legacy story numbers.
+
+[[entry]]
+id = 1
+type = "story"
+title = "Temel Analiz AI Raporu"
+description = "Kullanıcı (premium) ister: hisse detay sayfasında, uygulamanın kendi temel verisine dayanan bir AI temel analiz raporu okumak."
+verify = "Google Gemini API'sine, uygulamanın kendi hesapladığı temel verisi (F/K, ROE, borç/özsermaye, sektör kıyaslaması, geçmiş finansal performans) zemine alınarak (RAG) üretilmiş bir rapor gösterilir (FR-100)."
+covers = ["FR-080", "FR-100"]
+after = []
+hitl = false
+risk = "low"
+references = ["docs/stories/story-9.1.md", "docs/epics.md#story-91"]
+# legacy id: Story 9.1
+
+[[entry]]
+id = 2
+type = "story"
+title = "Teknik Analiz AI Raporu — CV Modeli"
+description = "Aktif trader ister: fiyat grafiğimin bir görüntü-tanıma modeliyle okunduğu bir teknik AI raporu görmek."
+verify = "Candle verisinden üretilen bir grafik görüntüsü, önceden eğitilmiş bir CV modeliyle (ChartScanAI/YOLOv8, MIT lisanslı) okunur ve sonuç, deterministik skordan **ayrı ve açıkça etiketlenmiş** bir \"modelin okuması\" olarak sunulur (FR-101)."
+covers = ["FR-025", "FR-101", "FR-102"]
+after = []
+hitl = false
+risk = "low"
+references = ["docs/stories/story-9.2.md", "docs/epics.md#story-92"]
+# legacy id: Story 9.2
+
+[[entry]]
+id = 3
+type = "story"
+title = "Günlük Sektör Bülteni"
+description = "Kullanıcı (premium) ister: ana ekranda her gün yeni eklenen, geçmişi silinmeyen bir AI sektör bülteni görmek."
+verify = "Deterministik rotasyonla seçilmiş bir sektör için, o sektördeki en yüksek skorlu 5 hissenin analiziyle yeni bir bülten üretilip kalıcı olarak eklenir; ertesi gün önceki bülten silinmez/üzerine yazılmaz."
+covers = ["FR-100"]
+after = []
+hitl = false
+risk = "low"
+references = ["docs/stories/story-9.3.md", "docs/epics.md#story-93"]
+# legacy id: Story 9.3
+
+[[entry]]
+id = 4
+type = "story"
+title = "Birleşik Değerlendirme AI Raporu"
+description = "Kullanıcı (premium) ister: hisse detay sayfasındaki AI Analiz sekmesinde, temel ve teknik raporların uyumlu mu çelişkili mi olduğunu özetleyen tek bir görüş görmek."
+verify = "Temel ve teknik raporlar (hazır değillerse önce üretilir) okunarak bir Gemini sentezi gösterilir."
+covers = ["FR-100", "FR-101"]
+after = []
+hitl = false
+risk = "low"
+references = ["docs/stories/story-9.4.md", "docs/epics.md#story-94"]
+# legacy id: Story 9.4

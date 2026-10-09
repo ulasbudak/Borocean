@@ -9,6 +9,8 @@ based_on: docs/PRD.md
 
 # Borocean — Sistem Mimarisi
 
+> **2026-10-09:** Bu belgenin yerini `docs/initiative-borocean/architecture-borocean/architecture-borocean.md` aldı (kodla doğrulanmış spine; AD-1…AD-9 numaraları korundu, AD-10…AD-18 eklendi). Bu belge kod öncesi tasarım kaydı olarak duruyor.
+
 *İngilizce versiyon: [`docs/architecture.en.md`](architecture.en.md).*
 
 ## 1. Mimari Paradigma

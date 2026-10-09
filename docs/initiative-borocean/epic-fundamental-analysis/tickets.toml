@@ -1,0 +1,40 @@
+# Epic 2 — generated 2026-10-09 from docs/epics.md; entry ids match the legacy story numbers.
+
+[[entry]]
+id = 1
+type = "story"
+title = "Temel Metriklerin Gösterimi"
+description = "Kullanıcı ister: bir hissenin F/K, PD/DD, ROE, ROA, EPS, temettü verimi, borç/özsermaye, kâr marjı gibi temel metriklerini görmek."
+verify = "PRD FR-010'da listelenen tüm metrikler güncel değerleriyle gösterilir."
+covers = ["FR-010"]
+after = []
+hitl = false
+risk = "low"
+references = ["docs/stories/story-2.1.md", "docs/epics.md#story-21"]
+# legacy id: Story 2.1
+
+[[entry]]
+id = 2
+type = "story"
+title = "Sektör Kıyaslaması"
+description = "Kullanıcı ister: her metriğin sektör/endeks ortalamasıyla karşılaştırmasını görmek."
+verify = "Yanında sektör ortalaması ve hissenin bu ortalamaya göre konumu (üstünde/altında, % fark) gösterilir (FR-011)."
+covers = ["FR-011"]
+after = []
+hitl = false
+risk = "low"
+references = ["docs/stories/story-2.2.md", "docs/epics.md#story-22"]
+# legacy id: Story 2.2
+
+[[entry]]
+id = 3
+type = "story"
+title = "Geçmiş Finansal Performans Grafiği"
+description = "Kullanıcı ister: şirketin son 5 yıl/20 çeyreklik gelir, net kâr ve EPS grafiğini görmek."
+verify = "Son 5 yıl (yıllık) ve son 20 çeyrek (çeyreklik) gelir/net kâr/EPS grafik olarak gösterilir (FR-013)."
+covers = ["FR-013"]
+after = []
+hitl = false
+risk = "low"
+references = ["docs/stories/story-2.3.md", "docs/epics.md#story-23"]
+# legacy id: Story 2.3

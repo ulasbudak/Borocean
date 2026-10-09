@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Borocean — Hisse sayfası /stock/US/MSFT · key screen mock</title>
+<style>
+/*
+  KEY SCREEN: Web stock page /stock/US/MSFT, dark mode.
+  Column A: Genel Bakış tab (canonical state). Column B: Teknik Analiz tab (load-bearing alternate).
+  Illustrative mock — the spine is the contract. Numbers are illustrative.
+
+  Governing spine sections:
+  - DESIGN.md › colors (dark), typography (numeric = tabular-nums), components.card / change-value /
+    score-value / chart / disclaimer; Components: Metrik Puanı (neutral NN / 100, category ProgressBar in
+    accent, no Al/Sat/Nötr badge), Sinyal listesi, Grafik; Brand & Style + Colors (green/red only for
+    signed values and candle direction; signal icon tint = indicator direction, not a recommendation).
+  - EXPERIENCE.md › Information Architecture (Hisse sayfası row, tabs Genel Bakış / Temel / Teknik / AI);
+    Component Patterns: Metrik Puanı, Sinyal listesi, Grafik, İzleme listesine ekle / Alarm kur /
+    Simülasyonda al, Değişim değeri; State Patterns: Gecikmeli veri (hidden while ALL_FEATURES_FREE);
+    Accessibility Floor (chips are real buttons in role="group"; direction also carried as text);
+    Compliance in the UI; Key Flows › Flow 2 steps 2–4 (Mert inspects MSFT).
+  Code grounding: apps/web/src/app/stock/[exchange]/[symbol]/{page,score-badge,stock-tabs,price-chart,signal-list}.tsx,
+  apps/web/src/components/ui/{page-header,toggle-chip,button,stat-table,change-value}.tsx,
+  apps/api/app/scoring.py (_build_rationale), apps/api/app/technical.py (rule names).
+  Known drift: shipped ProgressBar tints bars positive/warning/negative by value; the spine says accent.
+  This mock follows the spine (accent).
+*/
+:root{
+  --canvas:#0A0B0D; --surface:#121417; --surface-hover:#1A1D21; --surface-elevated:#1E2126;
+  --border-subtle:#23262B; --border-default:#2E3239;
+  --text-primary:#F4F5F7; --text-secondary:#9CA3AF; --text-tertiary:#6B7280;
+  --accent:#3B82F6; --accent-text:#EFF6FF; --positive:#34D399; --negative:#F87171; --warning:#F59E0B;
+  --r-sm:6px; --r-md:10px; --r-lg:14px;
+  --font: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#050607;font-family:var(--font);color:var(--text-primary);padding:32px;-webkit-font-smoothing:antialiased}
+.i{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
+.num{font-variant-numeric:tabular-nums}
+.cols{display:flex;gap:32px;align-items:flex-start;justify-content:center;flex-wrap:wrap}
+.col{width:860px}
+.col-title{font-size:12px;color:#6b7280;margin:0 0 10px 4px;letter-spacing:.04em;text-transform:uppercase}
+
+.browser{border:1px solid var(--border-default);border-radius:12px;overflow:hidden;box-shadow:0 30px 80px rgba(0,0,0,.6)}
+.chrome{display:flex;align-items:center;gap:12px;background:#17191C;padding:10px 14px;border-bottom:1px solid var(--border-subtle)}
+.dots{display:flex;gap:6px}.dots span{width:11px;height:11px;border-radius:50%;background:#3A3D42}
+.url{flex:1;background:#0E0F11;border:1px solid var(--border-subtle);border-radius:8px;padding:6px 12px;font-size:12px;color:var(--text-secondary)}
+.url b{color:var(--text-primary);font-weight:500}
+.page{background:var(--canvas)}
+.wrap{max-width:768px;margin:0 auto;padding:32px 16px}
+
+/* PageHeader */
+.back{display:inline-flex;align-items:center;gap:4px;font-size:14px;color:var(--text-tertiary);text-decoration:none}
+.back .i{width:14px;height:14px}
+.ph{margin-top:8px;display:flex;flex-wrap:wrap;align-items:flex-start;justify-content:space-between;gap:12px 16px;margin-bottom:24px}
+h1{font-size:20px;line-height:28px;font-weight:600;display:flex;align-items:center;gap:8px}
+.badge{display:inline-flex;align-items:center;border-radius:9999px;padding:2px 10px;font-size:12px;font-weight:500;background:var(--surface-hover);color:var(--text-secondary)}
+.actions{display:flex;flex-wrap:wrap;gap:8px}
+.btn{display:inline-flex;align-items:center;gap:6px;border-radius:var(--r-md);font-size:14px;font-weight:500;padding:8px 16px;border:1px solid transparent}
+.btn-primary{background:var(--accent);color:var(--accent-text)}
+.btn-secondary{background:var(--surface-elevated);color:var(--text-primary);border-color:var(--border-default)}
+
+/* tabs = ToggleChip */
+.tabs{display:flex;gap:8px;margin-bottom:20px}
+.chip{border-radius:9999px;border:1px solid var(--border-default);background:var(--surface-elevated);color:var(--text-secondary);padding:6px 12px;font-size:12px;font-weight:500;display:inline-flex;align-items:center;gap:6px}
+.chip.on{border-color:var(--accent);background:rgba(59,130,246,.15);color:var(--accent)}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+
+.stack{display:flex;flex-direction:column;gap:16px}
+.card{background:var(--surface);border:1px solid var(--border-subtle);border-radius:var(--r-lg);padding:20px}
+.label{font-size:12px;line-height:16px;font-weight:500;text-transform:uppercase;letter-spacing:.05em;color:var(--text-tertiary);margin-bottom:12px}
+.meta{font-size:12px;line-height:16px;color:var(--text-tertiary)}
+
+/* score */
+.score{font-size:30px;line-height:36px;font-weight:600;font-variant-numeric:tabular-nums;color:var(--text-primary)}
+.score small{font-size:16px;font-weight:400;color:var(--text-tertiary)}
+.rationale{margin-top:8px;font-size:14px;line-height:20px;color:var(--text-secondary)}
+.cats{list-style:none;margin-top:8px;display:flex;flex-direction:column;gap:10px}
+.cat-row{display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px}
+.cat-row span:first-child{color:var(--text-secondary)}
+.cat-row span:last-child{color:var(--text-primary);font-variant-numeric:tabular-nums}
+.bar{height:6px;border-radius:9999px;background:var(--surface-hover);overflow:hidden}
+.bar i{display:block;height:100%;border-radius:9999px;background:var(--accent)}
+.toggle{margin-top:16px;font-size:12px;font-weight:500;color:var(--accent)}
+.toggle::before{content:"▸ ";color:var(--text-tertiary)}
+
+/* stat table */
+.stat{border:1px solid var(--border-subtle);border-radius:var(--r-lg);background:var(--surface);display:grid;grid-template-columns:1fr 1fr;overflow:hidden}
+.stat div{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid var(--border-subtle)}
+.stat div:nth-child(odd){border-right:1px solid var(--border-subtle)}
+.stat div:nth-last-child(-n+1){border-bottom:0}
+.stat dt{font-size:14px;color:var(--text-secondary)}
+.stat dd{font-size:14px;font-weight:500;font-variant-numeric:tabular-nums;color:var(--text-primary);text-align:right}
+.up{color:var(--positive)}.down{color:var(--negative)}
+
+textarea{width:100%;height:64px;resize:none;border:1px solid var(--border-default);background:var(--surface-elevated);border-radius:var(--r-md);padding:8px 12px;font:inherit;font-size:14px;color:var(--text-tertiary)}
+.btn[disabled]{opacity:.5}
+.disclaimer{margin-top:32px;text-align:center;font-size:12px;line-height:16px;color:var(--text-tertiary)}
+
+/* chart controls */
+.row-between{display:flex;flex-wrap:wrap;justify-content:space-between;gap:12px}
+.hr{height:1px;background:var(--border-subtle);margin:16px 0}
+.adv{margin-top:12px;font-size:12px;font-weight:500;color:var(--accent)}
+.adv::before{content:"▸ ";color:var(--text-tertiary)}
+.legend{display:flex;gap:14px;font-size:11px;color:var(--text-secondary);margin-bottom:8px}
+.legend b{display:inline-block;width:10px;height:2px;vertical-align:middle;margin-right:5px}
+
+/* signals */
+.sig{list-style:none}
+.sig li{display:flex;align-items:center;gap:12px;padding:10px 0;font-size:14px;border-top:1px solid var(--border-subtle)}
+.sig li:first-child{border-top:0}
+.sig .ic{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.sig .ic .i{width:14px;height:14px}
+.ic.bull{background:rgba(52,211,153,.15);color:var(--positive)}
+.ic.bear{background:rgba(248,113,113,.15);color:var(--negative)}
+.sig strong.bull{color:var(--positive)}.sig strong.bear{color:var(--negative)}
+.sig .date{margin-left:auto;font-size:12px;color:var(--text-tertiary);font-variant-numeric:tabular-nums}
+.note{margin:16px auto 0;max-width:1752px;font-size:12px;color:#555b63;text-align:center}
+</style>
+</head>
+<body>
+<div class="cols">
+
+<!-- ===================== Column A — Genel Bakış ===================== -->
+<div class="col">
+<p class="col-title">A · Genel Bakış (varsayılan sekme)</p>
+<div class="browser">
+  <div class="chrome"><div class="dots"><span></span><span></span><span></span></div><div class="url">https://<b>borocean.com</b>/stock/US/MSFT</div></div>
+  <div class="page"><div class="wrap">
+
+    <a class="back" href="#"><svg class="i" viewBox="0 0 24 24"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg>Panele dön</a>
+    <div class="ph">
+      <h1>Microsoft Corporation <span class="badge">US</span></h1>
+      <div class="actions">
+        <span class="btn btn-primary"><svg class="i" viewBox="0 0 24 24"><path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"/></svg>İzleme listesine ekle</span>
+        <span class="btn btn-primary"><svg class="i" viewBox="0 0 24 24"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>Fiyat Alarmı Kur</span>
+        <span class="btn btn-primary"><svg class="i" viewBox="0 0 24 24"><path d="M4.9 19.1C1 15.2 1 8.8 4.9 4.9"/><path d="M7.8 16.2c-2.3-2.3-2.3-6.1 0-8.5"/><circle cx="12" cy="12" r="2"/><path d="M16.2 7.8c2.3 2.3 2.3 6.1 0 8.5"/><path d="M19.1 4.9C23 8.8 23 15.1 19.1 19"/></svg>Sinyal Alarmı Kur</span>
+        <span class="btn btn-secondary"><svg class="i" viewBox="0 0 24 24"><circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/></svg>Simülasyonda al</span>
+      </div>
+    </div>
+
+    <div class="tabs" role="tablist" aria-label="Hisse detay sekmeleri">
+      <span class="chip on" role="tab" aria-selected="true">Genel Bakış</span>
+      <span class="chip" role="tab">Temel Analiz</span>
+      <span class="chip" role="tab">Teknik Analiz</span>
+      <span class="chip" role="tab">AI Analiz</span>
+    </div>
+
+    <div class="stack">
+      <div class="card">
+        <p class="label">Metrik Puanı</p>
+        <span class="score">68<small> / 100</small></span>
+        <p class="rationale">Metrik puanı 68/100. En yüksek kategori: Kârlılık (86/100); en düşük: Değerleme (41/100). İzlenen 6 teknik göstergenin 4 tanesi şu an yukarı yönlü. Puan, kamuya açık verilerden sabit kurallarla hesaplanan bir özettir; yatırım tavsiyesi değildir.</p>
+        <p class="meta" style="margin-top:16px;font-weight:500">Kategoriler</p>
+        <ul class="cats">
+          <li><div class="cat-row"><span>Değerleme</span><span>41 / 100</span></div><div class="bar"><i style="width:41%"></i></div></li>
+          <li><div class="cat-row"><span>Kârlılık</span><span>86 / 100</span></div><div class="bar"><i style="width:86%"></i></div></li>
+          <li><div class="cat-row"><span>Borçluluk</span><span>78 / 100</span></div><div class="bar"><i style="width:78%"></i></div></li>
+          <li><div class="cat-row"><span>Büyüme</span><span>64 / 100</span></div><div class="bar"><i style="width:64%"></i></div></li>
+          <li><div class="cat-row"><span>Teknik görünüm</span><span>67 / 100</span></div><div class="bar"><i style="width:67%"></i></div></li>
+        </ul>
+        <p class="meta" style="margin-top:12px">Teknik göstergeler: 4/6 gösterge şu an yukarı yönlü</p>
+        <p class="meta" style="margin-top:8px">Puanlar, kamuya açık finansal ve fiyat verilerinden sabit kurallarla hesaplanır; bir al/sat önerisi değildir ve kişisel durumunu dikkate almaz.</p>
+        <p class="toggle">Bu puan neye dayanıyor?</p>
+      </div>
+
+      <dl class="stat">
+        <div><dt>Güncel Fiyat</dt><dd>$412,35</dd></div>
+        <div><dt>Günlük Değişim</dt><dd class="up">+$4,08 (+1.00%)</dd></div>
+        <div><dt>Piyasa Değeri</dt><dd>3,07 Tn $</dd></div>
+        <div><dt>Sektör</dt><dd>Technology</dd></div>
+        <div style="border-right:0;border-bottom:0"><dt>Endüstri</dt><dd>Software—Infrastructure</dd></div>
+        <div style="border-bottom:0"></div>
+      </dl>
+
+      <div class="card">
+        <p class="label" style="margin-bottom:8px">Kişisel Not</p>
+        <textarea readonly>Bu hisseyle ilgili notunu yaz...</textarea>
+        <div style="margin-top:8px"><span class="btn btn-primary" disabled>Kaydet</span></div>
+      </div>
+    </div>
+
+    <p class="disclaimer">Bu içerik yatırım tavsiyesi değildir; yalnızca kamuya açık verilerin analizi ve bilgilendirme amacı taşır.</p>
+  </div></div>
+</div>
+</div>
+
+<!-- ===================== Column B — Teknik Analiz ===================== -->
+<div class="col">
+<p class="col-title">B · Teknik Analiz sekmesi (grafik + sinyal listesi)</p>
+<div class="browser">
+  <div class="chrome"><div class="dots"><span></span><span></span><span></span></div><div class="url">https://<b>borocean.com</b>/stock/US/MSFT</div></div>
+  <div class="page"><div class="wrap">
+
+    <a class="back" href="#"><svg class="i" viewBox="0 0 24 24"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg>Panele dön</a>
+    <div class="ph">
+      <h1>Microsoft Corporation <span class="badge">US</span></h1>
+      <div class="actions">
+        <span class="btn btn-primary"><svg class="i" viewBox="0 0 24 24"><path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"/></svg>İzleme listesine ekle</span>
+        <span class="btn btn-primary"><svg class="i" viewBox="0 0 24 24"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>Fiyat Alarmı Kur</span>
+        <span class="btn btn-primary"><svg class="i" viewBox="0 0 24 24"><path d="M4.9 19.1C1 15.2 1 8.8 4.9 4.9"/><path d="M7.8 16.2c-2.3-2.3-2.3-6.1 0-8.5"/><circle cx="12" cy="12" r="2"/><path d="M16.2 7.8c2.3 2.3 2.3 6.1 0 8.5"/><path d="M19.1 4.9C23 8.8 23 15.1 19.1 19"/></svg>Sinyal Alarmı Kur</span>
+        <span class="btn btn-secondary"><svg class="i" viewBox="0 0 24 24"><circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/></svg>Simülasyonda al</span>
+      </div>
+    </div>
+
+    <div class="tabs" role="tablist" aria-label="Hisse detay sekmeleri">
+      <span class="chip" role="tab">Genel Bakış</span>
+      <span class="chip" role="tab">Temel Analiz</span>
+      <span class="chip on" role="tab" aria-selected="true">Teknik Analiz</span>
+      <span class="chip" role="tab">AI Analiz</span>
+    </div>
+
+    <div class="stack">
+      <div class="card">
+        <div class="row-between">
+          <div class="chips" role="group" aria-label="Grafik türü"><span class="chip on">Mum</span><span class="chip">Çizgi</span><span class="chip">Bar</span></div>
+          <div class="chips" role="group" aria-label="Zaman dilimi"><span class="chip">Gün İçi</span><span class="chip on">Günlük</span><span class="chip">Haftalık</span><span class="chip">Aylık</span></div>
+        </div>
+        <div class="hr"></div>
+        <div class="chips" role="group" aria-label="İndikatörler">
+          <span class="chip on">SMA</span><span class="chip">EMA</span><span class="chip">Bollinger Bantları</span><span class="chip">Hacim</span><span class="chip">RSI</span><span class="chip">MACD</span><span class="chip">Stokastik</span>
+        </div>
+        <p class="adv">Gelişmiş</p>
+        <div class="hr"></div>
+        <div class="chips" role="group" aria-label="Çizim araçları">
+          <span class="chip"><svg class="i" style="width:13px;height:13px" viewBox="0 0 24 24"><path d="M3 20 21 4"/><circle cx="3" cy="20" r="1.5"/><circle cx="21" cy="4" r="1.5"/></svg>Trend Çizgisi</span>
+          <span class="chip"><svg class="i" style="width:13px;height:13px" viewBox="0 0 24 24"><path d="M5 12h14"/></svg>Yatay Çizgi</span>
+        </div>
+        <div style="margin-top:12px">
+          <p class="meta" style="margin-bottom:6px">Çizimler</p>
+          <div class="chips"><span class="chip" style="background:var(--surface-hover);border-color:transparent">Yatay Çizgi <span style="color:var(--text-tertiary)">✕</span></span></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="legend"><span><b style="background:var(--accent)"></b>SMA 20</span><span><b style="background:var(--warning)"></b>Yatay Çizgi</span></div>
+        <svg viewBox="0 0 720 300" width="100%" role="img" aria-label="MSFT günlük mum grafiği (illüstrasyon)"><line x1="0" x2="664" y1="268.0" y2="268.0" stroke="var(--border-subtle)" stroke-width="1"/><text x="672" y="272.0" fill="var(--text-secondary)" font-size="11" class="num">382,64</text><line x1="0" x2="664" y1="203.0" y2="203.0" stroke="var(--border-subtle)" stroke-width="1"/><text x="672" y="207.0" fill="var(--text-secondary)" font-size="11" class="num">391,62</text><line x1="0" x2="664" y1="138.0" y2="138.0" stroke="var(--border-subtle)" stroke-width="1"/><text x="672" y="142.0" fill="var(--text-secondary)" font-size="11" class="num">400,61</text><line x1="0" x2="664" y1="73.0" y2="73.0" stroke="var(--border-subtle)" stroke-width="1"/><text x="672" y="77.0" fill="var(--text-secondary)" font-size="11" class="num">409,59</text><line x1="0" x2="664" y1="8.0" y2="8.0" stroke="var(--border-subtle)" stroke-width="1"/><text x="672" y="12.0" fill="var(--text-secondary)" font-size="11" class="num">418,57</text><line x1="65.6" x2="65.6" y1="8" y2="276" stroke="var(--border-subtle)" stroke-width="1"/><text x="69.6" y="294" fill="var(--text-secondary)" font-size="11">Ağu</text><line x1="306.1" x2="306.1" y1="8" y2="276" stroke="var(--border-subtle)" stroke-width="1"/><text x="310.1" y="294" fill="var(--text-secondary)" font-size="11">Eyl</text><line x1="546.7" x2="546.7" y1="8" y2="276" stroke="var(--border-subtle)" stroke-width="1"/><text x="550.7" y="294" fill="var(--text-secondary)" font-size="11">Eki</text><line x1="5.5" x2="5.5" y1="100.6" y2="119.3" stroke="var(--negative)" stroke-width="1"/><rect x="1.6" y="114.8" width="7.7" height="1.6" fill="var(--negative)"/><line x1="16.4" x2="16.4" y1="105.2" y2="143.3" stroke="var(--negative)" stroke-width="1"/><rect x="12.6" y="116.4" width="7.7" height="14.1" fill="var(--negative)"/><line x1="27.3" x2="27.3" y1="108.2" y2="167.8" stroke="var(--negative)" stroke-width="1"/><rect x="23.5" y="130.4" width="7.7" height="22.4" fill="var(--negative)"/><line x1="38.3" x2="38.3" y1="145.7" y2="178.3" stroke="var(--negative)" stroke-width="1"/><rect x="34.4" y="152.9" width="7.7" height="5.6" fill="var(--negative)"/><line x1="49.2" x2="49.2" y1="149.6" y2="171.1" stroke="var(--positive)" stroke-width="1"/><rect x="45.4" y="151.6" width="7.7" height="6.9" fill="var(--positive)"/><line x1="60.1" x2="60.1" y1="134.6" y2="170.1" stroke="var(--negative)" stroke-width="1"/><rect x="56.3" y="151.6" width="7.7" height="14.5" fill="var(--negative)"/><line x1="71.1" x2="71.1" y1="151.8" y2="170.5" stroke="var(--positive)" stroke-width="1"/><rect x="67.2" y="164.1" width="7.7" height="2.0" fill="var(--positive)"/><line x1="82.0" x2="82.0" y1="140.3" y2="212.6" stroke="var(--negative)" stroke-width="1"/><rect x="78.2" y="164.1" width="7.7" height="23.9" fill="var(--negative)"/><line x1="92.9" x2="92.9" y1="176.7" y2="232.5" stroke="var(--negative)" stroke-width="1"/><rect x="89.1" y="188.0" width="7.7" height="20.3" fill="var(--negative)"/><line x1="103.9" x2="103.9" y1="197.7" y2="239.1" stroke="var(--negative)" stroke-width="1"/><rect x="100.0" y="208.3" width="7.7" height="16.8" fill="var(--negative)"/><line x1="114.8" x2="114.8" y1="210.4" y2="229.4" stroke="var(--positive)" stroke-width="1"/><rect x="111.0" y="217.5" width="7.7" height="7.6" fill="var(--positive)"/><line x1="125.7" x2="125.7" y1="182.7" y2="223.4" stroke="var(--positive)" stroke-width="1"/><rect x="121.9" y="194.0" width="7.7" height="23.5" fill="var(--positive)"/><line x1="136.7" x2="136.7" y1="184.3" y2="197.9" stroke="var(--positive)" stroke-width="1"/><rect x="132.8" y="192.7" width="7.7" height="1.3" fill="var(--positive)"/><line x1="147.6" x2="147.6" y1="171.0" y2="201.5" stroke="var(--positive)" stroke-width="1"/><rect x="143.8" y="179.9" width="7.7" height="12.7" fill="var(--positive)"/><line x1="158.5" x2="158.5" y1="156.5" y2="208.4" stroke="var(--negative)" stroke-width="1"/><rect x="154.7" y="179.9" width="7.7" height="22.4" fill="var(--negative)"/><line x1="169.5" x2="169.5" y1="172.0" y2="208.3" stroke="var(--positive)" stroke-width="1"/><rect x="165.6" y="184.0" width="7.7" height="18.4" fill="var(--positive)"/><line x1="180.4" x2="180.4" y1="169.6" y2="203.2" stroke="var(--positive)" stroke-width="1"/><rect x="176.6" y="179.8" width="7.7" height="4.1" fill="var(--positive)"/><line x1="191.3" x2="191.3" y1="169.7" y2="185.5" stroke="var(--positive)" stroke-width="1"/><rect x="187.5" y="173.2" width="7.7" height="6.7" fill="var(--positive)"/><line x1="202.3" x2="202.3" y1="170.9" y2="178.0" stroke="var(--negative)" stroke-width="1"/><rect x="198.4" y="173.2" width="7.7" height="3.6" fill="var(--negative)"/><line x1="213.2" x2="213.2" y1="159.5" y2="198.7" stroke="var(--negative)" stroke-width="1"/><rect x="209.4" y="176.8" width="7.7" height="5.5" fill="var(--negative)"/><line x1="224.1" x2="224.1" y1="146.3" y2="193.4" stroke="var(--positive)" stroke-width="1"/><rect x="220.3" y="154.5" width="7.7" height="27.8" fill="var(--positive)"/><line x1="235.1" x2="235.1" y1="138.9" y2="175.8" stroke="var(--positive)" stroke-width="1"/><rect x="231.2" y="150.0" width="7.7" height="4.5" fill="var(--positive)"/><line x1="246.0" x2="246.0" y1="136.7" y2="156.7" stroke="var(--positive)" stroke-width="1"/><rect x="242.2" y="147.8" width="7.7" height="2.2" fill="var(--positive)"/><line x1="256.9" x2="256.9" y1="129.0" y2="159.8" stroke="var(--negative)" stroke-width="1"/><rect x="253.1" y="147.8" width="7.7" height="8.6" fill="var(--negative)"/><line x1="267.9" x2="267.9" y1="137.1" y2="185.1" stroke="var(--negative)" stroke-width="1"/><rect x="264.0" y="156.5" width="7.7" height="6.9" fill="var(--negative)"/><line x1="278.8" x2="278.8" y1="111.5" y2="185.2" stroke="var(--positive)" stroke-width="1"/><rect x="275.0" y="135.0" width="7.7" height="28.4" fill="var(--positive)"/><line x1="289.7" x2="289.7" y1="101.5" y2="149.0" stroke="var(--positive)" stroke-width="1"/><rect x="285.9" y="117.7" width="7.7" height="17.2" fill="var(--positive)"/><line x1="300.7" x2="300.7" y1="109.5" y2="146.2" stroke="var(--negative)" stroke-width="1"/><rect x="296.8" y="117.7" width="7.7" height="19.4" fill="var(--negative)"/><line x1="311.6" x2="311.6" y1="127.2" y2="164.2" stroke="var(--negative)" stroke-width="1"/><rect x="307.8" y="137.1" width="7.7" height="9.7" fill="var(--negative)"/><line x1="322.5" x2="322.5" y1="123.4" y2="171.1" stroke="var(--positive)" stroke-width="1"/><rect x="318.7" y="130.1" width="7.7" height="16.7" fill="var(--positive)"/><line x1="333.5" x2="333.5" y1="121.0" y2="165.3" stroke="var(--negative)" stroke-width="1"/><rect x="329.6" y="130.1" width="7.7" height="20.3" fill="var(--negative)"/><line x1="344.4" x2="344.4" y1="146.4" y2="175.5" stroke="var(--positive)" stroke-width="1"/><rect x="340.6" y="148.7" width="7.7" height="1.7" fill="var(--positive)"/><line x1="355.3" x2="355.3" y1="124.1" y2="163.6" stroke="var(--positive)" stroke-width="1"/><rect x="351.5" y="146.2" width="7.7" height="2.5" fill="var(--positive)"/><line x1="366.3" x2="366.3" y1="139.9" y2="166.3" stroke="var(--positive)" stroke-width="1"/><rect x="362.4" y="143.1" width="7.7" height="3.1" fill="var(--positive)"/><line x1="377.2" x2="377.2" y1="111.6" y2="143.7" stroke="var(--positive)" stroke-width="1"/><rect x="373.4" y="118.3" width="7.7" height="24.8" fill="var(--positive)"/><line x1="388.1" x2="388.1" y1="100.4" y2="148.8" stroke="var(--negative)" stroke-width="1"/><rect x="384.3" y="118.3" width="7.7" height="12.8" fill="var(--negative)"/><line x1="399.1" x2="399.1" y1="96.2" y2="136.9" stroke="var(--positive)" stroke-width="1"/><rect x="395.2" y="118.3" width="7.7" height="12.8" fill="var(--positive)"/><line x1="410.0" x2="410.0" y1="92.5" y2="119.2" stroke="var(--positive)" stroke-width="1"/><rect x="406.2" y="96.8" width="7.7" height="21.4" fill="var(--positive)"/><line x1="420.9" x2="420.9" y1="96.3" y2="126.9" stroke="var(--negative)" stroke-width="1"/><rect x="417.1" y="96.8" width="7.7" height="16.5" fill="var(--negative)"/><line x1="431.9" x2="431.9" y1="70.5" y2="117.0" stroke="var(--positive)" stroke-width="1"/><rect x="428.0" y="91.8" width="7.7" height="21.5" fill="var(--positive)"/><line x1="442.8" x2="442.8" y1="86.1" y2="98.9" stroke="var(--positive)" stroke-width="1"/><rect x="439.0" y="87.4" width="7.7" height="4.4" fill="var(--positive)"/><line x1="453.7" x2="453.7" y1="81.7" y2="96.5" stroke="var(--positive)" stroke-width="1"/><rect x="449.9" y="83.3" width="7.7" height="4.1" fill="var(--positive)"/><line x1="464.7" x2="464.7" y1="75.8" y2="112.3" stroke="var(--negative)" stroke-width="1"/><rect x="460.8" y="83.3" width="7.7" height="9.0" fill="var(--negative)"/><line x1="475.6" x2="475.6" y1="88.1" y2="106.0" stroke="var(--negative)" stroke-width="1"/><rect x="471.8" y="92.3" width="7.7" height="13.7" fill="var(--negative)"/><line x1="486.5" x2="486.5" y1="92.8" y2="116.2" stroke="var(--positive)" stroke-width="1"/><rect x="482.7" y="95.0" width="7.7" height="11.0" fill="var(--positive)"/><line x1="497.5" x2="497.5" y1="82.9" y2="120.6" stroke="var(--negative)" stroke-width="1"/><rect x="493.6" y="95.0" width="7.7" height="15.1" fill="var(--negative)"/><line x1="508.4" x2="508.4" y1="90.9" y2="141.7" stroke="var(--negative)" stroke-width="1"/><rect x="504.6" y="110.1" width="7.7" height="20.2" fill="var(--negative)"/><line x1="519.3" x2="519.3" y1="104.9" y2="153.9" stroke="var(--positive)" stroke-width="1"/><rect x="515.5" y="113.5" width="7.7" height="16.8" fill="var(--positive)"/><line x1="530.3" x2="530.3" y1="81.6" y2="120.3" stroke="var(--positive)" stroke-width="1"/><rect x="526.4" y="97.8" width="7.7" height="15.7" fill="var(--positive)"/><line x1="541.2" x2="541.2" y1="95.8" y2="122.5" stroke="var(--negative)" stroke-width="1"/><rect x="537.4" y="97.8" width="7.7" height="2.4" fill="var(--negative)"/><line x1="552.1" x2="552.1" y1="98.5" y2="121.4" stroke="var(--negative)" stroke-width="1"/><rect x="548.3" y="100.2" width="7.7" height="16.4" fill="var(--negative)"/><line x1="563.1" x2="563.1" y1="115.9" y2="137.1" stroke="var(--negative)" stroke-width="1"/><rect x="559.2" y="116.6" width="7.7" height="5.2" fill="var(--negative)"/><line x1="574.0" x2="574.0" y1="110.7" y2="135.5" stroke="var(--positive)" stroke-width="1"/><rect x="570.2" y="120.2" width="7.7" height="1.6" fill="var(--positive)"/><line x1="584.9" x2="584.9" y1="81.6" y2="130.9" stroke="var(--positive)" stroke-width="1"/><rect x="581.1" y="95.0" width="7.7" height="25.3" fill="var(--positive)"/><line x1="595.9" x2="595.9" y1="72.2" y2="126.3" stroke="var(--negative)" stroke-width="1"/><rect x="592.0" y="95.0" width="7.7" height="14.5" fill="var(--negative)"/><line x1="606.8" x2="606.8" y1="81.9" y2="126.7" stroke="var(--positive)" stroke-width="1"/><rect x="603.0" y="104.8" width="7.7" height="4.6" fill="var(--positive)"/><line x1="617.7" x2="617.7" y1="77.8" y2="127.3" stroke="var(--positive)" stroke-width="1"/><rect x="613.9" y="102.2" width="7.7" height="2.6" fill="var(--positive)"/><line x1="628.7" x2="628.7" y1="89.2" y2="120.0" stroke="var(--positive)" stroke-width="1"/><rect x="624.8" y="101.8" width="7.7" height="1.0" fill="var(--positive)"/><line x1="639.6" x2="639.6" y1="59.4" y2="115.6" stroke="var(--positive)" stroke-width="1"/><rect x="635.8" y="82.6" width="7.7" height="19.3" fill="var(--positive)"/><line x1="650.5" x2="650.5" y1="36.9" y2="103.6" stroke="var(--positive)" stroke-width="1"/><rect x="646.7" y="53.0" width="7.7" height="29.5" fill="var(--positive)"/><polyline points="213.2,177.2 224.1,179.1 235.1,180.1 246.0,179.8 256.9,179.7 267.9,180.3 278.8,178.8 289.7,176.4 300.7,173.9 311.6,170.8 322.5,166.1 333.5,162.7 344.4,160.5 355.3,158.1 366.3,156.3 377.2,152.1 388.1,149.4 399.1,146.4 410.0,142.6 420.9,139.4 431.9,134.9 442.8,131.5 453.7,128.2 464.7,125.4 475.6,122.9 486.5,119.4 497.5,118.2 508.4,118.8 519.3,117.6 530.3,115.2 541.2,113.7 552.1,112.0 563.1,110.7 574.0,109.4 584.9,107.0 595.9,106.5 606.8,105.2 617.7,104.4 628.7,104.7 639.6,103.1 650.5,101.2" fill="none" stroke="var(--accent)" stroke-width="2"/><line x1="0" x2="664" y1="106.8" y2="106.8" stroke="var(--warning)" stroke-width="2"/><text x="6" y="100.8" fill="var(--warning)" font-size="11">Yatay Çizgi</text><rect x="666" y="44.0" width="52" height="18" rx="3" fill="var(--positive)"/><text x="670" y="57.0" fill="#0A0B0D" font-size="11" font-weight="600" class="num">412,35</text></svg>
+      </div>
+
+      <div class="card">
+        <p class="label">Sinyaller</p>
+        <ul class="sig">
+          <li><span class="ic bull"><svg class="i" viewBox="0 0 24 24"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg></span><span><strong class="bull">Yükseliş</strong> MACD sinyal çizgisini yukarı kesti</span><span class="date">07.10.2026</span></li>
+          <li><span class="ic bull"><svg class="i" viewBox="0 0 24 24"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg></span><span><strong class="bull">Yükseliş</strong> SMA20, SMA50'yi yukarı kesti</span><span class="date">29.09.2026</span></li>
+          <li><span class="ic bear"><svg class="i" viewBox="0 0 24 24"><polyline points="22 17 13.5 8.5 8.5 13.5 2 7"/><polyline points="16 17 22 17 22 11"/></svg></span><span><strong class="bear">Düşüş</strong> Fiyat Bollinger alt bandını aşağı kırdı</span><span class="date">21.08.2026</span></li>
+          <li><span class="ic bear"><svg class="i" viewBox="0 0 24 24"><polyline points="22 17 13.5 8.5 8.5 13.5 2 7"/><polyline points="16 17 22 17 22 11"/></svg></span><span><strong class="bear">Düşüş</strong> MACD sinyal çizgisini aşağı kesti</span><span class="date">12.08.2026</span></li>
+        </ul>
+      </div>
+    </div>
+
+    <p class="disclaimer">Bu içerik yatırım tavsiyesi değildir; yalnızca kamuya açık verilerin analizi ve bilgilendirme amacı taşır.</p>
+  </div></div>
+</div>
+</div>
+
+</div>
+<p class="note">Illustrative mock (dark mode). Prices, score and signal dates are illustrative; the chart is a static SVG stand-in for lightweight-charts. "Günlük Değişim" reproduces the shipped formatChange output (percent uses a dot decimal). Source of truth: DESIGN.md / EXPERIENCE.md.</p>
+</body>
+</html>

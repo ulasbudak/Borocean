@@ -1,0 +1,28 @@
+# Epic 8 — generated 2026-10-09 from docs/epics.md; entry ids match the legacy story numbers.
+
+[[entry]]
+id = 1
+type = "story"
+title = "Ücretsiz/Premium Katman Ayrımının Uygulanması"
+description = "Ücretsiz kullanıcı ister: hangi özelliklerin ücretsiz hangilerinin premium olduğunu net şekilde görmek."
+verify = "Özellik kilitli gösterilir ve yükseltme teklifiyle karşılaşır (FR-080, FR-081, FR-082)."
+covers = ["FR-080", "FR-081", "FR-082"]
+after = []
+hitl = false
+risk = "low"
+references = ["docs/stories/story-8.1.md", "docs/epics.md#story-81"]
+# legacy id: Story 8.1
+
+[[entry]]
+id = 2
+type = "story"
+title = "Premium Abonelik Satın Alma ve Yönetimi"
+description = "Kullanıcı ister: uygulama içinden premium abone olup aboneliğimi yönetmek."
+verify = "RevenueCat üzerinden entitlement güncellenir ve kullanıcı anında premium özelliklere erişir (FR-083)."
+covers = ["FR-083"]
+after = []
+hitl = true
+risk = "high"
+unknown = "Kullanıcı ödeme altyapısını erteledi (2026-09-21); ne zaman açılacağı kullanıcının kararı."
+references = ["docs/epics.md#story-82"]
+# legacy id: Story 8.2

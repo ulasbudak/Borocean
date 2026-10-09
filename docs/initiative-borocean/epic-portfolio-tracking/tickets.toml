@@ -1,0 +1,40 @@
+# Epic 6 — generated 2026-10-09 from docs/epics.md; entry ids match the legacy story numbers.
+
+[[entry]]
+id = 1
+type = "story"
+title = "Portföy Oluşturma ve Pozisyon Ekleme"
+description = "Kullanıcı ister: sahip olduğum hisseleri adet ve maliyet fiyatıyla portföyüme eklemek."
+verify = "Pozisyon portföyüne eklenir (FR-050)."
+covers = ["FR-050"]
+after = []
+hitl = false
+risk = "low"
+references = ["docs/stories/story-6.1.md", "docs/epics.md#story-61"]
+# legacy id: Story 6.1
+
+[[entry]]
+id = 2
+type = "story"
+title = "Portföy Değeri ve Kâr/Zarar Hesaplama"
+description = "Kullanıcı ister: portföyümün anlık toplam değerini ve pozisyon bazlı kâr/zararımı görmek."
+verify = "Toplam portföy değeri ve her pozisyonun kâr/zararı (TL/USD ve %) güncellenir (FR-051)."
+covers = ["FR-051"]
+after = []
+hitl = false
+risk = "low"
+references = ["docs/stories/story-6.2.md", "docs/epics.md#story-62"]
+# legacy id: Story 6.2
+
+[[entry]]
+id = 3
+type = "story"
+title = "Çoklu Portföy Desteği"
+description = "Kullanıcı ister: birden fazla portföy (örn. \"ABD hisseleri\", \"BIST uzun vade\") oluşturmak."
+verify = "Istediği isimle ayrı bir portföy açılır (FR-052)."
+covers = ["FR-052"]
+after = []
+hitl = false
+risk = "low"
+references = ["docs/stories/story-6.3.md", "docs/epics.md#story-63"]
+# legacy id: Story 6.3

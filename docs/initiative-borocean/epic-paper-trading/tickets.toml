@@ -1,0 +1,40 @@
+# Epic 10 — generated 2026-10-09 from docs/epics.md; entry ids match the legacy story numbers.
+
+[[entry]]
+id = 1
+type = "story"
+title = "Bütçeli Simülasyon Oluşturma ve Emir Yürütme"
+description = "Kullanıcı ister: gerçek piyasa verisiyle, kendi belirlediğim bir bütçeyle sanal alım-satım yapmak."
+verify = "Emir kullanıcının girdiği değil **o anki gerçek piyasa fiyatından** yürütülür; nakit bakiyesi buna göre güncellenir."
+covers = ["FR-110", "FR-111", "FR-112"]
+after = []
+hitl = false
+risk = "low"
+references = ["docs/stories/story-10.1.md", "docs/epics.md#story-101"]
+# legacy id: Story 10.1
+
+[[entry]]
+id = 2
+type = "story"
+title = "Simülasyon Emir Formunda Sembol Otomatik Tamamlama"
+description = "Kullanıcı ister: simülasyon emir formundaki sembol alanına yazarken öneri listesi görmek."
+verify = "300ms sonra öneri listesi gösterilir."
+covers = ["FR-111"]
+after = []
+hitl = false
+risk = "low"
+references = ["docs/stories/story-10.2.md", "docs/epics.md#story-102"]
+# legacy id: Story 10.2
+
+[[entry]]
+id = 3
+type = "story"
+title = "Hisse Sayfasından Simülasyonda Alım"
+description = "Kullanıcı ister: incelediğim bir hisseyi, sayfadan ayrılmadan simülasyonuma almak."
+verify = "Simülasyonlarından birini seçip adet girerek alım emri verebilir; emir Story 10.1'deki gibi o anki gerçek fiyattan yürütülür."
+covers = ["FR-111"]
+after = []
+hitl = false
+risk = "low"
+references = ["docs/stories/story-10.3.md", "docs/epics.md#story-103"]
+# legacy id: Story 10.3

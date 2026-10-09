@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Borocean — Panel (/dashboard) · key screen mock</title>
+<style>
+/*
+  KEY SCREEN: Web Panel (/dashboard), dark mode, signed-in user "Ayşe" holding positions.
+  Illustrative mock — the spine is the contract. Numbers are illustrative.
+
+  Governing spine sections:
+  - DESIGN.md › colors (dark), typography, rounded, spacing, components.card / quick-access-tile /
+    section-label / input / change-value / disclaimer; Layout & Spacing (single column, max-w-3xl,
+    8-column quick access ≥ sm, section gap spacing.8); Elevation & Depth (search card shadow only).
+  - EXPERIENCE.md › Information Architecture (Panel row; web navigation = quick-access grid, no top/side menu);
+    Component Patterns: Hisse arama, Hızlı erişim karosu, Gelişme kartı, Değişim değeri;
+    State Patterns: Okunmamış gelişme; Compliance in the UI (disclaimer on every analysis card);
+    Voice and Tone ("Merhaba, Ayşe"); Key Flows › Flow 3 step 4 (Panel after signup).
+  Code grounding: apps/web/src/app/dashboard/{page,search-box,portfolio-insights,highlights,bulletin-section}.tsx,
+  apps/web/src/components/insights/insight-list.tsx, packages/shared/src/i18n/messages/tr.ts.
+  Note: the Panel has no page-level footer disclaimer in code; disclaimers live inside the
+  Gelişmeler and Bülten cards, as rendered here.
+*/
+:root{
+  --canvas:#0A0B0D; --surface:#121417; --surface-hover:#1A1D21; --surface-elevated:#1E2126;
+  --border-subtle:#23262B; --border-default:#2E3239;
+  --text-primary:#F4F5F7; --text-secondary:#9CA3AF; --text-tertiary:#6B7280;
+  --accent:#3B82F6; --accent-text:#EFF6FF; --positive:#34D399; --negative:#F87171; --warning:#F59E0B;
+  --r-sm:6px; --r-md:10px; --r-lg:14px;
+  --font: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#050607;font-family:var(--font);color:var(--text-primary);padding:32px;-webkit-font-smoothing:antialiased}
+.i{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
+.num{font-variant-numeric:tabular-nums}
+
+/* browser frame */
+.browser{max-width:1120px;margin:0 auto;border:1px solid var(--border-default);border-radius:12px;overflow:hidden;box-shadow:0 30px 80px rgba(0,0,0,.6)}
+.chrome{display:flex;align-items:center;gap:12px;background:#17191C;padding:10px 14px;border-bottom:1px solid var(--border-subtle)}
+.dots{display:flex;gap:6px}.dots span{width:11px;height:11px;border-radius:50%;background:#3A3D42}
+.url{flex:1;background:#0E0F11;border:1px solid var(--border-subtle);border-radius:8px;padding:6px 12px;font-size:12px;color:var(--text-secondary)}
+.url b{color:var(--text-primary);font-weight:500}
+.page{background:var(--canvas);min-height:600px}
+
+/* layout: mx-auto max-w-3xl px-4 py-8 flex-col gap-8 */
+.wrap{max-width:768px;margin:0 auto;padding:32px 16px;display:flex;flex-direction:column;gap:32px}
+header{display:flex;align-items:center;justify-content:space-between}
+.logo{display:flex;align-items:center;gap:8px;font-size:14px;font-weight:600;letter-spacing:-.01em}
+.hdr-right{display:flex;align-items:center;gap:12px}
+.avatar{width:32px;height:32px;border-radius:50%;background:var(--surface-elevated);box-shadow:0 0 0 1px var(--border-default);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;color:var(--text-secondary)}
+.signout{display:flex;align-items:center;gap:6px;border:1px solid var(--border-default);border-radius:var(--r-md);padding:6px 12px;font-size:12px;font-weight:500;color:var(--text-secondary);background:none}
+.signout .i{width:14px;height:14px}
+.greet{font-size:18px;font-weight:600}
+
+.label{font-size:12px;line-height:16px;font-weight:500;text-transform:uppercase;letter-spacing:.05em;color:var(--text-tertiary);margin-bottom:12px}
+.card{background:var(--surface);border:1px solid var(--border-subtle);border-radius:var(--r-lg);padding:20px}
+
+/* quick access grid: grid-cols-8 gap-2 (sm+) */
+.qa{display:grid;grid-template-columns:repeat(8,1fr);gap:8px}
+.tile{display:flex;flex-direction:column;align-items:center;gap:6px;border:1px solid var(--border-subtle);background:var(--surface);border-radius:var(--r-lg);padding:12px 4px;text-align:center;text-decoration:none}
+.tile .well{width:32px;height:32px;border-radius:var(--r-md);background:var(--surface-hover);color:var(--text-secondary);display:flex;align-items:center;justify-content:center}
+.tile span{font-size:12px;font-weight:500;line-height:1.25;color:var(--text-primary)}
+
+/* search */
+.search-card{box-shadow:0 10px 15px -3px rgba(0,0,0,.2),0 4px 6px -4px rgba(0,0,0,.2)}
+.field{position:relative}
+.field .i{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--text-tertiary)}
+.input{width:100%;border:1px solid var(--border-default);background:var(--surface-elevated);border-radius:var(--r-md);padding:8px 12px 8px 36px;font-size:14px;line-height:20px;color:var(--text-tertiary)}
+.meta{font-size:12px;line-height:16px;color:var(--text-tertiary)}
+.mt2{margin-top:8px}.mt3{margin-top:12px}
+
+/* insights */
+.sec-head{display:flex;align-items:center;gap:8px;margin-bottom:12px}
+.sec-head .label{margin:0}
+.pill{border-radius:9999px;background:rgba(59,130,246,.15);color:var(--accent);font-size:12px;font-weight:500;padding:2px 8px}
+.ilist{list-style:none}
+.ilist li{padding:10px 0;border-top:1px solid var(--border-subtle)}
+.ilist li:first-child{border-top:0;padding-top:0}
+.irow{display:flex;align-items:center;gap:8px;font-size:14px}
+.dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.dot.unread{background:var(--accent)}
+.sym{font-weight:600;color:var(--text-primary)}
+.isum{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--text-secondary)}
+.chev{color:var(--text-tertiary)}
+.links{display:flex;gap:16px;align-items:center;margin-top:12px;font-size:12px}
+.links a{color:var(--accent);font-weight:500;text-decoration:none}
+.links span{color:var(--text-tertiary)}
+
+/* highlights: grid sm:grid-cols-2 gap-2 */
+.hl{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.hl a{display:flex;align-items:center;gap:8px;border:1px solid var(--border-subtle);background:var(--surface);border-radius:var(--r-lg);padding:12px;font-size:14px;text-decoration:none}
+.badge{display:inline-flex;align-items:center;border-radius:9999px;padding:2px 10px;font-size:12px;font-weight:500;background:var(--surface-hover);color:var(--text-secondary)}
+.hl .name{color:var(--text-tertiary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.hl .px{margin-left:auto;text-align:right;font-variant-numeric:tabular-nums}
+.hl .px b{display:block;font-weight:400;color:var(--text-primary)}
+.up{color:var(--positive);font-weight:500}.down{color:var(--negative);font-weight:500}
+
+/* bulletin */
+.bh{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.sector{font-size:12px;font-weight:500;text-transform:uppercase;letter-spacing:.05em;color:var(--accent)}
+.prose{font-size:14px;line-height:22px;color:var(--text-secondary)}
+.prose p+p{margin-top:10px}
+.picks{margin-top:12px;border-top:1px solid var(--border-subtle);padding-top:12px}
+.chips{display:flex;flex-wrap:wrap;gap:6px;list-style:none;margin-top:6px}
+.chips li{border-radius:9999px;background:var(--surface-hover);padding:4px 10px;font-size:12px;color:var(--text-secondary)}
+.viewall{display:flex;align-items:center;gap:6px;align-self:center;border:1px solid var(--border-default);background:var(--surface);border-radius:var(--r-md);padding:8px 16px;font-size:14px;font-weight:500;color:var(--text-primary);text-decoration:none}
+.viewall .i{width:14px;height:14px}
+.bcol{display:flex;flex-direction:column;gap:12px}
+.note{max-width:1120px;margin:16px auto 0;font-size:12px;color:#555b63}
+</style>
+</head>
+<body>
+<div class="browser">
+  <div class="chrome">
+    <div class="dots"><span></span><span></span><span></span></div>
+    <div class="url">https://<b>borocean.com</b>/dashboard</div>
+  </div>
+  <div class="page">
+    <div class="wrap">
+
+      <header>
+        <div class="logo">
+          <svg viewBox="0 0 120 120" width="22" height="22" style="color:var(--accent)" aria-label="Borocean logomark">
+            <line x1="28" y1="46" x2="28" y2="88" stroke="currentColor" stroke-width="4" stroke-linecap="round" opacity=".35"/>
+            <rect x="20" y="58" width="16" height="22" rx="6" fill="currentColor" opacity=".35"/>
+            <line x1="58" y1="26" x2="58" y2="92" stroke="currentColor" stroke-width="4.5" stroke-linecap="round" opacity=".68"/>
+            <rect x="49" y="40" width="18" height="30" rx="7" fill="currentColor" opacity=".68"/>
+            <line x1="90" y1="8" x2="90" y2="96" stroke="currentColor" stroke-width="5" stroke-linecap="round"/>
+            <rect x="80" y="24" width="20" height="38" rx="8" fill="currentColor"/>
+          </svg>
+          Borocean
+        </div>
+        <div class="hdr-right">
+          <div class="avatar" title="Ayşe">A</div>
+          <button class="signout"><svg class="i" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" x2="9" y1="12" y2="12"/></svg>Çıkış Yap</button>
+        </div>
+      </header>
+
+      <div><p class="greet">Merhaba, Ayşe</p></div>
+
+      <section>
+        <nav class="qa" aria-label="Hızlı erişim">
+          <a class="tile" href="#"><div class="well"><svg class="i" viewBox="0 0 24 24"><path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"/></svg></div><span>İzleme Listeleri</span></a>
+          <a class="tile" href="#"><div class="well"><svg class="i" viewBox="0 0 24 24"><path d="M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1"/><path d="M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4"/></svg></div><span>Portföyler</span></a>
+          <a class="tile" href="#"><div class="well"><svg class="i" viewBox="0 0 24 24"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg></div><span>Fiyat Alarmları</span></a>
+          <a class="tile" href="#"><div class="well"><svg class="i" viewBox="0 0 24 24"><path d="M4.9 19.1C1 15.2 1 8.8 4.9 4.9"/><path d="M7.8 16.2c-2.3-2.3-2.3-6.1 0-8.5"/><circle cx="12" cy="12" r="2"/><path d="M16.2 7.8c2.3 2.3 2.3 6.1 0 8.5"/><path d="M19.1 4.9C23 8.8 23 15.1 19.1 19"/></svg></div><span>Sinyal Alarmları</span></a>
+          <a class="tile" href="#"><div class="well"><svg class="i" viewBox="0 0 24 24"><line x1="21" x2="14" y1="4" y2="4"/><line x1="10" x2="3" y1="4" y2="4"/><line x1="21" x2="12" y1="12" y2="12"/><line x1="8" x2="3" y1="12" y2="12"/><line x1="21" x2="16" y1="20" y2="20"/><line x1="12" x2="3" y1="20" y2="20"/><line x1="14" x2="14" y1="2" y2="6"/><line x1="8" x2="8" y1="10" y2="14"/><line x1="16" x2="16" y1="18" y2="22"/></svg></div><span>Tarama</span></a>
+          <a class="tile" href="#"><div class="well"><svg class="i" viewBox="0 0 24 24"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M9 3v18"/><path d="M15 3v18"/></svg></div><span>Hisse Karşılaştırma</span></a>
+          <a class="tile" href="#"><div class="well"><svg class="i" viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg></div><span>Simülasyonlar</span></a>
+          <a class="tile" href="#"><div class="well"><svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M2 12h3M19 12h3M4.9 19.1 7 17M17 7l2.1-2.1"/></svg></div><span>Ayarlar</span></a>
+        </nav>
+      </section>
+
+      <section>
+        <p class="label">Hisse ara</p>
+        <div class="card search-card">
+          <div class="field">
+            <svg class="i" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+            <div class="input">Sembol veya şirket adı ara (örn. AAPL, Apple)</div>
+          </div>
+          <p class="meta mt2">Borsa İstanbul (BIST) şu an devre dışı — şimdilik yalnızca ABD hisseleri destekleniyor.</p>
+        </div>
+      </section>
+
+      <section>
+        <div class="sec-head">
+          <p class="label">Portföyündeki Gelişmeler</p>
+          <span class="pill">2 okunmamış</span>
+        </div>
+        <div class="card">
+          <ul class="ilist">
+            <li><div class="irow"><span class="dot unread"></span><span class="sym">NVDA</span><span class="isum">Bilanço açıklandı (2026 Q3 dönemi), beklentiden sapma +%6,4 +1</span><svg class="i chev" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg></div></li>
+            <li><div class="irow"><span class="dot unread"></span><span class="sym">AAPL</span><span class="isum">Hacim, 20 günlük ortalamanın 2,4 katı</span><svg class="i chev" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg></div></li>
+            <li><div class="irow"><span class="dot"></span><span class="sym">MSFT</span><span class="isum">Fiyat Bollinger üst bandının üzerinde kapandı</span><svg class="i chev" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg></div></li>
+          </ul>
+          <div class="links"><a href="#">Portföye git</a><span>Tümünü okundu say</span></div>
+          <p class="meta mt3">Gelişmeler, kamuya açık verilerden sabit kurallarla her sabah tespit edilir; ne yapman gerektiğini söylemez. Yatırım tavsiyesi değildir. Haberler kaynağına aittir.</p>
+        </div>
+      </section>
+
+      <section>
+        <p class="label">Öne Çıkanlar</p>
+        <div class="hl">
+          <a href="#"><span class="badge">US</span><span class="sym">AMD</span><span class="name">Advanced Micro Devices</span><span class="px"><b>$162,48</b><span class="up">+%3,8</span></span></a>
+          <a href="#"><span class="badge">US</span><span class="sym">ORCL</span><span class="name">Oracle Corporation</span><span class="px"><b>$188,10</b><span class="up">+%2,2</span></span></a>
+          <a href="#"><span class="badge">US</span><span class="sym">INTC</span><span class="name">Intel Corporation</span><span class="px"><b>$31,74</b><span class="down">-%2,1</span></span></a>
+          <a href="#"><span class="badge">US</span><span class="sym">CRM</span><span class="name">Salesforce, Inc.</span><span class="px"><b>$271,55</b><span class="down">-%1,6</span></span></a>
+        </div>
+      </section>
+
+      <section>
+        <p class="label">Bülten</p>
+        <div class="bcol">
+          <div class="card">
+            <div class="bh"><span class="sector">Teknoloji</span><span class="meta num">09.10.2026</span></div>
+            <div class="prose">
+              <p>Teknoloji sektöründe dünkü işlem gününde yarı iletken şirketlerinin hacmi 20 günlük ortalamalarının üzerindeydi; yazılım şirketlerinde fiyat hareketleri daha sınırlı kaldı.</p>
+              <p>Sektörün piyasa değerine göre en büyük beş şirketinde ortalama net kâr marjı bir önceki çeyreğe yakın seyretti. Bu hafta iki şirketin bilanço açıklaması bekleniyor.</p>
+            </div>
+            <div class="picks">
+              <p class="meta">Bültende incelenen şirketler (piyasa değerine göre)</p>
+              <ul class="chips">
+                <li>NVDA · NVIDIA Corporation</li><li>MSFT · Microsoft Corporation</li><li>AAPL · Apple Inc.</li><li>AVGO · Broadcom Inc.</li>
+              </ul>
+            </div>
+            <p class="meta mt3">Yapay zeka tarafından kamuya açık verilerden üretilmiştir — yatırım tavsiyesi değildir.</p>
+          </div>
+          <a class="viewall" href="#">Tüm bültenler <svg class="i" viewBox="0 0 24 24"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></a>
+        </div>
+      </section>
+
+    </div>
+  </div>
+</div>
+<p class="note">Illustrative mock (dark mode, ≥ sm width). Numbers, tickers and bulletin text are illustrative. Source of truth: DESIGN.md / EXPERIENCE.md.</p>
+</body>
+</html>

@@ -1,0 +1,133 @@
+# Epic 15 — generated 2026-10-09 from docs/epics.md; entry ids match the legacy story numbers.
+
+[[entry]]
+id = 5
+type = "bug"
+title = "Senkron DB erişimi olay döngüsünü bloke ediyor (M3)"
+description = "AD-17'yi uygular: DB kullanan async endpoint'ler def olur ya da asyncio.to_thread ile sarılır; runner'lar da aynı kurala uyar. Havuz ertelendi."
+verify = "e2e/signed-in/dashboard.spec.ts içindeki fixme testi (Panel yüklenirken arama yanıt verir) açılır ve geçer; Panel açıkken arama ~45 sn yerine 1 sn içinde yanıt verir."
+covers = []
+after = []
+hitl = false
+risk = "high"
+references = ["docs/initiative-borocean/review-codebase-2026-10-09.md"]
+
+[[entry]]
+id = 1
+type = "bug"
+title = "Sinyal alarmları eski sinyalle tetikleniyor (H1)"
+description = "signal_alerts.py yalnızca alarm kurulduktan sonraki mumlarda oluşan sinyali eşler."
+verify = "Eski bir RSI kesişimi olan hissede kurulan alarm hemen tetiklenmez; yeni kesişimde tetiklenir (regresyon testi)."
+covers = ["FR-042"]
+after = [5]
+hitl = false
+risk = "high"
+references = ["docs/initiative-borocean/review-codebase-2026-10-09.md"]
+
+[[entry]]
+id = 2
+type = "bug"
+title = "Finnhub istek hızı sınırsız (H2)"
+description = "AD-5'i uygular: fundamentals.py, insight_sources.py ve screener.py'deki doğrudan Finnhub çağrıları market_data'ya taşınır; sağlayıcı başına süreç genelinde bütçe (Finnhub 60/dk, Twelve Data 8/dk + 800/gün), kullanıcı ve arka plan hatları, (symbol, exchange) anahtarlı önbellek; aşımda açıklayıcı uyarı."
+verify = "Üç sektörlü Panel yüklemesi dakikada 60 Finnhub çağrısını aşmaz; aşım simülasyonunda kullanıcı uyarı görür."
+covers = ["FR-001", "FR-030", "FR-061"]
+after = [5]
+hitl = false
+risk = "high"
+references = ["docs/initiative-borocean/review-codebase-2026-10-09.md"]
+
+[[entry]]
+id = 3
+type = "bug"
+title = "/auth/confirm açık yönlendirme ve login-CSRF (M1)"
+description = "Kullanılmayan /auth/confirm rotası silinir ya da next ve token doğrulanır; /auth/oauth next kontrolü sıkılaştırılır."
+verify = "/auth/confirm?next=https://evil.com dış adrese yönlenmez; //evil.com kabul edilmez."
+covers = []
+after = [5]
+hitl = false
+risk = "medium"
+references = ["docs/initiative-borocean/review-codebase-2026-10-09.md"]
+
+[[entry]]
+id = 4
+type = "bug"
+title = "Simülasyon geçmişi en eski 90 günü döndürüyor (M2)"
+description = "get_history en yeni 90 günü seçip sıralar."
+verify = "91+ günlük bir simülasyonun grafiği son günü gösterir (regresyon testi)."
+covers = ["FR-112"]
+after = [5, 9]
+hitl = false
+risk = "medium"
+references = ["docs/initiative-borocean/review-codebase-2026-10-09.md"]
+
+[[entry]]
+id = 6
+type = "bug"
+title = "Başarısız bülten her GET'te yeniden üretiliyor (M4)"
+description = "Günün bülten üretimi için süreç içi kilit ve başarısızlığı belirli süre hatırlama."
+verify = "Gemini kotası bittiğinde ardışık /bulletins istekleri yeniden üretim tetiklemez (test)."
+covers = ["FR-100"]
+after = [5, 2]
+hitl = false
+risk = "medium"
+references = ["docs/initiative-borocean/review-codebase-2026-10-09.md"]
+
+[[entry]]
+id = 7
+type = "bug"
+title = "Emirlerde satır kilidi yok (L1)"
+description = "Simülasyon ve portföy emirleri ilgili satırları FOR UPDATE ile kilitler."
+verify = "Aynı anda gönderilen iki alım emri nakdi iki kez harcamaz (eşzamanlılık testi)."
+covers = ["FR-050", "FR-111"]
+after = [5]
+hitl = false
+risk = "low"
+references = ["docs/initiative-borocean/review-codebase-2026-10-09.md"]
+
+[[entry]]
+id = 8
+type = "bug"
+title = "Float karşılaştırması 'hepsini sattı' kararını bozuyor (L2)"
+description = "Miktar aritmetiği Decimal veya SQL ile yapılır; API yanıtında sayılar JSON sayısı olarak kalır (AD-2)."
+verify = "0.1+0.2 gibi miktarlarla tam satış pozisyonu kapatır, toz pozisyon kalmaz (test)."
+covers = ["FR-050", "FR-111"]
+after = [5, 7]
+hitl = false
+risk = "low"
+references = ["docs/initiative-borocean/review-codebase-2026-10-09.md"]
+
+[[entry]]
+id = 9
+type = "bug"
+title = "account-exists hız sınırlayıcısı adresleri unutmuyor (L3)"
+description = "Boşalan e-posta kovaları silinir ya da sınırlı TTL sözlüğü kullanılır."
+verify = "10.000 farklı adresle yapılan kontrol sonrası bellekteki kova sayısı sınırlı kalır (test)."
+covers = []
+after = [5]
+hitl = false
+risk = "low"
+references = ["docs/initiative-borocean/review-codebase-2026-10-09.md"]
+
+[[entry]]
+id = 11
+type = "bug"
+title = "AI metinlerini kullanıcının dilinde üretmek (D2)"
+description = "AD-12'yi uygular: AI raporu, bülten ve gelişme notu prompt'ları istekteki dile (tr/en) göre üretilir; locale önbellek anahtarına girer, iki dil birbirinin üstüne yazmaz."
+verify = "Arayüzü İngilizce olan kullanıcı aynı hisse için İngilizce AI raporu, Türkçe olan Türkçe rapor görür; ikisi de önbellekten ayrı ayrı döner (test)."
+covers = ["FR-100", "FR-101"]
+after = [5]
+hitl = false
+risk = "medium"
+references = ["docs/initiative-borocean/review-codebase-2026-10-09.md"]
+
+[[entry]]
+id = 10
+type = "bug"
+title = "İngilizce sinyal bildirimi ham kural kimliğini gösteriyor (L4)"
+description = "SIGNAL_RULE_CATALOG'a İngilizce kural adı eklenir ve bildirimde kullanılır."
+verify = "İngilizce kullanıcıya giden e-posta ve push 'macd_bullish_cross' yerine okunur kural adı içerir."
+covers = ["FR-043"]
+after = [5, 1]
+hitl = false
+risk = "low"
+references = ["docs/initiative-borocean/review-codebase-2026-10-09.md"]

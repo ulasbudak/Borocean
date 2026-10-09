@@ -1,0 +1,27 @@
+# Epic 12 — generated 2026-10-09 from docs/epics.md; entry ids match the legacy story numbers.
+
+[[entry]]
+id = 1
+type = "story"
+title = "Yönlendirici Çıktıların Kaldırılması (SPK — Yatırım Danışmanlığı Sınırı)"
+description = "Ürün sahibi ister: uygulamanın hiçbir yerde bir hisse için \"al/sat/tut\" yönlendirmesi, hedef fiyat veya kişiye özel öneri üretmemesini."
+verify = "Al/Nötr/Sat gibi bir yönlendirme etiketi yoktur; puan objektif kategorilere ayrılmış olarak gösterilir (FR-130)."
+covers = ["FR-130"]
+after = []
+hitl = false
+risk = "low"
+references = ["docs/stories/story-12.1.md", "docs/epics.md#story-121"]
+# legacy id: Story 12.1
+
+[[entry]]
+id = 2
+type = "story"
+title = "KVKK — Aydınlatma, Kullanım Koşulları ve Hesap Silme"
+description = "Kullanıcı ister: hangi kişisel verilerimin neden ve nerede işlendiğini okuyabilmek ve hesabımı tüm verilerimle birlikte kendim silebilmek."
+verify = "Oturum gerekmeden görüntülenir; kayıt ekranında bu metinlere bağlantı vardır (FR-131)."
+covers = ["FR-131"]
+after = []
+hitl = false
+risk = "low"
+references = ["docs/stories/story-12.2.md", "docs/epics.md#story-122"]
+# legacy id: Story 12.2

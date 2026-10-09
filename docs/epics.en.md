@@ -11,6 +11,8 @@ translationOf: docs/epics.md
 
 # Borocean — Epic & Story Backlog
 
+> **2026-10-09:** Planning and status now live in the BMAD ticket tree: `docs/initiative-borocean/` (`tickets.py status`). This document stays as history; epic and story numbers are the same there.
+
 *This is the English translation of [`docs/epics.md`](epics.md), which remains the source of truth. If the two ever disagree, the Turkish version wins until this file is re-synced. Last re-synced: 2026-09-28 (Epic 13 added).*
 
 ## 1. Overview
