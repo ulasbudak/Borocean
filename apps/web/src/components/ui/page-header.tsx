@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import type { ReactNode } from "react";
+import { AppNav } from "@/components/app-nav";
 
 export function PageHeader({
   backHref,
@@ -17,6 +18,7 @@ export function PageHeader({
 }) {
   return (
     <div className="mb-6">
+      <AppNav />
       <Link
         href={backHref}
         className="inline-flex items-center gap-1 text-sm text-text-tertiary transition-colors hover:text-text-primary"

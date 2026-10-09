@@ -96,3 +96,11 @@ for (const pathname of [
     await expect(page).toHaveURL(/\/login/);
   });
 }
+
+test("the removed /auth/confirm route cannot be used to bounce visitors elsewhere", async ({
+  page,
+}) => {
+  const response = await page.goto("/auth/confirm?token_hash=x&type=signup&next=https://evil.example");
+  expect(response?.status()).toBe(404);
+  expect(new URL(page.url()).host).not.toContain("evil.example");
+});

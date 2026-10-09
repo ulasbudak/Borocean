@@ -79,7 +79,7 @@ export function BulletinSection({ onShowAll }: { onShowAll?: () => void } = {}) 
         if (cancelled) return;
         setLocked(!entitlement.ai_reports);
         if (!entitlement.ai_reports) return;
-        const data = await fetchBulletins();
+        const data = await fetchBulletins(locale);
         if (!cancelled) setBulletins(data.bulletins);
       } catch {
         if (!cancelled) setBulletins([]);
@@ -90,7 +90,7 @@ export function BulletinSection({ onShowAll }: { onShowAll?: () => void } = {}) 
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [locale]);
 
   if (locked === null) return <Text style={styles.emptyText}>{messages.common.loading}</Text>;
 

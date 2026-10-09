@@ -83,7 +83,7 @@ function ReportCard<T extends { report: string; cached: boolean }>({
 }
 
 export function AIAnalysisPanel({ symbol, exchange }: { symbol: string; exchange: string }) {
-  const { messages } = useLocale();
+  const { locale, messages } = useLocale();
   const t = messages.aiAnalysis;
   const { colors } = useTheme();
   const styles = makeStyles(colors);
@@ -129,7 +129,7 @@ export function AIAnalysisPanel({ symbol, exchange }: { symbol: string; exchange
         title={t.combinedTitle}
         disclaimer={t.combinedDisclaimer}
         fetcher={(): Promise<{ report: CombinedAIReport | null; warnings: string[] }> =>
-          fetchCombinedAIReport(symbol, exchange)
+          fetchCombinedAIReport(symbol, exchange, locale)
         }
       />
       <ReportCard
@@ -137,14 +137,14 @@ export function AIAnalysisPanel({ symbol, exchange }: { symbol: string; exchange
         disclaimer={t.technicalDisclaimer}
         generatingHint={t.technicalGeneratingHint}
         fetcher={(): Promise<{ report: TechnicalAIReport | null; warnings: string[] }> =>
-          fetchTechnicalAIReport(symbol, exchange)
+          fetchTechnicalAIReport(symbol, exchange, locale)
         }
       />
       <ReportCard
         title={t.fundamentalTitle}
         disclaimer={t.fundamentalDisclaimer}
         fetcher={(): Promise<{ report: FundamentalAIReport | null; warnings: string[] }> =>
-          fetchFundamentalAIReport(symbol, exchange)
+          fetchFundamentalAIReport(symbol, exchange, locale)
         }
       />
       <View>

@@ -95,6 +95,16 @@ export interface Messages {
     settingsLink: string;
     quickAccess: string;
   };
+  onboarding: {
+    title: string;
+    intro: string;
+    stepInterests: string;
+    stepInterestsAction: string;
+    stepSearch: string;
+    stepTrack: string;
+    stepTrackWatchlist: string;
+    stepTrackPortfolio: string;
+  };
   search: {
     bistDisabledNote: string;
     label: string;

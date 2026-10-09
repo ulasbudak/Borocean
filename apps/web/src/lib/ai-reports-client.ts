@@ -1,4 +1,4 @@
-import { authFetch } from "@/lib/api-client";
+import { authFetch, pageLocale } from "@/lib/api-client";
 
 export type FundamentalAIReport = {
   symbol: string;
@@ -37,8 +37,10 @@ type CombinedResponse = { report: CombinedAIReport | null; warnings: string[] };
 async function fetchReport<T>(path: string, symbol: string, exchange: string): Promise<T> {
   let response: Response;
   try {
+    // AI text comes back in the page's language (AD-12).
     response = await authFetch(
-      `${path}?symbol=${encodeURIComponent(symbol)}&exchange=${encodeURIComponent(exchange)}`
+      `${path}?symbol=${encodeURIComponent(symbol)}&exchange=${encodeURIComponent(exchange)}` +
+        `&locale=${pageLocale()}`
     );
   } catch {
     // A network-level failure (timeout, connection drop) throws the browser's own

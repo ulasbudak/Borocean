@@ -23,8 +23,12 @@ test("screener runs the default quality screen and saves it", async ({ page }) =
   await page.goto("/screener");
   await page.getByRole("button", { name: "Taramayı çalıştır" }).click();
 
+  // A cold run may also show the provider-budget warning ("…sonuçlar eksik olabilir"), so
+  // match the results heading itself rather than any "Sonuçlar" text.
   await expect(
-    page.getByText("Sonuçlar").or(page.getByText("Kriterlere uyan hisse bulunamadı."))
+    page
+      .getByRole("heading", { name: /^Sonuçlar/ })
+      .or(page.getByText("Kriterlere uyan hisse bulunamadı."))
   ).toBeVisible({ timeout: 180_000 });
 
   await page.getByPlaceholder("Tarama adı").fill("E2E Tarama");

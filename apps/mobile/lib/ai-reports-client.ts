@@ -47,11 +47,18 @@ async function authFetch(path: string): Promise<Response> {
   return fetch(`${apiUrl}${path}`, { headers });
 }
 
-async function fetchReport<T>(path: string, symbol: string, exchange: string): Promise<T> {
+async function fetchReport<T>(
+  path: string,
+  symbol: string,
+  exchange: string,
+  locale: string
+): Promise<T> {
   let response: Response;
   try {
+    // AI text comes back in the app's language (AD-12).
     response = await authFetch(
-      `${path}?symbol=${encodeURIComponent(symbol)}&exchange=${encodeURIComponent(exchange)}`
+      `${path}?symbol=${encodeURIComponent(symbol)}&exchange=${encodeURIComponent(exchange)}` +
+        `&locale=${encodeURIComponent(locale)}`
     );
   } catch {
     // A network-level failure (timeout, connection drop) throws React Native's own
@@ -68,21 +75,24 @@ async function fetchReport<T>(path: string, symbol: string, exchange: string): P
 
 export async function fetchFundamentalAIReport(
   symbol: string,
-  exchange: string
+  exchange: string,
+  locale: string
 ): Promise<FundamentalResponse> {
-  return fetchReport("/symbols/ai-report/fundamental", symbol, exchange);
+  return fetchReport("/symbols/ai-report/fundamental", symbol, exchange, locale);
 }
 
 export async function fetchTechnicalAIReport(
   symbol: string,
-  exchange: string
+  exchange: string,
+  locale: string
 ): Promise<TechnicalResponse> {
-  return fetchReport("/symbols/ai-report/technical", symbol, exchange);
+  return fetchReport("/symbols/ai-report/technical", symbol, exchange, locale);
 }
 
 export async function fetchCombinedAIReport(
   symbol: string,
-  exchange: string
+  exchange: string,
+  locale: string
 ): Promise<CombinedResponse> {
-  return fetchReport("/symbols/ai-report/combined", symbol, exchange);
+  return fetchReport("/symbols/ai-report/combined", symbol, exchange, locale);
 }

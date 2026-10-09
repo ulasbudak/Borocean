@@ -8,7 +8,8 @@
   "scripts": {
     "generate:types": "openapi-typescript http://127.0.0.1:8000/openapi.json -o src/api-types.ts",
     "typecheck": "tsc --noEmit",
-    "lint": "echo \"no lint configured for shared package yet\""
+    "lint": "echo \"no lint configured for shared package yet\"",
+    "test": "tsc -p tsconfig.test.json && node --test .test-build/**/*.test.js"
   },
   "devDependencies": {
     "openapi-typescript": "7.13.0",

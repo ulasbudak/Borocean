@@ -1,4 +1,5 @@
 import { useColorScheme } from "react-native";
+import { useThemePreference } from "./theme-preference";
 import {
   colorTokens,
   radius,
@@ -11,10 +12,13 @@ import {
 export { spacing, radius, typeScale };
 export type { ThemeMode };
 
-/** Dark is the default when the OS reports no preference (matches web's dark-first default). */
+/** The user's choice in Settings wins; "system" follows the OS, and dark is the default when the
+ * OS reports no preference (matches web's dark-first default). */
 export function useTheme(): { mode: ThemeMode; colors: ColorPalette } {
   const scheme = useColorScheme();
-  const mode: ThemeMode = scheme === "light" ? "light" : "dark";
+  const { preference } = useThemePreference();
+  const system: ThemeMode = scheme === "light" ? "light" : "dark";
+  const mode: ThemeMode = preference === "system" ? system : preference;
   return { mode, colors: colorTokens[mode] };
 }
 

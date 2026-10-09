@@ -20,6 +20,7 @@ import { signOut } from "./actions";
 import { SearchBox } from "./search-box";
 import { Highlights } from "./highlights";
 import { BulletinSection } from "./bulletin-section";
+import { GettingStarted } from "./getting-started";
 import { PortfolioInsights } from "./portfolio-insights";
 
 export default async function DashboardPage() {
@@ -37,6 +38,8 @@ export default async function DashboardPage() {
   const displayName = displayNameFrom(claims.user_metadata);
   const shownName = displayName ?? email;
   const initial = shownName.charAt(0).toLocaleUpperCase(locale) || "?";
+  const interestSectors = claims.user_metadata?.interest_sectors;
+  const needsOnboarding = !Array.isArray(interestSectors) || interestSectors.length === 0;
 
   return (
     <div className="mx-auto flex max-w-3xl flex-col gap-8 px-4 py-8">
@@ -148,6 +151,8 @@ export default async function DashboardPage() {
           </Link>
         </nav>
       </section>
+
+      {needsOnboarding && <GettingStarted messages={t.onboarding} />}
 
       <section>
         <p className="mb-3 text-xs font-medium uppercase tracking-wide text-text-tertiary">

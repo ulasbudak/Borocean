@@ -1,4 +1,4 @@
-import { authFetch } from "@/lib/api-client";
+import { authFetch, pageLocale } from "@/lib/api-client";
 
 export type Pick = {
   symbol: string;
@@ -17,7 +17,7 @@ export type Bulletin = {
 type BulletinsResponse = { bulletins: Bulletin[]; warnings: string[] };
 
 export async function fetchBulletins(): Promise<BulletinsResponse> {
-  const response = await authFetch("/bulletins");
+  const response = await authFetch(`/bulletins?locale=${pageLocale()}`);
   if (!response.ok) {
     const body = await response.json().catch(() => null);
     throw new Error(body?.detail ?? "Failed to load bulletins");

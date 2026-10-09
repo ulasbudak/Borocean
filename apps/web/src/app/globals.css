@@ -15,10 +15,10 @@
   --tk-border-default: #2e3239;
   --tk-text-primary: #f4f5f7;
   --tk-text-secondary: #9ca3af;
-  --tk-text-tertiary: #6b7280;
+  --tk-text-tertiary: #848c98;
   --tk-text-disabled: #4b5563;
   --tk-accent: #3b82f6;
-  --tk-accent-text: #eff6ff;
+  --tk-accent-text: #0a0b0d;
   --tk-positive: #34d399;
   --tk-negative: #f87171;
   --tk-warning: #f59e0b;
@@ -36,13 +36,13 @@
     --tk-border-default: #d1d5db;
     --tk-text-primary: #0f172a;
     --tk-text-secondary: #475569;
-    --tk-text-tertiary: #94a3b8;
+    --tk-text-tertiary: #5f6e82;
     --tk-text-disabled: #cbd5e1;
     --tk-accent: #2563eb;
     --tk-accent-text: #ffffff;
-    --tk-positive: #16a34a;
-    --tk-negative: #dc2626;
-    --tk-warning: #d97706;
+    --tk-positive: #15803d;
+    --tk-negative: #b91c1c;
+    --tk-warning: #b45309;
     --tk-info: #0284c7;
     color-scheme: light;
   }
@@ -61,13 +61,13 @@
   --tk-border-default: #d1d5db;
   --tk-text-primary: #0f172a;
   --tk-text-secondary: #475569;
-  --tk-text-tertiary: #94a3b8;
+  --tk-text-tertiary: #5f6e82;
   --tk-text-disabled: #cbd5e1;
   --tk-accent: #2563eb;
   --tk-accent-text: #ffffff;
-  --tk-positive: #16a34a;
-  --tk-negative: #dc2626;
-  --tk-warning: #d97706;
+  --tk-positive: #15803d;
+  --tk-negative: #b91c1c;
+  --tk-warning: #b45309;
   --tk-info: #0284c7;
   color-scheme: light;
 }

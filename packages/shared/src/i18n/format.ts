@@ -15,7 +15,13 @@ export function formatChange(
   locale: Locale
 ): string {
   const sign = changeAbs >= 0 ? "+" : "";
-  return `${sign}${formatPrice(changeAbs, currency, locale)} (${sign}${changePct.toFixed(2)}%)`;
+  const pct = new Intl.NumberFormat(LOCALE_TAGS[locale], {
+    style: "percent",
+    signDisplay: "always",
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(changePct / 100);
+  return `${sign}${formatPrice(changeAbs, currency, locale)} (${pct})`;
 }
 
 export function formatMarketCap(marketCap: number, currency: string | null, locale: Locale): string {

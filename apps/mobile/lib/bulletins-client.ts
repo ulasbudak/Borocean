@@ -29,8 +29,8 @@ async function authFetch(path: string): Promise<Response> {
   return fetch(`${apiUrl}${path}`, { headers });
 }
 
-export async function fetchBulletins(): Promise<BulletinsResponse> {
-  const response = await authFetch("/bulletins");
+export async function fetchBulletins(locale: string): Promise<BulletinsResponse> {
+  const response = await authFetch(`/bulletins?locale=${encodeURIComponent(locale)}`);
   if (!response.ok) {
     const body = await response.json().catch(() => null);
     throw new Error(body?.detail ?? "Failed to load bulletins");

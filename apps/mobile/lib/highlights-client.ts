@@ -13,6 +13,7 @@ export type Highlight = {
 type HighlightsResponse = {
   highlights: Highlight[];
   warnings: string[];
+  missing_interests?: boolean;
 };
 
 export async function fetchHighlights(): Promise<HighlightsResponse> {

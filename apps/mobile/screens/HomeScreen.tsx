@@ -41,6 +41,9 @@ export function HomeScreen({ session }: { session: Session }) {
   const [showCompare, setShowCompare] = useState(false);
   const [showSimulation, setShowSimulation] = useState(false);
   const [showBulletins, setShowBulletins] = useState(false);
+  // First-run guide (UX plan 16.4) until the user has picked interest sectors.
+  const interestSectors = session.user.user_metadata?.interest_sectors;
+  const needsOnboarding = !Array.isArray(interestSectors) || interestSectors.length === 0;
 
   // Story 13.6 — tapping the morning "updates in your portfolio" push opens the portfolio.
   useEffect(() => {
@@ -160,6 +163,27 @@ export function HomeScreen({ session }: { session: Session }) {
           )}
         </Text>
 
+        {needsOnboarding && (
+          <View style={styles.card}>
+            <Text style={styles.navCardText}>{messages.onboarding.title}</Text>
+            <Text style={styles.onboardingText}>{messages.onboarding.intro}</Text>
+            <Text style={styles.onboardingText}>1. {messages.onboarding.stepInterests}</Text>
+            <TouchableOpacity onPress={() => setShowSettings(true)}>
+              <Text style={styles.link}>{messages.onboarding.stepInterestsAction}</Text>
+            </TouchableOpacity>
+            <Text style={styles.onboardingText}>2. {messages.onboarding.stepSearch}</Text>
+            <Text style={styles.onboardingText}>3. {messages.onboarding.stepTrack}</Text>
+            <View style={styles.onboardingLinks}>
+              <TouchableOpacity onPress={() => setShowWatchlist(true)}>
+                <Text style={styles.link}>{messages.onboarding.stepTrackWatchlist}</Text>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={() => setShowPortfolio(true)}>
+                <Text style={styles.link}>{messages.onboarding.stepTrackPortfolio}</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        )}
+
         <View style={styles.card}>
           <SearchBox onSelectResult={setSelectedStock} />
         </View>
@@ -259,6 +283,16 @@ function makeStyles(colors: ThemeColors) {
     navCardText: {
       color: colors.textPrimary,
       fontWeight: "600",
+    },
+    onboardingText: {
+      color: colors.textSecondary,
+      fontSize: 13,
+      marginTop: spacing[2],
+    },
+    onboardingLinks: {
+      flexDirection: "row",
+      gap: spacing[4],
+      marginTop: spacing[1],
     },
     button: {
       backgroundColor: colors.surfaceElevated,

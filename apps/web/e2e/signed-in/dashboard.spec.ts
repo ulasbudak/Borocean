@@ -45,11 +45,9 @@ test("symbol search opens the stock page", async ({ page }) => {
   await expect(page).toHaveURL(/\/stock\/US\/AAPL$/);
 });
 
-// Known bug: async API handlers (/insights, /bulletins, /highlights, ...) run blocking
-// psycopg calls, each opening a new connection, on the event loop. While the dashboard
-// panels load, /symbols/search queues behind them — against the dev database (~2.3 s per
-// connection) the search stays on "Aranıyor..." for 45 s+.
-test.fixme("symbol search answers while the dashboard panels are still loading", async ({
+// Regression for ticket 15.5: blocking DB calls on the API's event loop used to queue the
+// search behind the dashboard panels for 45 s+ (AD-17).
+test("symbol search answers while the dashboard panels are still loading", async ({
   page,
 }) => {
   await page.goto("/dashboard");
@@ -79,4 +77,29 @@ test("dashboard shows only the latest bulletin and links to the archive", async 
   await archiveLink.click();
   await expect(page).toHaveURL(/\/bulletins$/);
   await expect(page.getByRole("heading", { name: "Bülten arşivi" })).toBeVisible();
+});
+
+test("a new user gets a getting-started guide until they pick interest sectors", async ({
+  page,
+}) => {
+  await page.goto("/dashboard");
+  await expect(page.getByText("Başlarken")).toBeVisible();
+  await page.getByRole("link", { name: "Sektör seç" }).click();
+  await expect(page).toHaveURL(/\/settings$/);
+});
+
+test("sub-pages carry a compact navigation to every area", async ({ page }) => {
+  await page.goto("/portfolio");
+  const nav = page.getByRole("navigation", { name: "Hızlı erişim" });
+  await expect(nav.getByRole("link", { name: "Portföy" })).toHaveAttribute("aria-current", "page");
+
+  await nav.getByRole("link", { name: "Fiyat Alarmları" }).click();
+  await expect(page).toHaveURL(/\/alerts$/);
+
+  // No horizontal page scroll at phone width.
+  await page.setViewportSize({ width: 375, height: 800 });
+  const overflow = await page.evaluate(
+    () => document.documentElement.scrollWidth > document.documentElement.clientWidth
+  );
+  expect(overflow).toBe(false);
 });

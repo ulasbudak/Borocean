@@ -111,6 +111,16 @@ export const en: Messages = {
     settingsLink: "Settings",
     quickAccess: "Quick access",
   },
+  onboarding: {
+    title: "Getting started",
+    intro: "Three quick steps to make Borocean yours:",
+    stepInterests: "Pick the sectors you follow; the Panel then shows the biggest movers in them.",
+    stepInterestsAction: "Pick sectors",
+    stepSearch: "Find a stock with the search below and open its page.",
+    stepTrack: "Add stocks you follow to a watchlist and the ones you own to a portfolio.",
+    stepTrackWatchlist: "Watchlist",
+    stepTrackPortfolio: "Portfolio",
+  },
   search: {
     bistDisabledNote: "Borsa Istanbul (BIST) is currently disabled — only US stocks are supported for now.",
     label: "Search stocks",

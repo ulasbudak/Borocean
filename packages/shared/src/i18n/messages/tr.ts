@@ -111,6 +111,16 @@ export const tr: Messages = {
     settingsLink: "Ayarlar",
     quickAccess: "Hızlı erişim",
   },
+  onboarding: {
+    title: "Başlarken",
+    intro: "Borocean'ı kendine göre ayarlamak için üç kısa adım:",
+    stepInterests: "İlgilendiğin sektörleri seç; Panelde o sektörlerde en çok hareket eden hisseler görünür.",
+    stepInterestsAction: "Sektör seç",
+    stepSearch: "Aşağıdaki aramadan bir hisse bul ve sayfasını aç.",
+    stepTrack: "Takip ettiğin hisseleri izleme listesine, sahip olduklarını portföye ekle.",
+    stepTrackWatchlist: "İzleme listesi",
+    stepTrackPortfolio: "Portföy",
+  },
   search: {
     bistDisabledNote: "Borsa İstanbul (BIST) şu an devre dışı — şimdilik yalnızca ABD hisseleri destekleniyor.",
     label: "Hisse ara",

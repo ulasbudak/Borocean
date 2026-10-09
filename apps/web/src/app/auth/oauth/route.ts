@@ -10,7 +10,8 @@ export async function GET(request: Request) {
   const code = searchParams.get("code");
   const flow = searchParams.get("flow");
   let next = searchParams.get("next") ?? "/dashboard";
-  if (!next.startsWith("/")) {
+  // Only same-site paths: "//host" and "/\\host" are protocol-relative URLs to another site.
+  if (!next.startsWith("/") || next.startsWith("//") || next.startsWith("/\\")) {
     next = "/dashboard";
   }
 

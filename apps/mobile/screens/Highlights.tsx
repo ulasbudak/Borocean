@@ -49,6 +49,11 @@ export function Highlights({ onSelectResult }: { onSelectResult: (result: Symbol
 
   return (
     <View style={styles.list}>
+      {warnings.map((warning) => (
+        <Text key={warning} style={styles.warning}>
+          {warning}
+        </Text>
+      ))}
       {highlights.map((h) => (
         <TouchableOpacity
           key={`${h.exchange}-${h.symbol}`}
@@ -111,6 +116,10 @@ function makeStyles(colors: ThemeColors) {
     emptyText: {
       fontSize: 13,
       color: colors.textSecondary,
+    },
+    warning: {
+      fontSize: 12,
+      color: colors.warning,
     },
   });
 }

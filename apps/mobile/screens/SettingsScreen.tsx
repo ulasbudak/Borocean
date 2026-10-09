@@ -18,6 +18,7 @@ import {
   type Locale,
 } from "@borocean/shared";
 import { useLocale } from "../lib/locale-context";
+import { useThemePreference, type ThemePreference } from "../lib/theme-preference";
 import { useTheme, radius, spacing, type ThemeColors } from "../lib/theme";
 import { supabase } from "../lib/supabase";
 import {
@@ -31,6 +32,7 @@ import { openWebPage } from "../lib/web-links";
 
 export function SettingsScreen({ onBack }: { onBack: () => void }) {
   const { locale, messages, setLocale } = useLocale();
+  const { preference: themePreference, setPreference: setThemePreference } = useThemePreference();
   const { colors } = useTheme();
   const styles = makeStyles(colors);
 
@@ -125,6 +127,19 @@ export function SettingsScreen({ onBack }: { onBack: () => void }) {
     supabase.auth.updateUser({ data: { interest_sectors: next } }).catch(() => {
       // Best-effort; local toggle state already reflects the intent.
     });
+  }
+
+  function renderThemeOption(value: ThemePreference, label: string) {
+    const isActive = themePreference === value;
+    return (
+      <TouchableOpacity
+        style={[styles.option, isActive && styles.optionActive]}
+        onPress={() => setThemePreference(value)}
+        disabled={isActive}
+      >
+        <Text style={[styles.optionText, isActive && styles.optionTextActive]}>{label}</Text>
+      </TouchableOpacity>
+    );
   }
 
   function renderOption(value: Locale, label: string) {
@@ -293,6 +308,15 @@ export function SettingsScreen({ onBack }: { onBack: () => void }) {
         <View style={styles.optionRow}>
           {renderOption("tr", messages.settings.turkish)}
           {renderOption("en", messages.settings.english)}
+        </View>
+      </View>
+
+      <View style={styles.card}>
+        <Text style={styles.label}>{messages.settings.theme}</Text>
+        <View style={styles.optionRow}>
+          {renderThemeOption("system", messages.settings.themeSystem)}
+          {renderThemeOption("light", messages.settings.themeLight)}
+          {renderThemeOption("dark", messages.settings.themeDark)}
         </View>
       </View>
 

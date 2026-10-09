@@ -17,3 +17,8 @@ export async function authFetch(path: string, init: RequestInit = {}): Promise<R
   const apiUrl = process.env.NEXT_PUBLIC_API_URL;
   return fetch(`${apiUrl}${path}`, { ...init, headers });
 }
+
+/** The language the page is rendered in (`<html lang>`), for endpoints that return text. */
+export function pageLocale(): "tr" | "en" {
+  return typeof document !== "undefined" && document.documentElement.lang === "en" ? "en" : "tr";
+}
