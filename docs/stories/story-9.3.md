@@ -4,13 +4,15 @@ epic: "Epic 9 — AI Destekli Yorum ve Örüntü Tanıma"
 story_id: "9.3"
 status: done
 created: 2026-09-19
-updated: 2026-09-28
+updated: 2026-10-09
 author: Bob (BMAD Scrum Master) & Amelia (BMAD Developer)
 based_on: ["docs/PRD.md §5.11", "docs/epics.md §13", "docs/product-brief-epic9-ai.md"]
 depends_on: ["7.1", "8.1", "9.1"]
 ---
 
 # Story 9.3: Günlük Sektör Bülteni
+
+> **Güncelleme (2026-10-09, kullanıcı isteği):** Panel'de yalnızca en yeni bülten gösteriliyor; altındaki "Tüm bültenler" düğmesi arşiv sayfasına (web `/bulletins`, mobil `BulletinsScreen`) götürüyor. Arşiv sayfasında tüm bültenler listeleniyor. Gerçek tarayıcıda doğrulandı: Panel'de 1 bülten, arşivde 3.
 
 > **Güncelleme (2026-09-28, Story 12.1):** Bülten artık sektörün **en yüksek skorlu** hisselerini değil, **piyasa değerine göre en büyük** 5 şirketini kapsıyor. Şirketlere puan/etiket verilmiyor, metin yönlendirme içermiyor. Eski formattaki bültenler listeden gizlendi (silinmedi); bkz. `docs/stories/story-12.1.md`.
 

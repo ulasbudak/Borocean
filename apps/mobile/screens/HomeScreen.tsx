@@ -18,6 +18,7 @@ import { CompareScreen } from "./CompareScreen";
 import { SimulationScreen } from "./SimulationScreen";
 import { Highlights } from "./Highlights";
 import { BulletinSection } from "./BulletinSection";
+import { BulletinsScreen } from "./BulletinsScreen";
 import { PortfolioInsightsCard } from "./PortfolioInsightsCard";
 
 type SymbolResult = {
@@ -39,6 +40,7 @@ export function HomeScreen({ session }: { session: Session }) {
   const [showSignalAlerts, setShowSignalAlerts] = useState(false);
   const [showCompare, setShowCompare] = useState(false);
   const [showSimulation, setShowSimulation] = useState(false);
+  const [showBulletins, setShowBulletins] = useState(false);
 
   // Story 13.6 — tapping the morning "updates in your portfolio" push opens the portfolio.
   useEffect(() => {
@@ -126,6 +128,14 @@ export function HomeScreen({ session }: { session: Session }) {
     );
   }
 
+  if (showBulletins) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <BulletinsScreen onBack={() => setShowBulletins(false)} />
+      </SafeAreaView>
+    );
+  }
+
   if (showSimulation) {
     return (
       <SafeAreaView style={styles.container}>
@@ -160,7 +170,7 @@ export function HomeScreen({ session }: { session: Session }) {
         <Highlights onSelectResult={setSelectedStock} />
 
         <Text style={styles.sectionLabel}>{messages.bulletin.title}</Text>
-        <BulletinSection />
+        <BulletinSection onShowAll={() => setShowBulletins(true)} />
 
         <TouchableOpacity style={styles.navCard} onPress={() => setShowWatchlist(true)}>
           <Text style={styles.navCardText}>{messages.watchlist.title}</Text>

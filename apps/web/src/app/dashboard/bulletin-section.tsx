@@ -1,13 +1,27 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
+import { ArrowRight } from "lucide-react";
 import { translateSector, type Locale, type Messages } from "@borocean/shared";
 import { Card } from "@/components/ui/card";
 import { ProseText } from "@/components/ui/prose-text";
 import { fetchEntitlement } from "@/lib/entitlements-client";
 import { fetchBulletins, type Bulletin } from "@/lib/bulletins-client";
 
-export function BulletinSection({ messages, locale }: { messages: Messages["bulletin"]; locale: Locale }) {
+/**
+ * Daily sector bulletins (Story 9.3). The dashboard passes `latestOnly` to show just the
+ * newest one with a link to the archive page (/bulletins), which shows them all.
+ */
+export function BulletinSection({
+  messages,
+  locale,
+  latestOnly = false,
+}: {
+  messages: Messages["bulletin"];
+  locale: Locale;
+  latestOnly?: boolean;
+}) {
   const t = messages;
   const [locked, setLocked] = useState<boolean | null>(null);
   const [bulletins, setBulletins] = useState<Bulletin[] | null>(null);
@@ -55,9 +69,11 @@ export function BulletinSection({ messages, locale }: { messages: Messages["bull
     );
   }
 
+  const shown = latestOnly ? bulletins.slice(0, 1) : bulletins;
+
   return (
     <div className="flex flex-col gap-3">
-      {bulletins.map((bulletin) => (
+      {shown.map((bulletin) => (
         <Card key={bulletin.bulletin_date}>
           <div className="mb-2 flex items-center justify-between">
             <span className="text-xs font-medium uppercase tracking-wide text-accent">
@@ -86,6 +102,15 @@ export function BulletinSection({ messages, locale }: { messages: Messages["bull
           <p className="mt-3 text-xs text-text-tertiary">{t.disclaimer}</p>
         </Card>
       ))}
+      {latestOnly && (
+        <Link
+          href="/bulletins"
+          className="flex items-center justify-center gap-1.5 self-center rounded-md border border-border-default bg-surface px-4 py-2 text-sm font-medium text-text-primary transition-colors hover:border-accent/50 hover:text-accent"
+        >
+          {t.viewAll}
+          <ArrowRight size={14} />
+        </Link>
+      )}
     </div>
   );
 }

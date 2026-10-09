@@ -61,7 +61,7 @@ function BulletinCard({
   );
 }
 
-export function BulletinSection() {
+export function BulletinSection({ onShowAll }: { onShowAll?: () => void } = {}) {
   const { locale, messages } = useLocale();
   const t = messages.bulletin;
   const { colors } = useTheme();
@@ -114,9 +114,14 @@ export function BulletinSection() {
 
   return (
     <View style={styles.list}>
-      {bulletins.map((bulletin) => (
+      {(onShowAll ? bulletins.slice(0, 1) : bulletins).map((bulletin) => (
         <BulletinCard key={bulletin.bulletin_date} bulletin={bulletin} locale={locale} t={t} styles={styles} />
       ))}
+      {onShowAll && (
+        <TouchableOpacity style={styles.showAll} onPress={onShowAll}>
+          <Text style={styles.showAllText}>{t.viewAll} →</Text>
+        </TouchableOpacity>
+      )}
     </View>
   );
 }
@@ -153,6 +158,20 @@ function makeStyles(colors: ThemeColors) {
       fontSize: 13,
       lineHeight: 19,
       color: colors.textSecondary,
+    },
+    showAll: {
+      alignSelf: "center",
+      borderWidth: 1,
+      borderColor: colors.borderDefault,
+      borderRadius: radius.md,
+      paddingHorizontal: spacing[4],
+      paddingVertical: spacing[2],
+      backgroundColor: colors.surface,
+    },
+    showAllText: {
+      color: colors.textPrimary,
+      fontWeight: "600",
+      fontSize: 13,
     },
     readMore: {
       marginTop: spacing[1] + 2,

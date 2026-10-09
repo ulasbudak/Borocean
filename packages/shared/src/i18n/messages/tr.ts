@@ -528,6 +528,9 @@ export const tr: Messages = {
     disclaimer: "Yapay zeka tarafından kamuya açık verilerden üretilmiştir — yatırım tavsiyesi değildir.",
     readMoreLabel: "Devamını oku",
     readLessLabel: "Daha az göster",
+    viewAll: "Tüm bültenler",
+    archiveTitle: "Bülten arşivi",
+    backToDashboard: "← Panele dön",
   },
   legal: {
     termsTitle: "Kullanım Koşulları",

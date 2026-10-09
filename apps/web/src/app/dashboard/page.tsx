@@ -171,7 +171,7 @@ export default async function DashboardPage() {
         <p className="mb-3 text-xs font-medium uppercase tracking-wide text-text-tertiary">
           {t.bulletin.title}
         </p>
-        <BulletinSection messages={t.bulletin} locale={locale} />
+        <BulletinSection messages={t.bulletin} locale={locale} latestOnly />
       </section>
 
     </div>

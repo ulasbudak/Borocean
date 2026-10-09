@@ -516,6 +516,9 @@ export interface Messages {
     disclaimer: string;
     readMoreLabel: string;
     readLessLabel: string;
+    viewAll: string;
+    archiveTitle: string;
+    backToDashboard: string;
   };
   legal: {
     termsTitle: string;
