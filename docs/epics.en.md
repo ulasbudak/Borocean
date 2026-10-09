@@ -989,14 +989,15 @@ So that users don't get "Too many attempts" while signing up and emails don't la
 
 ### Story 14.2: Turning On Alert Emails in Production
 
-- [x] **Code done (2026-10-09); production setup is on the user.**
+- [x] **Done (2026-10-09), live.**
   - **Finding:** alerts were only evaluated when the alerts page was opened, so notifications arrived while the user was already looking at it.
   - **Background evaluation:** `app/alert_runner.py` + `POST /internal/alerts/run?kind=price|signal` (cron-secret protected). Price alerts every 15 minutes during the US session on weekdays, signal alerts once a day (05:15 UTC). Setup: `scripts/setup_alerts_cron.sql`.
   - Each symbol is fetched once per run.
   - `_mark_triggered` now only updates an active alert, so a single notification goes out even if the page and the scheduler run at the same time.
   - Email and push text are in the user's language; the email is HTML with alert and settings links and the "not investment advice" notice.
   - **Verification:** 381 tests green. Tried on dev with real alerts: the AAPL price alert past its threshold and the AAPL signal alert triggered, MSFT stayed active.
-  - **User's part:** `RESEND_API_KEY` + `NOTIFICATION_FROM_EMAIL` on Render, `setup_alerts_cron.sql` in prod.
+  - **Production setup:** `RESEND_API_KEY` + `NOTIFICATION_FROM_EMAIL` on Render, `setup_alerts_cron.sql` run in prod.
+  - **Live verification:** a test account in prod set an AAPL "above 1" alert without opening the alerts page. The 17:15 UTC cron run delivered the "Borocean Fiyat Alarmı" email (Turkish copy, /alerts and /settings links, notice). The test account was deleted.
 
 As a **user**,
 I want to receive an email when my price and signal alerts trigger,
