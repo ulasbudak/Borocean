@@ -16,6 +16,7 @@ import httpx
 from pydantic import BaseModel
 
 from app.config import get_settings
+from app.market_data import finnhub_get
 
 FINNHUB_BASE_URL = "https://finnhub.io/api/v1"
 FINNHUB_TIMEOUT_SECONDS = 5.0
@@ -48,9 +49,7 @@ async def _get(path: str, params: dict, client: httpx.AsyncClient) -> object | N
     if not settings.finnhub_api_key:
         return None
     try:
-        response = await client.get(
-            f"{FINNHUB_BASE_URL}/{path}", params={**params, "token": settings.finnhub_api_key}
-        )
+        response = await finnhub_get(client, path, params)
         response.raise_for_status()
         return response.json()
     except (httpx.HTTPError, ValueError):

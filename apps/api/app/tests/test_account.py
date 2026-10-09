@@ -113,6 +113,21 @@ def test_account_check_is_rate_limited_per_email_and_globally(monkeypatch):
     assert not account.account_check_allowed("new@x.com", now=0.0)
 
 
+def test_account_check_forgets_addresses_once_their_window_has_passed(monkeypatch):
+    from collections import deque
+
+    monkeypatch.setattr(account, "_checks_by_email", {})
+    monkeypatch.setattr(account, "_checks_global", deque())
+    window = account.ACCOUNT_CHECK_PER_EMAIL_WINDOW
+
+    # 10,000 distinct addresses spread over a day, as an enumeration run would send them.
+    for i in range(10_000):
+        account.account_check_allowed(f"user{i}@x.com", now=i * 9.0)
+
+    live_limit = account.ACCOUNT_CHECK_GLOBAL * (window / account.ACCOUNT_CHECK_GLOBAL_WINDOW)
+    assert len(account._checks_by_email) <= live_limit + account.ACCOUNT_CHECK_GLOBAL
+
+
 def test_account_exists_endpoint(monkeypatch):
     monkeypatch.setattr(main, "account_check_allowed", lambda email: True)
     monkeypatch.setattr(main, "account_exists", lambda email: email == "known@x.com")

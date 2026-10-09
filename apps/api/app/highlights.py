@@ -10,6 +10,9 @@ MAX_CONCURRENT_REQUESTS = 15
 MAX_HIGHLIGHTS = 10
 
 NO_INTEREST_WARNING = "Öne çıkanları görmek için ayarlardan ilgi alanı sektörü seç."
+PARTIAL_DATA_WARNING = (
+    "Bazı hisselerin fiyatı şu an alınamadı; liste eksik olabilir. Birazdan tekrar dene."
+)
 
 
 class Highlight(BaseModel):
@@ -64,4 +67,5 @@ async def get_highlights(interest_sectors: list[str]) -> tuple[list[Highlight], 
         if overview is not None and overview.change_pct is not None
     ]
     highlights.sort(key=lambda h: abs(h.change_pct or 0), reverse=True)
-    return highlights[:MAX_HIGHLIGHTS], []
+    warnings = [PARTIAL_DATA_WARNING] if any(o is None for o in overviews) else []
+    return highlights[:MAX_HIGHLIGHTS], warnings

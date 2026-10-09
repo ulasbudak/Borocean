@@ -139,7 +139,7 @@ async def test_evaluate_marks_alert_triggered_when_rule_fires(monkeypatch):
         return [
             SignalRecord(
                 rule_id="rsi_oversold", rule_name="RSI 30 altına düştü",
-                direction="bearish", triggered_at=1700000000,
+                direction="bearish", triggered_at=int(NOW.timestamp()) + 86400,
             )
         ]
 
@@ -153,6 +153,58 @@ async def test_evaluate_marks_alert_triggered_when_rule_fires(monkeypatch):
     assert updated[0].status == "triggered"
     assert updated[0].triggered_at is not None
     assert warnings == []
+
+
+@pytest.mark.anyio
+async def test_evaluate_ignores_signals_from_before_the_alert_was_created(monkeypatch):
+    created = int(NOW.timestamp())
+    old_signals = [
+        SignalRecord(
+            rule_id="rsi_oversold", rule_name="RSI 30 altına düştü",
+            direction="bearish", triggered_at=created - 120 * 86400,
+        ),
+        # The daily candle that closed just before creation is history too.
+        SignalRecord(
+            rule_id="rsi_oversold", rule_name="RSI 30 altına düştü",
+            direction="bearish", triggered_at=created - 86400,
+        ),
+    ]
+
+    async def fake_get_us_candles(symbol, timeframe):
+        return []
+
+    marked = []
+    monkeypatch.setattr(signal_alerts, "get_us_candles", fake_get_us_candles)
+    monkeypatch.setattr(signal_alerts, "evaluate_signals", lambda candles: old_signals)
+    monkeypatch.setattr(
+        signal_alerts, "_mark_triggered", lambda alert_id, triggered_at: marked.append(alert_id)
+    )
+
+    updated, _ = await signal_alerts.evaluate_and_persist([make_alert(rule_id="rsi_oversold")])
+
+    assert updated[0].status == "active"
+    assert marked == []
+
+
+@pytest.mark.anyio
+async def test_evaluate_counts_the_candle_still_open_at_creation(monkeypatch):
+    created = int(NOW.timestamp())
+    # Daily candle stamped 6 h before creation is still forming, so its signal is new.
+    current = SignalRecord(
+        rule_id="rsi_oversold", rule_name="RSI 30 altına düştü",
+        direction="bearish", triggered_at=created - 6 * 3600,
+    )
+
+    async def fake_get_us_candles(symbol, timeframe):
+        return []
+
+    monkeypatch.setattr(signal_alerts, "get_us_candles", fake_get_us_candles)
+    monkeypatch.setattr(signal_alerts, "evaluate_signals", lambda candles: [current])
+    monkeypatch.setattr(signal_alerts, "_mark_triggered", lambda alert_id, triggered_at: True)
+
+    updated, _ = await signal_alerts.evaluate_and_persist([make_alert(rule_id="rsi_oversold")])
+
+    assert updated[0].status == "triggered"
 
 
 @pytest.mark.anyio
@@ -283,3 +335,18 @@ def test_delete_signal_alert_endpoint_not_found(monkeypatch):
     response = client.delete("/signal-alerts/a1")
 
     assert response.status_code == 404
+
+
+def test_english_signal_alert_message_names_the_rule_instead_of_its_id():
+    alert = make_alert(rule_id="macd_bullish_cross")
+
+    title, body = signal_alerts.signal_alert_message(alert, "en")
+
+    assert "macd_bullish_cross" not in body
+    assert "MACD crossed above its signal line" in body
+
+
+def test_every_signal_rule_has_an_english_name():
+    from app.technical import SIGNAL_RULE_IDS, SIGNAL_RULE_NAMES_EN
+
+    assert set(SIGNAL_RULE_NAMES_EN) == SIGNAL_RULE_IDS

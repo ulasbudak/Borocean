@@ -63,6 +63,23 @@ SIGNAL_RULE_CATALOG: list[dict[str, str]] = [
 ]
 SIGNAL_RULE_IDS = {rule["rule_id"] for rule in SIGNAL_RULE_CATALOG}
 
+# English names for server-sent texts (alert e-mail and push); the app's own screens use the
+# shared i18n.
+SIGNAL_RULE_NAMES_EN: dict[str, str] = {
+    "rsi_oversold": "RSI fell below 30",
+    "rsi_overbought": "RSI rose above 70",
+    "macd_bullish_cross": "MACD crossed above its signal line",
+    "macd_bearish_cross": "MACD crossed below its signal line",
+    "golden_cross": "SMA50 crossed above SMA200 (Golden Cross)",
+    "death_cross": "SMA50 crossed below SMA200 (Death Cross)",
+    "sma20_50_golden_cross": "SMA20 crossed above SMA50",
+    "sma20_50_death_cross": "SMA20 crossed below SMA50",
+    "bollinger_breakout_up": "Price broke above the upper Bollinger band",
+    "bollinger_breakout_down": "Price broke below the lower Bollinger band",
+    "stochastic_bullish_cross": "Stochastic %K crossed above %D in oversold territory",
+    "stochastic_bearish_cross": "Stochastic %K crossed below %D in overbought territory",
+}
+
 
 class SignalRecord(BaseModel):
     rule_id: str

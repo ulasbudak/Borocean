@@ -1,4 +1,6 @@
+import asyncio
 from datetime import date, datetime
+from decimal import Decimal
 
 from psycopg.rows import dict_row
 from pydantic import BaseModel
@@ -15,6 +17,9 @@ BIST_UNSUPPORTED_MESSAGE = (
 
 SNAPSHOT_HISTORY_LIMIT = 90
 
+
+# Below this a quantity is float-rounding dust from before exact arithmetic, not shares.
+QUANTITY_EPSILON = Decimal("1e-9")
 
 class SimulationNotFoundError(Exception):
     """Raised when a simulation does not exist or does not belong to the requesting user."""
@@ -162,6 +167,102 @@ def delete_simulation(user_id: str, simulation_id: str) -> None:
         raise SimulationNotFoundError(simulation_id)
 
 
+def _execute_order(
+    user_id: str,
+    simulation_id: str,
+    symbol: str,
+    exchange: str,
+    name: str | None,
+    quantity: float,
+    side: str,
+    price: float,
+) -> dict:
+    """The order's DB transaction; sync, so `place_order` runs it off the event loop."""
+    with get_connection() as conn, conn.cursor(row_factory=dict_row) as cur:
+        # Locks the simulation for this transaction, so concurrent orders can't both spend the
+        # same cash or overwrite each other's quantity.
+        cur.execute(
+            "SELECT cash_balance FROM simulations WHERE id = %s AND user_id = %s FOR UPDATE",
+            (simulation_id, user_id),
+        )
+        simulation_row = cur.fetchone()
+        if simulation_row is None:
+            raise SimulationNotFoundError(simulation_id)
+        # Exact arithmetic: floats leave dust positions (0.1 + 0.2 - 0.3 != 0).
+        cash_balance = Decimal(simulation_row["cash_balance"])
+        qty = Decimal(str(quantity))
+        unit_price = Decimal(str(price))
+
+        cur.execute(
+            """
+            SELECT id, quantity, avg_cost FROM simulation_positions
+            WHERE simulation_id = %s AND symbol = %s AND exchange = %s
+            """,
+            (simulation_id, symbol, exchange),
+        )
+        existing = cur.fetchone()
+
+        if side == "buy":
+            cost = qty * unit_price
+            if cost > cash_balance:
+                raise InsufficientFundsError(symbol)
+            new_cash = cash_balance - cost
+
+            if existing is None:
+                cur.execute(
+                    """
+                    INSERT INTO simulation_positions
+                        (simulation_id, symbol, exchange, name, quantity, avg_cost)
+                    VALUES (%s, %s, %s, %s, %s, %s)
+                    RETURNING id, symbol, exchange, name, quantity, avg_cost, created_at, updated_at
+                    """,
+                    (simulation_id, symbol, exchange, name, qty, unit_price),
+                )
+            else:
+                old_qty = Decimal(existing["quantity"])
+                old_avg_cost = Decimal(existing["avg_cost"])
+                new_qty = old_qty + qty
+                new_avg_cost = (old_qty * old_avg_cost + qty * unit_price) / new_qty
+                cur.execute(
+                    """
+                    UPDATE simulation_positions
+                    SET quantity = %s, avg_cost = %s, name = %s, updated_at = now()
+                    WHERE id = %s
+                    RETURNING id, symbol, exchange, name, quantity, avg_cost, created_at, updated_at
+                    """,
+                    (new_qty, new_avg_cost, name, existing["id"]),
+                )
+        else:
+            if existing is None or Decimal(existing["quantity"]) - qty < -QUANTITY_EPSILON:
+                raise InsufficientQuantityError(symbol)
+            new_cash = cash_balance + qty * unit_price
+            remaining = Decimal(existing["quantity"]) - qty
+
+            if remaining <= QUANTITY_EPSILON:
+                cur.execute(
+                    "DELETE FROM simulation_positions WHERE id = %s "
+                    "RETURNING id, symbol, exchange, name, quantity, avg_cost, "
+                    "created_at, updated_at",
+                    (existing["id"],),
+                )
+            else:
+                cur.execute(
+                    """
+                    UPDATE simulation_positions SET quantity = %s, updated_at = now() WHERE id = %s
+                    RETURNING id, symbol, exchange, name, quantity, avg_cost, created_at, updated_at
+                    """,
+                    (remaining, existing["id"]),
+                )
+
+        position_row = cur.fetchone()
+        cur.execute(
+            "UPDATE simulations SET cash_balance = %s WHERE id = %s", (new_cash, simulation_id)
+        )
+        conn.commit()
+
+    return position_row
+
+
 async def place_order(
     user_id: str,
     simulation_id: str,
@@ -189,82 +290,9 @@ async def place_order(
     if price is None:
         raise MarketDataUnavailableError(f"No live price available for {symbol}")
 
-    with get_connection() as conn, conn.cursor(row_factory=dict_row) as cur:
-        cur.execute(
-            "SELECT cash_balance FROM simulations WHERE id = %s AND user_id = %s",
-            (simulation_id, user_id),
-        )
-        simulation_row = cur.fetchone()
-        if simulation_row is None:
-            raise SimulationNotFoundError(simulation_id)
-        cash_balance = float(simulation_row["cash_balance"])
-
-        cur.execute(
-            """
-            SELECT id, quantity, avg_cost FROM simulation_positions
-            WHERE simulation_id = %s AND symbol = %s AND exchange = %s
-            """,
-            (simulation_id, symbol, exchange),
-        )
-        existing = cur.fetchone()
-
-        if side == "buy":
-            cost = quantity * price
-            if cost > cash_balance:
-                raise InsufficientFundsError(symbol)
-            new_cash = cash_balance - cost
-
-            if existing is None:
-                cur.execute(
-                    """
-                    INSERT INTO simulation_positions
-                        (simulation_id, symbol, exchange, name, quantity, avg_cost)
-                    VALUES (%s, %s, %s, %s, %s, %s)
-                    RETURNING id, symbol, exchange, name, quantity, avg_cost, created_at, updated_at
-                    """,
-                    (simulation_id, symbol, exchange, name, quantity, price),
-                )
-            else:
-                old_qty = float(existing["quantity"])
-                old_avg_cost = float(existing["avg_cost"])
-                new_qty = old_qty + quantity
-                new_avg_cost = (old_qty * old_avg_cost + quantity * price) / new_qty
-                cur.execute(
-                    """
-                    UPDATE simulation_positions
-                    SET quantity = %s, avg_cost = %s, name = %s, updated_at = now()
-                    WHERE id = %s
-                    RETURNING id, symbol, exchange, name, quantity, avg_cost, created_at, updated_at
-                    """,
-                    (new_qty, new_avg_cost, name, existing["id"]),
-                )
-        else:
-            if existing is None or float(existing["quantity"]) < quantity:
-                raise InsufficientQuantityError(symbol)
-            new_cash = cash_balance + quantity * price
-            remaining = float(existing["quantity"]) - quantity
-
-            if remaining == 0:
-                cur.execute(
-                    "DELETE FROM simulation_positions WHERE id = %s "
-                    "RETURNING id, symbol, exchange, name, quantity, avg_cost, "
-                    "created_at, updated_at",
-                    (existing["id"],),
-                )
-            else:
-                cur.execute(
-                    """
-                    UPDATE simulation_positions SET quantity = %s, updated_at = now() WHERE id = %s
-                    RETURNING id, symbol, exchange, name, quantity, avg_cost, created_at, updated_at
-                    """,
-                    (remaining, existing["id"]),
-                )
-
-        position_row = cur.fetchone()
-        cur.execute(
-            "UPDATE simulations SET cash_balance = %s WHERE id = %s", (new_cash, simulation_id)
-        )
-        conn.commit()
+    position_row = await asyncio.to_thread(
+        _execute_order, user_id, simulation_id, symbol, exchange, name, quantity, side, price
+    )
 
     position = _row_to_position(position_row)
     position.current_price = price
@@ -364,20 +392,22 @@ def list_snapshots(simulation_id: str, limit: int = SNAPSHOT_HISTORY_LIMIT) -> l
             SELECT snapshot_date, cash_balance, positions_value, total_equity, pnl_abs, pnl_pct
             FROM simulation_snapshots
             WHERE simulation_id = %s
-            ORDER BY snapshot_date ASC
+            ORDER BY snapshot_date DESC
             LIMIT %s
             """,
             (simulation_id, limit),
         )
         rows = cur.fetchall()
-    return [_row_to_snapshot(row) for row in rows]
+    # Newest `limit` days, returned oldest-first for the chart.
+    return [_row_to_snapshot(row) for row in reversed(rows)]
 
 
 async def get_history(user_id: str, simulation_id: str) -> list[SnapshotPoint]:
-    simulations = [s for s in list_simulations(user_id) if s.id == simulation_id]
+    owned = await asyncio.to_thread(list_simulations, user_id)
+    simulations = [s for s in owned if s.id == simulation_id]
     if not simulations:
         raise SimulationNotFoundError(simulation_id)
 
     valued, _ = await value_simulations(simulations)
-    save_todays_snapshot(valued[0])
-    return list_snapshots(simulation_id)
+    await asyncio.to_thread(save_todays_snapshot, valued[0])
+    return await asyncio.to_thread(list_snapshots, simulation_id)

@@ -1,3 +1,4 @@
+import asyncio
 import hmac
 from datetime import UTC, datetime
 
@@ -386,17 +387,22 @@ FundamentalAIReportResponse = dict[str, FundamentalAIReport | list[str] | None]
 
 @app.get("/symbols/ai-report/fundamental")
 async def get_fundamental_ai_report_endpoint(
-    symbol: str, exchange: str, claims: dict = Depends(get_current_claims)
+    symbol: str,
+    exchange: str,
+    locale: str | None = None,
+    claims: dict = Depends(get_current_claims),
 ) -> FundamentalAIReportResponse:
     try:
-        enforce_ai_reports_access(claims["sub"])
+        await asyncio.to_thread(enforce_ai_reports_access, claims["sub"])
     except EntitlementLimitError as exc:
         raise HTTPException(status_code=403, detail=exc.message) from exc
 
     warnings: list[str] = []
     report: FundamentalAIReport | None = None
     try:
-        report = await get_fundamental_report(symbol, exchange)
+        report = await get_fundamental_report(
+            symbol, exchange, locale=_request_locale(locale, claims)
+        )
     except AIReportUnavailableError as exc:
         warnings.append(str(exc))
     except psycopg.Error:
@@ -410,17 +416,22 @@ TechnicalAIReportResponse = dict[str, TechnicalAIReport | list[str] | None]
 
 @app.get("/symbols/ai-report/technical")
 async def get_technical_ai_report_endpoint(
-    symbol: str, exchange: str, claims: dict = Depends(get_current_claims)
+    symbol: str,
+    exchange: str,
+    locale: str | None = None,
+    claims: dict = Depends(get_current_claims),
 ) -> TechnicalAIReportResponse:
     try:
-        enforce_ai_reports_access(claims["sub"])
+        await asyncio.to_thread(enforce_ai_reports_access, claims["sub"])
     except EntitlementLimitError as exc:
         raise HTTPException(status_code=403, detail=exc.message) from exc
 
     warnings: list[str] = []
     report: TechnicalAIReport | None = None
     try:
-        report = await get_technical_report(symbol, exchange)
+        report = await get_technical_report(
+            symbol, exchange, locale=_request_locale(locale, claims)
+        )
     except AIReportUnavailableError as exc:
         warnings.append(str(exc))
     except psycopg.Error:
@@ -434,17 +445,22 @@ CombinedAIReportResponse = dict[str, CombinedAIReport | list[str] | None]
 
 @app.get("/symbols/ai-report/combined")
 async def get_combined_ai_report_endpoint(
-    symbol: str, exchange: str, claims: dict = Depends(get_current_claims)
+    symbol: str,
+    exchange: str,
+    locale: str | None = None,
+    claims: dict = Depends(get_current_claims),
 ) -> CombinedAIReportResponse:
     try:
-        enforce_ai_reports_access(claims["sub"])
+        await asyncio.to_thread(enforce_ai_reports_access, claims["sub"])
     except EntitlementLimitError as exc:
         raise HTTPException(status_code=403, detail=exc.message) from exc
 
     warnings: list[str] = []
     report: CombinedAIReport | None = None
     try:
-        report = await get_combined_report(symbol, exchange)
+        report = await get_combined_report(
+            symbol, exchange, locale=_request_locale(locale, claims)
+        )
     except AIReportUnavailableError as exc:
         warnings.append(str(exc))
     except psycopg.Error:
@@ -457,22 +473,25 @@ BulletinsResponse = dict[str, list[Bulletin] | list[str]]
 
 
 @app.get("/bulletins")
-async def get_bulletins_endpoint(claims: dict = Depends(get_current_claims)) -> BulletinsResponse:
+async def get_bulletins_endpoint(
+    locale: str | None = None, claims: dict = Depends(get_current_claims)
+) -> BulletinsResponse:
+    locale = _request_locale(locale, claims)
     try:
-        enforce_ai_reports_access(claims["sub"])
+        await asyncio.to_thread(enforce_ai_reports_access, claims["sub"])
     except EntitlementLimitError as exc:
         raise HTTPException(status_code=403, detail=exc.message) from exc
 
     warnings: list[str] = []
     try:
-        await get_or_create_todays_bulletin()
+        await get_or_create_todays_bulletin(locale)
     except AIReportUnavailableError as exc:
         warnings.append(str(exc))
     except psycopg.Error:
         warnings.append("Bülten verisi şu an sağlanamıyor.")
 
     try:
-        bulletins = list_bulletins()
+        bulletins = await asyncio.to_thread(list_bulletins, locale=locale)
     except psycopg.Error:
         bulletins = []
         if not warnings:
@@ -619,10 +638,16 @@ def _claims_locale(claims: dict) -> str:
     return "en" if (claims.get("user_metadata") or {}).get("locale") == "en" else "tr"
 
 
+def _request_locale(requested: str | None, claims: dict) -> str:
+    """The page's language when the client sends it (the user may have switched it since the
+    token was issued), else the profile's (AD-12)."""
+    return requested if requested in ("tr", "en") else _claims_locale(claims)
+
+
 @app.get("/alerts")
 async def get_alerts(claims: dict = Depends(get_current_claims)) -> dict[str, object]:
     try:
-        alerts = list_alerts(claims["sub"])
+        alerts = await asyncio.to_thread(list_alerts, claims["sub"])
     except psycopg.Error as exc:
         raise _alerts_unavailable() from exc
     updated, warnings = await evaluate_and_persist(
@@ -902,7 +927,7 @@ PortfoliosResponse = dict[str, list[Portfolio] | list[str]]
 @app.get("/portfolios")
 async def get_portfolios(claims: dict = Depends(get_current_claims)) -> PortfoliosResponse:
     try:
-        portfolios = list_portfolios(claims["sub"])
+        portfolios = await asyncio.to_thread(list_portfolios, claims["sub"])
     except psycopg.Error as exc:
         raise _portfolios_unavailable() from exc
     valued, warnings = await value_portfolios(portfolios)
@@ -1012,7 +1037,7 @@ SimulationsResponse = dict[str, list[Simulation] | list[str]]
 @app.get("/simulations")
 async def get_simulations(claims: dict = Depends(get_current_claims)) -> SimulationsResponse:
     try:
-        simulations = list_simulations(claims["sub"])
+        simulations = await asyncio.to_thread(list_simulations, claims["sub"])
     except psycopg.Error as exc:
         raise _simulations_unavailable() from exc
     valued, warnings = await value_simulations(simulations)
@@ -1108,14 +1133,18 @@ async def get_simulation_history(
     return {"history": snapshots, "warnings": []}
 
 
-HighlightsResponse = dict[str, list[Highlight] | list[str]]
+HighlightsResponse = dict[str, list[Highlight] | list[str] | bool]
 
 
 @app.get("/highlights")
 async def get_highlights_endpoint(claims: dict = Depends(get_current_claims)) -> HighlightsResponse:
     interest_sectors = (claims.get("user_metadata") or {}).get("interest_sectors") or []
     highlights, warnings = await get_highlights(interest_sectors)
-    return {"highlights": highlights, "warnings": warnings}
+    return {
+        "highlights": highlights,
+        "warnings": warnings,
+        "missing_interests": not interest_sectors,
+    }
 
 
 class UpsertNoteRequest(BaseModel):
@@ -1238,9 +1267,9 @@ async def get_portfolio_insights(claims: dict = Depends(get_current_claims)) -> 
     today = now.date()
     warnings: list[str] = []
     try:
-        items = insights.list_portfolio_insights(user_id, today)
-        holds_positions = insights.user_holds_positions(user_id)
-        run = insights.latest_run(today)
+        items = await asyncio.to_thread(insights.list_portfolio_insights, user_id, today)
+        holds_positions = await asyncio.to_thread(insights.user_holds_positions, user_id)
+        run = await asyncio.to_thread(insights.latest_run, today)
         if run is None and insight_runner.fallback_due(now) and holds_positions:
             # The morning cron didn't run today: start the scan now instead of silently
             # showing yesterday's picture (NFR-2).
@@ -1250,7 +1279,7 @@ async def get_portfolio_insights(claims: dict = Depends(get_current_claims)) -> 
             )
     except psycopg.Error as exc:
         raise _insights_unavailable() from exc
-    items = _gate_notes(user_id, items)
+    items = await asyncio.to_thread(_gate_notes, user_id, items)
     return InsightsResponse(
         insights=items,
         unread_count=sum(1 for item in items if not item.read),

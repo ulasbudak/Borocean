@@ -16,6 +16,10 @@ from app.technical import _rsi
 US_UNIVERSE_PATH = Path(__file__).parent / "data" / "us_universe.json"
 CACHE_TTL_SECONDS = 30 * 60
 MAX_CONCURRENT_REQUESTS = 15
+PARTIAL_DATA_WARNING = (
+    "Bazı hisselerin verisi şu an alınamadı (veri sağlayıcının dakikalık sınırı); sonuçlar "
+    "eksik olabilir. Birazdan tekrar çalıştır."
+)
 # Twelve Data's free tier caps at 8 requests/minute, far stricter than Finnhub's fundamentals quota.
 MAX_CONCURRENT_TECHNICAL_REQUESTS = 4
 # At 8 req/min this keeps a screener run's technical stage under ~2 minutes worst case.
@@ -164,6 +168,10 @@ async def _run_us_screener(criteria: ScreenerCriteria) -> tuple[list[ScreenerRes
             return_exceptions=True,
         )
 
+        provider_warnings: list[str] = []
+        if any(not isinstance(r, FundamentalsSnapshot) for r in fundamentals_results):
+            provider_warnings.append(PARTIAL_DATA_WARNING)
+
         survivors: list[tuple[dict, FundamentalsSnapshot]] = []
         for entry, result in zip(universe, fundamentals_results):
             if isinstance(result, FundamentalsSnapshot) and _passes_fundamentals_filter(
@@ -215,7 +223,7 @@ async def _run_us_screener(criteria: ScreenerCriteria) -> tuple[list[ScreenerRes
             )
         )
 
-    return results, technical_warnings
+    return results, provider_warnings + technical_warnings
 
 
 def _run_bist_screener() -> tuple[list[ScreenerResult], list[str]]:

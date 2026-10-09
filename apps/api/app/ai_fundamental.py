@@ -1,3 +1,4 @@
+import asyncio
 from datetime import datetime
 
 import httpx
@@ -10,6 +11,8 @@ from app.ai_reports import (
     call_gemini,
     ensure_disclaimer,
     get_cached_report,
+    language_instruction,
+    normalize_locale,
     save_report,
 )
 from app.fundamentals import (
@@ -103,12 +106,19 @@ def _build_user_prompt(
 
 
 async def get_fundamental_report(
-    symbol: str, exchange: str, *, client: httpx.AsyncClient | None = None
+    symbol: str,
+    exchange: str,
+    *,
+    locale: str = "tr",
+    client: httpx.AsyncClient | None = None,
 ) -> FundamentalAIReport:
     symbol = symbol.strip().upper()
     exchange_filter = exchange.strip().upper()
+    locale = normalize_locale(locale)
 
-    cached = get_cached_report(symbol, exchange_filter, "fundamental", CACHE_TTL_HOURS)
+    cached = await asyncio.to_thread(
+        get_cached_report, symbol, exchange_filter, "fundamental", CACHE_TTL_HOURS, locale
+    )
     if cached is not None:
         content, generated_at = cached
         return FundamentalAIReport(
@@ -136,9 +146,14 @@ async def get_fundamental_report(
         history = None
 
     user_prompt = _build_user_prompt(fundamentals, sector_comparison, history)
-    report_text = ensure_disclaimer(await call_gemini(SYSTEM_PROMPT, user_prompt, client=client))
+    system_prompt = SYSTEM_PROMPT + language_instruction(locale)
+    report_text = ensure_disclaimer(
+        await call_gemini(system_prompt, user_prompt, client=client), locale
+    )
 
-    generated_at = save_report(symbol, exchange_filter, "fundamental", {"report": report_text})
+    generated_at = await asyncio.to_thread(
+        save_report, symbol, exchange_filter, "fundamental", {"report": report_text}, locale
+    )
     return FundamentalAIReport(
         symbol=symbol,
         exchange=exchange_filter,

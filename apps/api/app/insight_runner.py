@@ -52,7 +52,7 @@ from app.insight_sources import (
     fetch_headlines,
 )
 from app.insight_text import describe_event, push_text
-from app.market_data import get_us_candles
+from app.market_data import background_lane, get_us_candles
 from app.notifications import send_expo_push
 
 logger = logging.getLogger(__name__)
@@ -221,7 +221,8 @@ async def backfill_missing_notes(
     today: date, budget: int, client: httpx.AsyncClient, *, pace: bool = True
 ) -> int:
     generated = 0
-    for index, row in enumerate(insights.insights_missing_note(today)[:budget]):
+    missing = await asyncio.to_thread(insights.insights_missing_note, today)
+    for index, row in enumerate(missing[:budget]):
         # Back-to-back Gemini calls hit the free tier's per-minute limit (429 in the first
         # live retry); the main loop is already paced by SYMBOL_INTERVAL_SECONDS.
         if pace and index:
@@ -236,13 +237,15 @@ async def backfill_missing_notes(
         except AIReportUnavailableError as exc:
             logger.warning("insight note retry for %s failed: %s", row["symbol"], exc)
             continue
-        insights.save_insight_note(str(row["id"]), note, tone, PROMPT_VERSION)
+        await asyncio.to_thread(
+            insights.save_insight_note, str(row["id"]), note, tone, PROMPT_VERSION
+        )
         generated += 1
     return generated
 
 
 async def send_daily_pushes(today: date) -> int:
-    rows = insights.push_recipients(today)
+    rows = await asyncio.to_thread(insights.push_recipients, today)
     by_user: dict[str, dict] = {}
     for row in rows:
         entry = by_user.setdefault(
@@ -253,7 +256,7 @@ async def send_daily_pushes(today: date) -> int:
     sent = 0
     for user_id, entry in by_user.items():
         # Claim the day first so a concurrent run can't push the same user twice.
-        if not insights.log_push(user_id, today):
+        if not await asyncio.to_thread(insights.log_push, user_id, today):
             continue
         title, body = push_text(entry["items"], entry["locale"])
         if await send_expo_push(entry["token"], title, body, data=PUSH_DATA):
@@ -264,7 +267,7 @@ async def send_daily_pushes(today: date) -> int:
 async def run_daily_scan(trigger: str, *, today: date | None = None, pace: bool = True) -> dict:
     now = datetime.now(UTC)
     today = today or now.date()
-    run_id = insights.start_run(today, trigger, now)
+    run_id = await asyncio.to_thread(insights.start_run, today, trigger, now)
     if run_id is None:
         return {"status": "already_running"}
 
@@ -281,13 +284,13 @@ async def run_daily_scan(trigger: str, *, today: date | None = None, pace: bool 
         )
     }
     try:
-        universe = insights.portfolio_universe(DAILY_SYMBOL_CAP)
+        universe = await asyncio.to_thread(insights.portfolio_universe, DAILY_SYMBOL_CAP)
         counters["universe_size"] = len(universe)
-        notes_left = DAILY_NOTE_CAP - insights.count_notes_on(today)
+        notes_left = DAILY_NOTE_CAP - await asyncio.to_thread(insights.count_notes_on, today)
         async with httpx.AsyncClient(timeout=10.0) as client:
             last_started = 0.0
             for symbol, name in universe:
-                state = insights.get_scan_state(symbol, EXCHANGE)
+                state = await asyncio.to_thread(insights.get_scan_state, symbol, EXCHANGE)
                 if state is not None and state.last_scanned_date == today:
                     counters["skipped"] += 1
                     continue
@@ -301,7 +304,8 @@ async def run_daily_scan(trigger: str, *, today: date | None = None, pace: bool 
                     if result.important:
                         events = [e.model_dump() for e in result.events]
                         headlines = await fetch_headlines(symbol, datetime.now(UTC), client, name)
-                        insight_id = insights.save_insight(
+                        insight_id = await asyncio.to_thread(
+                            insights.save_insight,
                             symbol,
                             EXCHANGE,
                             today,
@@ -315,12 +319,18 @@ async def run_daily_scan(trigger: str, *, today: date | None = None, pace: bool 
                                 note, tone = await generate_note(
                                     symbol, events, result.fundamentals, headlines
                                 )
-                                insights.save_insight_note(insight_id, note, tone, PROMPT_VERSION)
+                                await asyncio.to_thread(
+                                    insights.save_insight_note,
+                        insight_id,
+                        note,
+                        tone,
+                        PROMPT_VERSION,
+                                )
                                 counters["notes_generated"] += 1
                                 notes_left -= 1
                             except AIReportUnavailableError as exc:
                                 logger.warning("insight note for %s failed: %s", symbol, exc)
-                    insights.save_scan_state(symbol, EXCHANGE, new_state)
+                    await asyncio.to_thread(insights.save_scan_state, symbol, EXCHANGE, new_state)
                     counters["processed"] += 1
                 except Exception:
                     logger.exception("insight scan for %s failed", symbol)
@@ -332,10 +342,10 @@ async def run_daily_scan(trigger: str, *, today: date | None = None, pace: bool 
                     today, notes_left, client, pace=pace
                 )
         counters["pushes_sent"] = await send_daily_pushes(today)
-        insights.finish_run(run_id, counters, "completed")
+        await asyncio.to_thread(insights.finish_run, run_id, counters, "completed")
     except Exception as exc:
         logger.exception("insight run failed")
-        insights.finish_run(run_id, counters, "failed", str(exc)[:500])
+        await asyncio.to_thread(insights.finish_run, run_id, counters, "failed", str(exc)[:500])
         raise
     return {"status": "completed", **counters}
 
@@ -349,7 +359,8 @@ def start_background_scan(trigger: str) -> bool:
 
     async def _run():
         try:
-            await run_daily_scan(trigger)
+            with background_lane():
+                await run_daily_scan(trigger)
         except Exception:
             logger.exception("background insight scan crashed")
 

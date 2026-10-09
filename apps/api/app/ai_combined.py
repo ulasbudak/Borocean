@@ -19,6 +19,8 @@ from app.ai_reports import (
     call_gemini,
     ensure_disclaimer,
     get_cached_report,
+    language_instruction,
+    normalize_locale,
     save_report,
 )
 from app.ai_technical import TechnicalAIReport, get_technical_report
@@ -54,11 +56,16 @@ def _build_user_prompt(fundamental: FundamentalAIReport, technical: TechnicalAIR
     )
 
 
-async def get_combined_report(symbol: str, exchange: str) -> CombinedAIReport:
+async def get_combined_report(
+    symbol: str, exchange: str, *, locale: str = "tr"
+) -> CombinedAIReport:
     symbol = symbol.strip().upper()
     exchange_filter = exchange.strip().upper()
+    locale = normalize_locale(locale)
 
-    cached = get_cached_report(symbol, exchange_filter, "combined", CACHE_TTL_HOURS)
+    cached = await asyncio.to_thread(
+        get_cached_report, symbol, exchange_filter, "combined", CACHE_TTL_HOURS, locale
+    )
     if cached is not None:
         content, generated_at = cached
         return CombinedAIReport(
@@ -70,14 +77,17 @@ async def get_combined_report(symbol: str, exchange: str) -> CombinedAIReport:
         )
 
     fundamental, technical = await asyncio.gather(
-        get_fundamental_report(symbol, exchange_filter),
-        get_technical_report(symbol, exchange_filter),
+        get_fundamental_report(symbol, exchange_filter, locale=locale),
+        get_technical_report(symbol, exchange_filter, locale=locale),
     )
 
     user_prompt = _build_user_prompt(fundamental, technical)
-    report_text = ensure_disclaimer(await call_gemini(SYSTEM_PROMPT, user_prompt))
+    system_prompt = SYSTEM_PROMPT + language_instruction(locale)
+    report_text = ensure_disclaimer(await call_gemini(system_prompt, user_prompt), locale)
 
-    generated_at = save_report(symbol, exchange_filter, "combined", {"report": report_text})
+    generated_at = await asyncio.to_thread(
+        save_report, symbol, exchange_filter, "combined", {"report": report_text}, locale
+    )
     return CombinedAIReport(
         symbol=symbol,
         exchange=exchange_filter,

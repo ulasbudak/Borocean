@@ -41,7 +41,10 @@ async def test_returns_cached_report_without_calling_gemini(monkeypatch):
     monkeypatch.setattr(
         ai_fundamental,
         "get_cached_report",
-        lambda symbol, exchange, report_type, ttl_hours: ({"report": "Önbellekteki rapor"}, NOW),
+        lambda symbol, exchange, report_type, ttl_hours, locale="tr": (
+            {"report": "Önbellekteki rapor"},
+            NOW,
+        ),
     )
 
     def unexpected_call(request: httpx.Request) -> httpx.Response:
@@ -90,7 +93,7 @@ async def test_generates_and_saves_report_on_cache_miss(monkeypatch):
     async def fake_get_us_historical_performance(symbol, *, client=None):
         return None
 
-    def fake_save_report(symbol, exchange, report_type, content):
+    def fake_save_report(symbol, exchange, report_type, content, locale="tr"):
         saved["symbol"] = symbol
         saved["exchange"] = exchange
         saved["report_type"] = report_type
@@ -234,3 +237,44 @@ def test_system_prompt_forbids_buy_sell_direction_and_price_targets():
     assert "Hedef fiyat" in SYSTEM_PROMPT
     assert "risk profiline" in SYSTEM_PROMPT
     assert "'Riskler'" in SYSTEM_PROMPT
+
+
+@pytest.mark.anyio
+async def test_english_users_get_an_english_report_cached_under_their_own_language(monkeypatch):
+    import json
+
+    seen = {}
+
+    async def fake_get_us_fundamentals(symbol, *, client=None):
+        return FundamentalsSnapshot(symbol="AAPL", exchange="US", pe_ratio=28.5)
+
+    async def none_async(*args, **kwargs):
+        return None
+
+    def fake_cached(symbol, exchange, report_type, ttl_hours, locale="tr"):
+        seen["read_locale"] = locale
+        return None
+
+    def fake_save_report(symbol, exchange, report_type, content, locale="tr"):
+        seen["saved_locale"] = locale
+        return NOW
+
+    monkeypatch.setattr(ai_fundamental, "get_cached_report", fake_cached)
+    monkeypatch.setattr(ai_fundamental, "get_us_fundamentals", fake_get_us_fundamentals)
+    monkeypatch.setattr(ai_fundamental, "get_us_sector_comparison", none_async)
+    monkeypatch.setattr(ai_fundamental, "get_us_historical_performance", none_async)
+    monkeypatch.setattr(ai_fundamental, "save_report", fake_save_report)
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        system = json.loads(request.content)["systemInstruction"]["parts"][0]["text"]
+        seen["system_prompt"] = system
+        return _gemini_response()
+
+    async with httpx.AsyncClient(transport=httpx.MockTransport(handler)) as http_client:
+        report = await get_fundamental_report("AAPL", "US", locale="en", client=http_client)
+
+    assert seen["read_locale"] == seen["saved_locale"] == "en"
+    assert "İngilizce" in seen["system_prompt"]
+    # The compliance rules are still part of the prompt in English mode.
+    assert "yönlendirme" in seen["system_prompt"]
+    assert report.report.endswith("for information only.")

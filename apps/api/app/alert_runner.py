@@ -16,6 +16,7 @@ import asyncio
 import logging
 
 from app import alerts, signal_alerts
+from app.market_data import background_lane
 
 logger = logging.getLogger(__name__)
 
@@ -23,7 +24,7 @@ _running: dict[str, asyncio.Task] = {}
 
 
 async def run_price_alerts() -> dict:
-    owners = alerts.list_active_us_alerts_by_user()
+    owners = await asyncio.to_thread(alerts.list_active_us_alerts_by_user)
     price_cache: dict[str, float | None] = {}
     triggered = 0
     for user_id, owner in owners.items():
@@ -49,7 +50,7 @@ async def run_price_alerts() -> dict:
 
 
 async def run_signal_alerts() -> dict:
-    owners = signal_alerts.list_active_us_alerts_by_user()
+    owners = await asyncio.to_thread(signal_alerts.list_active_us_alerts_by_user)
     signal_cache: dict[tuple[str, str], list | None] = {}
     triggered = 0
     for user_id, owner in owners.items():
@@ -80,7 +81,8 @@ def start_background_run(kind: str) -> bool:
 
     async def _run():
         try:
-            await RUNNERS[kind]()
+            with background_lane():
+                await RUNNERS[kind]()
         except Exception:
             logger.exception("alert run %s crashed", kind)
 

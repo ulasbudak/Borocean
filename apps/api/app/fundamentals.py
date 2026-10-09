@@ -4,6 +4,7 @@ import httpx
 from pydantic import BaseModel
 
 from app.config import get_settings
+from app.market_data import finnhub_get
 
 FINNHUB_METRIC_URL = "https://finnhub.io/api/v1/stock/metric"
 FINNHUB_PEERS_URL = "https://finnhub.io/api/v1/stock/peers"
@@ -110,9 +111,10 @@ async def get_us_fundamentals(
     owns_client = client is None
     http_client = client or httpx.AsyncClient(timeout=FINNHUB_TIMEOUT_SECONDS)
     try:
-        response = await http_client.get(
+        response = await finnhub_get(
+            http_client,
             FINNHUB_METRIC_URL,
-            params={"symbol": symbol, "metric": "all", "token": settings.finnhub_api_key},
+            {"symbol": symbol, "metric": "all"},
         )
         response.raise_for_status()
         payload = response.json()
@@ -166,9 +168,10 @@ async def get_peer_symbols(symbol: str, *, client: httpx.AsyncClient | None = No
     owns_client = client is None
     http_client = client or httpx.AsyncClient(timeout=FINNHUB_TIMEOUT_SECONDS)
     try:
-        response = await http_client.get(
+        response = await finnhub_get(
+            http_client,
             FINNHUB_PEERS_URL,
-            params={"symbol": symbol, "grouping": "sector", "token": settings.finnhub_api_key},
+            {"symbol": symbol, "grouping": "sector"},
         )
         response.raise_for_status()
         payload = response.json()
@@ -303,9 +306,10 @@ async def get_us_historical_performance(
     owns_client = client is None
     http_client = client or httpx.AsyncClient(timeout=FINNHUB_TIMEOUT_SECONDS)
     try:
-        response = await http_client.get(
+        response = await finnhub_get(
+            http_client,
             FINNHUB_METRIC_URL,
-            params={"symbol": symbol, "metric": "all", "token": settings.finnhub_api_key},
+            {"symbol": symbol, "metric": "all"},
         )
         response.raise_for_status()
         payload = response.json()

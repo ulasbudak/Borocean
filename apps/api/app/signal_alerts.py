@@ -1,3 +1,4 @@
+import asyncio
 from datetime import UTC, datetime
 
 from psycopg.rows import dict_row
@@ -6,7 +7,12 @@ from pydantic import BaseModel
 from app.db import get_connection
 from app.market_data import MarketDataUnavailableError, get_us_candles
 from app.notifications import notify_trigger
-from app.technical import SIGNAL_RULE_CATALOG, SIGNAL_RULE_IDS, evaluate_signals
+from app.technical import (
+    SIGNAL_RULE_CATALOG,
+    SIGNAL_RULE_IDS,
+    SIGNAL_RULE_NAMES_EN,
+    evaluate_signals,
+)
 
 UNAVAILABLE_WARNING = "ABD sinyal alarmları şu an değerlendirilemiyor."
 BIST_UNAVAILABLE_WARNING = "BIST hisseleri için sinyal verisi bu sürümde sağlanmıyor."
@@ -134,12 +140,32 @@ def signal_alert_message(alert: SignalAlert, locale: str) -> tuple[str, str]:
     if locale == "en":
         return (
             "Borocean signal alert",
-            f"The '{alert.rule_id}' signal fired for {label} ({alert.symbol}).",
+            f"The '{SIGNAL_RULE_NAMES_EN.get(alert.rule_id, alert.rule_name)}' signal fired for "
+            f"{label} ({alert.symbol}).",
         )
     return (
         "Borocean Sinyal Alarmı",
         f"{label} ({alert.symbol}) için '{alert.rule_name}' sinyali tetiklendi.",
     )
+
+
+# A signal belongs to the candle it was computed on; that candle's period has to end after the
+# alert was created, or the "signal" is history the user already saw when setting the alert.
+CANDLE_PERIOD_SECONDS = {
+    "intraday": 3600,
+    "daily": 86400,
+    "weekly": 7 * 86400,
+    "monthly": 31 * 86400,
+}
+
+
+def _newest_signal_since_creation(signals: list, alert: SignalAlert):
+    period = CANDLE_PERIOD_SECONDS.get(alert.timeframe, 86400)
+    created = alert.created_at.timestamp()
+    fresh = [
+        s for s in signals if s.rule_id == alert.rule_id and s.triggered_at + period > created
+    ]
+    return max(fresh, key=lambda s: s.triggered_at, default=None)
 
 
 async def evaluate_and_persist(
@@ -192,10 +218,10 @@ async def evaluate_and_persist(
                 warnings.append(UNAVAILABLE_WARNING)
             continue
 
-        match = next((s for s in signals if s.rule_id == alert.rule_id), None)
+        match = _newest_signal_since_creation(signals, alert)
         if match is not None:
             triggered_at = datetime.fromtimestamp(match.triggered_at, tz=UTC)
-            won = _mark_triggered(alert.id, triggered_at)
+            won = await asyncio.to_thread(_mark_triggered, alert.id, triggered_at)
             updated.append(
                 alert.model_copy(update={"status": "triggered", "triggered_at": triggered_at})
             )

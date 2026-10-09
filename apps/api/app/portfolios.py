@@ -1,4 +1,5 @@
 from datetime import datetime
+from decimal import Decimal
 
 from psycopg.rows import dict_row
 from pydantic import BaseModel
@@ -11,6 +12,9 @@ UNAVAILABLE_WARNING = (
 )
 BIST_UNAVAILABLE_WARNING = "BIST pozisyonları için canlı fiyat verisi henüz yok."
 
+
+# Below this a quantity is float-rounding dust from before exact arithmetic, not shares.
+QUANTITY_EPSILON = Decimal("1e-9")
 
 class PortfolioNotFoundError(Exception):
     """Raised when a portfolio does not exist or does not belong to the requesting user."""
@@ -144,10 +148,15 @@ def add_transaction(
     """
     symbol = symbol.upper()
     exchange = exchange.upper()
+    # Exact quantity arithmetic: floats leave dust positions (0.1 + 0.2 - 0.3 != 0).
+    qty = Decimal(str(quantity))
 
     with get_connection() as conn, conn.cursor(row_factory=dict_row) as cur:
+        # Locks the portfolio for this transaction, so concurrent orders on it (two tabs, web
+        # and mobile) run one after the other instead of overwriting each other's quantity.
         cur.execute(
-            "SELECT 1 FROM portfolios WHERE id = %s AND user_id = %s", (portfolio_id, user_id)
+            "SELECT 1 FROM portfolios WHERE id = %s AND user_id = %s FOR UPDATE",
+            (portfolio_id, user_id),
         )
         if cur.fetchone() is None:
             raise PortfolioNotFoundError(portfolio_id)
@@ -169,13 +178,13 @@ def add_transaction(
                     VALUES (%s, %s, %s, %s, %s, %s)
                     RETURNING id, symbol, exchange, name, quantity, avg_cost, created_at, updated_at
                     """,
-                    (portfolio_id, symbol, exchange, name, quantity, price),
+                    (portfolio_id, symbol, exchange, name, qty, Decimal(str(price))),
                 )
             else:
-                old_qty = float(existing["quantity"])
-                old_avg_cost = float(existing["avg_cost"])
-                new_qty = old_qty + quantity
-                new_avg_cost = (old_qty * old_avg_cost + quantity * price) / new_qty
+                old_qty = Decimal(existing["quantity"])
+                old_avg_cost = Decimal(existing["avg_cost"])
+                new_qty = old_qty + qty
+                new_avg_cost = (old_qty * old_avg_cost + qty * Decimal(str(price))) / new_qty
                 cur.execute(
                     """
                     UPDATE positions
@@ -186,10 +195,10 @@ def add_transaction(
                     (new_qty, new_avg_cost, name, existing["id"]),
                 )
         else:
-            if existing is None or float(existing["quantity"]) < quantity:
+            if existing is None or Decimal(existing["quantity"]) - qty < -QUANTITY_EPSILON:
                 raise InsufficientQuantityError(symbol)
-            remaining = float(existing["quantity"]) - quantity
-            if remaining == 0:
+            remaining = Decimal(existing["quantity"]) - qty
+            if remaining <= QUANTITY_EPSILON:
                 cur.execute(
                     "DELETE FROM positions WHERE id = %s "
                     "RETURNING id, symbol, exchange, name, quantity, avg_cost, "

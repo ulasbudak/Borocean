@@ -33,7 +33,7 @@ async def test_returns_cached_report_without_running_inference(monkeypatch):
     monkeypatch.setattr(
         ai_technical,
         "get_cached_report",
-        lambda symbol, exchange, report_type, ttl_hours: (
+        lambda symbol, exchange, report_type, ttl_hours, locale="tr": (
             {"report": "Önbellekteki teknik rapor", "detections": []},
             NOW,
         ),
@@ -47,7 +47,26 @@ async def test_returns_cached_report_without_running_inference(monkeypatch):
     report = await get_technical_report("AAPL", "US")
 
     assert report.cached is True
-    assert report.report == "Önbellekteki teknik rapor"
+    # The text is rendered from the cached detections, in the requested language.
+    assert report.report.startswith("Grafik modeli bu grafikte belirgin")
+
+
+@pytest.mark.anyio
+async def test_cached_detections_are_rendered_in_english_for_english_users(monkeypatch):
+    monkeypatch.setattr(
+        ai_technical,
+        "get_cached_report",
+        lambda symbol, exchange, report_type, ttl_hours, locale="tr": (
+            {"report": "eski Türkçe metin", "detections": [{"label": "upward", "confidence": 0.8}]},
+            NOW,
+        ),
+    )
+
+    report = await get_technical_report("AAPL", "US", locale="en")
+
+    assert "1 upward and 0 downward patterns" in report.report
+    assert "80% model confidence" in report.report
+    assert report.report.endswith(ai_technical.DISCLAIMER_LINE_EN)
 
 
 @pytest.mark.anyio
@@ -92,7 +111,7 @@ async def test_generates_and_saves_report_on_cache_miss(monkeypatch):
     def fake_run_inference(candles):
         return [Detection(label="upward", confidence=0.8)]
 
-    def fake_save_report(symbol, exchange, report_type, content):
+    def fake_save_report(symbol, exchange, report_type, content, locale="tr"):
         saved["symbol"] = symbol
         saved["report_type"] = report_type
         saved["content"] = content

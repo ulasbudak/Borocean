@@ -55,3 +55,11 @@ def test_ensure_disclaimer_appends_only_when_missing():
     assert ensure_disclaimer("Rapor.") == f"Rapor.\n\n{DISCLAIMER_LINE}"
     already = "Rapor.\n\nBu içerik yatırım tavsiyesi değildir."
     assert ensure_disclaimer(already) == already
+
+
+def test_ensure_disclaimer_appends_the_line_in_the_reports_language():
+    from app.ai_reports import DISCLAIMER_LINE_EN, ensure_disclaimer
+
+    assert ensure_disclaimer("Report body.", "en").endswith(DISCLAIMER_LINE_EN)
+    already = f"Body.\n\n{DISCLAIMER_LINE_EN}"
+    assert ensure_disclaimer(already, "en") == already

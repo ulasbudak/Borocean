@@ -64,7 +64,9 @@ APPLE = FundamentalsSnapshot(symbol="AAPL", exchange="US", market_cap=3.0e12, pe
 @pytest.mark.anyio
 async def test_returns_existing_bulletin_without_fetching(monkeypatch):
     monkeypatch.setattr(
-        bulletins, "_get_bulletin_row", lambda d: _row([{"symbol": "AAPL", "name": "Apple"}])
+        bulletins,
+        "_get_bulletin_row",
+        lambda d, locale="tr": _row([{"symbol": "AAPL", "name": "Apple"}]),
     )
 
     def unexpected_call(sector):
@@ -79,7 +81,7 @@ async def test_returns_existing_bulletin_without_fetching(monkeypatch):
 
 @pytest.mark.anyio
 async def test_raises_when_no_companies_found(monkeypatch):
-    monkeypatch.setattr(bulletins, "_get_bulletin_row", lambda d: None)
+    monkeypatch.setattr(bulletins, "_get_bulletin_row", lambda d, locale="tr": None)
 
     async def fake_select(sector):
         return []
@@ -93,7 +95,7 @@ async def test_raises_when_no_companies_found(monkeypatch):
 @pytest.mark.anyio
 async def test_regenerates_todays_legacy_bulletin_in_place(monkeypatch):
     """Story 12.1: a pre-12.1 bulletin (picks with Al/Nötr/Sat labels) is replaced."""
-    monkeypatch.setattr(bulletins, "_get_bulletin_row", lambda d: _row(LEGACY_PICKS))
+    monkeypatch.setattr(bulletins, "_get_bulletin_row", lambda d, locale="tr": _row(LEGACY_PICKS))
 
     async def fake_select(sector):
         return [(Pick(symbol="AAPL", name="Apple Inc.", market_cap=3.0e12), APPLE)]
@@ -103,7 +105,7 @@ async def test_regenerates_todays_legacy_bulletin_in_place(monkeypatch):
 
     replaced = {}
 
-    def fake_replace(bulletin_date, sector, picks, content):
+    def fake_replace(bulletin_date, sector, picks, content, locale="tr"):
         replaced["content"] = content
         return Bulletin(
             bulletin_date=bulletin_date, sector=sector, picks=picks, content=content,
@@ -197,7 +199,7 @@ def test_bulletin_prompt_carries_metrics_but_no_score_or_verdict():
 
 @pytest.mark.anyio
 async def test_generates_and_saves_new_bulletin(monkeypatch):
-    monkeypatch.setattr(bulletins, "_get_bulletin_row", lambda d: None)
+    monkeypatch.setattr(bulletins, "_get_bulletin_row", lambda d, locale="tr": None)
 
     picks = [Pick(symbol="AAPL", name="Apple Inc.", market_cap=3.0e12)]
 
@@ -206,7 +208,7 @@ async def test_generates_and_saves_new_bulletin(monkeypatch):
 
     saved = {}
 
-    def fake_save(bulletin_date, sector, picks_arg, content):
+    def fake_save(bulletin_date, sector, picks_arg, content, locale="tr"):
         saved["bulletin_date"] = bulletin_date
         saved["sector"] = sector
         saved["picks"] = picks_arg
@@ -231,6 +233,61 @@ async def test_generates_and_saves_new_bulletin(monkeypatch):
     assert result.content.startswith("Bugünün bülteni.")
     assert saved["sector"] == pick_sector_for_date(date.today())
     assert saved["picks"] == picks
+
+
+@pytest.mark.anyio
+async def test_concurrent_first_requests_share_one_generation(monkeypatch):
+    import asyncio
+
+    monkeypatch.setattr(bulletins, "_get_bulletin_row", lambda d, locale="tr": None)
+    gemini_calls = []
+
+    async def fake_select(sector):
+        return [(Pick(symbol="AAPL", name="Apple Inc.", market_cap=3.0e12), APPLE)]
+
+    async def slow_gemini(system_prompt, user_prompt, *, client=None):
+        gemini_calls.append(1)
+        await asyncio.sleep(0.01)
+        return "Bugünün bülteni."
+
+    def fake_save(bulletin_date, sector, picks, content, locale="tr"):
+        return Bulletin(
+            bulletin_date=bulletin_date, sector=sector, picks=picks, content=content,
+            created_at=NOW,
+        )
+
+    monkeypatch.setattr(bulletins, "_select_sector_companies", fake_select)
+    monkeypatch.setattr(bulletins, "call_gemini", slow_gemini)
+    monkeypatch.setattr(bulletins, "_save_bulletin", fake_save)
+
+    results = await asyncio.gather(*(get_or_create_todays_bulletin() for _ in range(5)))
+
+    assert len(gemini_calls) == 1
+    assert {r.content for r in results} == {results[0].content}
+
+
+@pytest.mark.anyio
+async def test_failed_generation_is_not_retried_by_every_request(monkeypatch):
+    monkeypatch.setattr(bulletins, "_get_bulletin_row", lambda d, locale="tr": None)
+    attempts = []
+
+    async def failing_select(sector):
+        attempts.append(sector)
+        raise AIReportUnavailableError("Gemini kotası doldu.")
+
+    monkeypatch.setattr(bulletins, "_select_sector_companies", failing_select)
+
+    for _ in range(3):
+        with pytest.raises(AIReportUnavailableError, match="Gemini kotası doldu."):
+            await get_or_create_todays_bulletin()
+    assert len(attempts) == 1
+
+    # Once the back-off has passed, the next request tries again.
+    monkeypatch.setattr(bulletins, "FAILURE_BACKOFF_SECONDS", -1.0)
+    bulletins.reset_generation_state()
+    with pytest.raises(AIReportUnavailableError):
+        await get_or_create_todays_bulletin()
+    assert len(attempts) == 2
 
 
 # --- _save_bulletin idempotency ---------------------------------------------------
@@ -319,13 +376,47 @@ def test_get_bulletins_endpoint_requires_auth():
 def test_get_bulletins_endpoint_returns_list_for_premium_user(monkeypatch):
     monkeypatch.setattr(main, "enforce_ai_reports_access", lambda user_id: None)
 
-    async def fake_get_or_create():
+    async def fake_get_or_create(locale="tr"):
         return None
 
     monkeypatch.setattr(main, "get_or_create_todays_bulletin", fake_get_or_create)
-    monkeypatch.setattr(main, "list_bulletins", lambda: [])
+    monkeypatch.setattr(main, "list_bulletins", lambda **k: [])
 
     response = client.get("/bulletins")
 
     assert response.status_code == 200
     assert response.json() == {"bulletins": [], "warnings": []}
+
+
+@pytest.mark.anyio
+async def test_english_bulletin_is_generated_and_stored_separately(monkeypatch):
+    seen = {}
+
+    def fake_row(d, locale="tr"):
+        seen.setdefault("read", []).append(locale)
+        return None
+
+    async def fake_select(sector):
+        return [(Pick(symbol="AAPL", name="Apple Inc.", market_cap=3.0e12), APPLE)]
+
+    async def fake_gemini(system_prompt, user_prompt, *, client=None):
+        seen["prompt"] = system_prompt
+        return "Today's bulletin."
+
+    def fake_save(bulletin_date, sector, picks, content, locale="tr"):
+        seen["saved"] = locale
+        return Bulletin(
+            bulletin_date=bulletin_date, sector=sector, picks=picks, content=content,
+            created_at=NOW,
+        )
+
+    monkeypatch.setattr(bulletins, "_get_bulletin_row", fake_row)
+    monkeypatch.setattr(bulletins, "_select_sector_companies", fake_select)
+    monkeypatch.setattr(bulletins, "call_gemini", fake_gemini)
+    monkeypatch.setattr(bulletins, "_save_bulletin", fake_save)
+
+    result = await get_or_create_todays_bulletin("en")
+
+    assert seen["read"] == ["en"] and seen["saved"] == "en"
+    assert "İngilizce" in seen["prompt"]
+    assert result.content.endswith("for information only.")

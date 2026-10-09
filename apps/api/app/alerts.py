@@ -1,3 +1,4 @@
+import asyncio
 from datetime import UTC, datetime
 
 from psycopg.rows import dict_row
@@ -193,7 +194,7 @@ async def evaluate_and_persist(
             continue
 
         if _condition_met(alert.direction, alert.threshold, price):
-            won = _mark_triggered(alert.id)
+            won = await asyncio.to_thread(_mark_triggered, alert.id)
             updated.append(
                 alert.model_copy(update={"status": "triggered", "triggered_at": datetime.now(UTC)})
             )

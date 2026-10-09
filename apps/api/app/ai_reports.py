@@ -47,16 +47,45 @@ DISCLAIMER_LINE = (
     "bilgilendirme amacı taşır."
 )
 
+DISCLAIMER_LINE_EN = (
+    "This content is not investment advice; it is an analysis of public data for information "
+    "only."
+)
+
+SUPPORTED_LOCALES = ("tr", "en")
+
+
+def normalize_locale(locale: str | None) -> str:
+    return locale if locale in SUPPORTED_LOCALES else "tr"
+
+
+def disclaimer_line(locale: str = "tr") -> str:
+    return DISCLAIMER_LINE_EN if locale == "en" else DISCLAIMER_LINE
+
+
+def language_instruction(locale: str = "tr") -> str:
+    """Appended to a Turkish system prompt to get the output in the user's language (AD-12).
+    The rules stay in Turkish — the model follows them either way — only the output changes."""
+    if locale != "en":
+        return ""
+    return (
+        " ÖNEMLİ: Yanıtın tamamını, başlıklar dahil, İngilizce yaz; yukarıdaki Türkçe başlık "
+        "adlarının İngilizce karşılıklarını kullan. Sondaki uyarı satırı olarak Türkçe satır "
+        f"yerine tam olarak şunu yaz: '{DISCLAIMER_LINE_EN}'"
+    )
+
+
 # Bumped whenever the prompts change in a way that makes cached reports non-compliant.
 # get_cached_report() treats reports saved under an older version as a cache miss.
 PROMPT_VERSION = 2
 
 
-def ensure_disclaimer(text: str) -> str:
+def ensure_disclaimer(text: str, locale: str = "tr") -> str:
     """The prompts ask for the disclaimer line; append it if the model left it out."""
-    if "yatırım tavsiyesi değildir" in text:
+    marker = "not investment advice" if locale == "en" else "yatırım tavsiyesi değildir"
+    if marker in text.lower():
         return text
-    return f"{text.rstrip()}\n\n{DISCLAIMER_LINE}"
+    return f"{text.rstrip()}\n\n{disclaimer_line(locale)}"
 
 
 class AIReportUnavailableError(Exception):
@@ -130,15 +159,15 @@ async def call_gemini(
 
 
 def get_cached_report(
-    symbol: str, exchange: str, report_type: str, ttl_hours: float
+    symbol: str, exchange: str, report_type: str, ttl_hours: float, locale: str = "tr"
 ) -> tuple[dict, datetime] | None:
     with get_connection() as conn, conn.cursor(row_factory=dict_row) as cur:
         cur.execute(
             """
             SELECT content, generated_at FROM ai_reports
-            WHERE symbol = %s AND exchange = %s AND report_type = %s
+            WHERE symbol = %s AND exchange = %s AND report_type = %s AND locale = %s
             """,
-            (symbol.upper(), exchange.upper(), report_type),
+            (symbol.upper(), exchange.upper(), report_type, locale),
         )
         row = cur.fetchone()
 
@@ -151,13 +180,15 @@ def get_cached_report(
     return row["content"], row["generated_at"]
 
 
-def save_report(symbol: str, exchange: str, report_type: str, content: dict) -> datetime:
+def save_report(
+    symbol: str, exchange: str, report_type: str, content: dict, locale: str = "tr"
+) -> datetime:
     with get_connection() as conn, conn.cursor(row_factory=dict_row) as cur:
         cur.execute(
             """
-            INSERT INTO ai_reports (symbol, exchange, report_type, content)
-            VALUES (%s, %s, %s, %s)
-            ON CONFLICT (symbol, exchange, report_type)
+            INSERT INTO ai_reports (symbol, exchange, report_type, locale, content)
+            VALUES (%s, %s, %s, %s, %s)
+            ON CONFLICT (symbol, exchange, report_type, locale)
             DO UPDATE SET content = EXCLUDED.content, generated_at = now()
             RETURNING generated_at
             """,
@@ -165,6 +196,7 @@ def save_report(symbol: str, exchange: str, report_type: str, content: dict) -> 
                 symbol.upper(),
                 exchange.upper(),
                 report_type,
+                locale,
                 Json({**content, "prompt_version": PROMPT_VERSION}),
             ),
         )

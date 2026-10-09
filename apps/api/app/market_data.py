@@ -1,9 +1,12 @@
 import asyncio
+import contextlib
 import difflib
 import json
 import time
 from collections import deque
-from datetime import UTC, datetime
+from collections.abc import Iterator
+from contextvars import ContextVar
+from datetime import UTC, date, datetime
 from functools import lru_cache
 from pathlib import Path
 
@@ -35,28 +38,146 @@ FUZZY_MATCH_CUTOFF = 0.6
 TWELVEDATA_TIME_SERIES_URL = "https://api.twelvedata.com/time_series"
 TWELVEDATA_TIMEOUT_SECONDS = 5.0
 TWELVEDATA_RATE_LIMIT_PER_MINUTE = 8
-TWELVEDATA_RATE_WINDOW_SECONDS = 60.0
 
-# Process-wide, so every caller (screener, /symbols/candles, /symbols/score, ...) shares one budget.
-_twelvedata_call_times: deque[float] = deque()
-_twelvedata_throttle_lock = asyncio.Lock()
+FINNHUB_BASE_URL = "https://finnhub.io/api/v1"
+# Free tier is 60/min. Keep headroom, and stop background jobs earlier so users' requests
+# always find budget left (AD-5).
+FINNHUB_RATE_LIMIT_PER_MINUTE = 55
+FINNHUB_BACKGROUND_LIMIT_PER_MINUTE = 40
+TWELVEDATA_DAILY_LIMIT = 800
+# A user-facing call gives up instead of hanging the page; background jobs just wait.
+INTERACTIVE_MAX_WAIT_SECONDS = 20.0
+
+QUOTE_CACHE_SECONDS = 60.0
+PROFILE_CACHE_SECONDS = 24 * 3600.0
+_CACHE_MAX_ENTRIES = 2000
+
+# Which lane provider calls in the current task draw from. Runners and other jobs that fan
+# out set "background" for their whole task via `background_lane()`.
+provider_lane: ContextVar[str] = ContextVar("provider_lane", default="interactive")
 
 
-async def _throttle_twelvedata() -> None:
-    async with _twelvedata_throttle_lock:
+@contextlib.contextmanager
+def background_lane() -> Iterator[None]:
+    token = provider_lane.set("background")
+    try:
+        yield
+    finally:
+        provider_lane.reset(token)
+
+
+class ProviderBudgetExceededError(httpx.HTTPError):
+    """Our own request budget for a provider is spent. Subclasses httpx.HTTPError so every
+    caller's existing "provider unavailable" handling covers it."""
+
+
+class _RateBudget:
+    """Process-wide sliding-window request budget for one provider (AD-5)."""
+
+    def __init__(
+        self,
+        name: str,
+        per_minute: int,
+        *,
+        background_per_minute: int | None = None,
+        per_day: int | None = None,
+    ) -> None:
+        self.name = name
+        self.per_minute = per_minute
+        self.background_per_minute = background_per_minute or per_minute
+        self.per_day = per_day
+        self._calls: deque[float] = deque()
+        self._day: date | None = None
+        self._day_count = 0
+        self._lock = asyncio.Lock()
+
+    def reset(self) -> None:
+        self._calls.clear()
+        self._day = None
+        self._day_count = 0
+
+    async def acquire(self) -> None:
+        background = provider_lane.get() == "background"
+        limit = self.background_per_minute if background else self.per_minute
+        waited = 0.0
         while True:
+            async with self._lock:
+                now = time.monotonic()
+                while self._calls and now - self._calls[0] >= 60.0:
+                    self._calls.popleft()
+                today = datetime.now(UTC).date()
+                if self._day != today:
+                    self._day, self._day_count = today, 0
+                if self.per_day is not None and self._day_count >= self.per_day:
+                    raise ProviderBudgetExceededError(f"{self.name} daily request budget spent")
+                if len(self._calls) < limit:
+                    self._calls.append(now)
+                    self._day_count += 1
+                    return
+                if limit <= 0:
+                    raise ProviderBudgetExceededError(f"{self.name} has no request budget")
+                wait = 60.0 - (now - self._calls[len(self._calls) - limit]) + 0.05
+            if not background and waited + wait > INTERACTIVE_MAX_WAIT_SECONDS:
+                raise ProviderBudgetExceededError(f"{self.name} per-minute request budget spent")
+            await asyncio.sleep(wait)
+            waited += wait
+
+
+FINNHUB_BUDGET = _RateBudget(
+    "Finnhub",
+    FINNHUB_RATE_LIMIT_PER_MINUTE,
+    background_per_minute=FINNHUB_BACKGROUND_LIMIT_PER_MINUTE,
+)
+TWELVEDATA_BUDGET = _RateBudget(
+    "Twelve Data", TWELVEDATA_RATE_LIMIT_PER_MINUTE, per_day=TWELVEDATA_DAILY_LIMIT
+)
+
+
+async def finnhub_get(
+    client: httpx.AsyncClient, path: str, params: dict
+) -> httpx.Response:
+    """The only way the app calls Finnhub (AD-5): draws on the shared budget and adds the
+    token. Raises httpx errors like a plain `client.get`, so callers keep their handling."""
+    await FINNHUB_BUDGET.acquire()
+    url = path if path.startswith("http") else f"{FINNHUB_BASE_URL}/{path}"
+    return await client.get(url, params={**params, "token": get_settings().finnhub_api_key})
+
+
+class _TTLCache:
+    def __init__(self, ttl_seconds: float) -> None:
+        self.ttl = ttl_seconds
+        self._items: dict[tuple, tuple[float, object]] = {}
+
+    def get(self, key: tuple):
+        hit = self._items.get(key)
+        if hit is None or time.monotonic() - hit[0] > self.ttl:
+            return None
+        return hit[1]
+
+    def put(self, key: tuple, value: object) -> None:
+        if len(self._items) >= _CACHE_MAX_ENTRIES:
             now = time.monotonic()
-            while (
-                _twelvedata_call_times
-                and now - _twelvedata_call_times[0] >= TWELVEDATA_RATE_WINDOW_SECONDS
-            ):
-                _twelvedata_call_times.popleft()
-            if len(_twelvedata_call_times) < TWELVEDATA_RATE_LIMIT_PER_MINUTE:
-                _twelvedata_call_times.append(now)
-                return
-            await asyncio.sleep(
-                TWELVEDATA_RATE_WINDOW_SECONDS - (now - _twelvedata_call_times[0]) + 0.1
-            )
+            self._items = {k: v for k, v in self._items.items() if now - v[0] <= self.ttl}
+            if len(self._items) >= _CACHE_MAX_ENTRIES:
+                self._items.clear()
+        self._items[key] = (time.monotonic(), value)
+
+    def clear(self) -> None:
+        self._items.clear()
+
+
+# Keyed by (symbol, exchange) per AD-5.
+_quote_cache = _TTLCache(QUOTE_CACHE_SECONDS)
+_profile_cache = _TTLCache(PROFILE_CACHE_SECONDS)
+
+
+def reset_provider_state() -> None:
+    """Test hook: forget budgets and cached quotes/profiles."""
+    FINNHUB_BUDGET.reset()
+    TWELVEDATA_BUDGET.reset()
+    _quote_cache.clear()
+    _profile_cache.clear()
+
 
 TIMEFRAMES: dict[str, dict[str, object]] = {
     "intraday": {"interval": "1h", "outputsize": 40},
@@ -162,11 +283,12 @@ async def search_us_symbols(
     owns_client = client is None
     http_client = client or httpx.AsyncClient(timeout=FINNHUB_TIMEOUT_SECONDS)
     try:
-        response = await http_client.get(
+        response = await finnhub_get(
+            http_client,
             FINNHUB_SEARCH_URL,
             # Without exchange=US, Finnhub also returns foreign listings (AAPL.TO, MSFT.L,
             # GARAN.E.IS…) that we'd label "US" but have no data for.
-            params={"q": query, "exchange": "US", "token": settings.finnhub_api_key},
+            {"q": query, "exchange": "US"},
         )
         response.raise_for_status()
         payload = response.json()
@@ -204,23 +326,26 @@ async def get_us_overview(
     if not settings.finnhub_api_key:
         raise MarketDataUnavailableError("FINNHUB_API_KEY is not configured")
 
+    key = (symbol.upper(), "US")
+    quote = _quote_cache.get(key)
+    profile = _profile_cache.get(key)
+
+    async def fetch_json(url: str) -> dict:
+        response = await finnhub_get(http_client, url, {"symbol": symbol})
+        response.raise_for_status()
+        return response.json()
+
     owns_client = client is None
     http_client = client or httpx.AsyncClient(timeout=FINNHUB_TIMEOUT_SECONDS)
     try:
-        quote_response, profile_response = await asyncio.gather(
-            http_client.get(
-                FINNHUB_QUOTE_URL,
-                params={"symbol": symbol, "token": settings.finnhub_api_key},
-            ),
-            http_client.get(
-                FINNHUB_PROFILE_URL,
-                params={"symbol": symbol, "token": settings.finnhub_api_key},
-            ),
-        )
-        quote_response.raise_for_status()
-        profile_response.raise_for_status()
-        quote = quote_response.json()
-        profile = profile_response.json()
+        if quote is None and profile is None:
+            quote, profile = await asyncio.gather(
+                fetch_json(FINNHUB_QUOTE_URL), fetch_json(FINNHUB_PROFILE_URL)
+            )
+        elif quote is None:
+            quote = await fetch_json(FINNHUB_QUOTE_URL)
+        elif profile is None:
+            profile = await fetch_json(FINNHUB_PROFILE_URL)
     except httpx.HTTPError as exc:
         raise MarketDataUnavailableError(f"Finnhub request failed: {exc}") from exc
     finally:
@@ -231,6 +356,9 @@ async def get_us_overview(
     previous_close = quote.get("pc")
     if not price and not previous_close:
         raise MarketDataUnavailableError(f"No quote data for symbol {symbol}")
+    _quote_cache.put(key, quote)
+    if profile:
+        _profile_cache.put(key, profile)
 
     market_cap = profile.get("marketCapitalization")
 
@@ -273,7 +401,7 @@ async def get_us_candles(
     owns_client = client is None
     http_client = client or httpx.AsyncClient(timeout=TWELVEDATA_TIMEOUT_SECONDS)
     try:
-        await _throttle_twelvedata()
+        await TWELVEDATA_BUDGET.acquire()
         response = await http_client.get(
             TWELVEDATA_TIME_SERIES_URL,
             params={

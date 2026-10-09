@@ -65,7 +65,7 @@ REPORTS = [
 def test_ai_report_endpoint_returns_the_report(
     monkeypatch, signed_in, ai_allowed, path, loader, factory
 ):
-    async def load(symbol, exchange):
+    async def load(symbol, exchange, locale="tr"):
         assert (symbol, exchange) == ("AAPL", "US")
         return factory()
 
@@ -84,7 +84,7 @@ def test_ai_report_endpoint_returns_the_report(
 def test_ai_report_unavailable_becomes_a_warning(
     monkeypatch, signed_in, ai_allowed, path, loader, factory
 ):
-    async def unavailable(symbol, exchange):
+    async def unavailable(symbol, exchange, locale="tr"):
         raise AIReportUnavailableError("Yapay zeka şu an yanıt vermiyor.")
 
     monkeypatch.setattr(main, loader, unavailable)
@@ -99,7 +99,7 @@ def test_ai_report_unavailable_becomes_a_warning(
 def test_ai_report_database_error_becomes_a_generic_warning(
     monkeypatch, signed_in, ai_allowed, path, loader, factory
 ):
-    async def broken(symbol, exchange):
+    async def broken(symbol, exchange, locale="tr"):
         raise psycopg.OperationalError("connection refused")
 
     monkeypatch.setattr(main, loader, broken)
@@ -208,3 +208,22 @@ def test_portfolio_insights_database_error_is_503(monkeypatch, signed_in):
 def test_symbol_insights_require_auth():
     main.app.dependency_overrides.pop(get_current_claims, None)
     assert client.get("/insights/symbol", params={"symbol": "AAPL"}).status_code == 401
+
+
+@pytest.mark.parametrize(("path", "loader", "factory"), REPORTS)
+def test_ai_report_endpoint_uses_the_language_the_page_asks_for(
+    monkeypatch, signed_in, ai_allowed, path, loader, factory
+):
+    seen = []
+
+    async def load(symbol, exchange, locale="tr"):
+        seen.append(locale)
+        return factory()
+
+    monkeypatch.setattr(main, loader, load)
+
+    client.get(path, params={**PARAMS, "locale": "en"})
+    client.get(path, params={**PARAMS, "locale": "xx"})
+
+    # An unknown value falls back to the profile language (Turkish for this test user).
+    assert seen == ["en", "tr"]

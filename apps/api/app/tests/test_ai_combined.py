@@ -36,7 +36,7 @@ async def test_returns_cached_report_without_generating(monkeypatch):
     monkeypatch.setattr(
         ai_combined,
         "get_cached_report",
-        lambda symbol, exchange, report_type, ttl_hours: (
+        lambda symbol, exchange, report_type, ttl_hours, locale="tr": (
             {"report": "Önbellekteki ortak rapor"},
             NOW,
         ),
@@ -58,10 +58,10 @@ async def test_returns_cached_report_without_generating(monkeypatch):
 async def test_generates_from_both_underlying_reports_on_cache_miss(monkeypatch):
     saved = {}
 
-    async def fake_get_fundamental_report(symbol, exchange):
+    async def fake_get_fundamental_report(symbol, exchange, locale="tr"):
         return _fundamental_report()
 
-    async def fake_get_technical_report(symbol, exchange):
+    async def fake_get_technical_report(symbol, exchange, locale="tr"):
         return _technical_report()
 
     async def fake_call_gemini(system_prompt, user_prompt, *, client=None):
@@ -69,7 +69,7 @@ async def test_generates_from_both_underlying_reports_on_cache_miss(monkeypatch)
         assert "Teknik: yükseliş." in user_prompt
         return "Sentezlenmiş ortak rapor."
 
-    def fake_save_report(symbol, exchange, report_type, content):
+    def fake_save_report(symbol, exchange, report_type, content, locale="tr"):
         saved["symbol"] = symbol
         saved["report_type"] = report_type
         saved["content"] = content
@@ -94,12 +94,12 @@ async def test_generates_from_both_underlying_reports_on_cache_miss(monkeypatch)
 async def test_propagates_error_when_underlying_report_unavailable(monkeypatch):
     from app.ai_reports import AIReportUnavailableError
 
-    async def failing_fundamental(symbol, exchange):
+    async def failing_fundamental(symbol, exchange, locale="tr"):
         raise AIReportUnavailableError(
             "Temel analiz AI raporu BIST borsası için henüz desteklenmiyor."
         )
 
-    async def fake_get_technical_report(symbol, exchange):
+    async def fake_get_technical_report(symbol, exchange, locale="tr"):
         return _technical_report()
 
     monkeypatch.setattr(ai_combined, "get_cached_report", lambda *a, **k: None)

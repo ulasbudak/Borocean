@@ -435,3 +435,89 @@ def test_bist_overview_warns_that_bist_is_disabled(monkeypatch):
 
     assert body["overview"]["name"] == "Garanti BBVA"
     assert body["warnings"] == [market_data.BIST_DISABLED_MESSAGE]
+
+
+# --- provider budgets and caches (AD-5, ticket 15.2) -----------------------------------
+
+
+def _overview_handler(calls: list[str]):
+    def handler(request: httpx.Request) -> httpx.Response:
+        calls.append(request.url.path)
+        if "quote" in str(request.url):
+            return httpx.Response(200, json={"c": 190.5, "d": 1.5, "dp": 0.79, "pc": 189.0})
+        return httpx.Response(200, json={"name": "Apple Inc", "currency": "USD"})
+
+    return handler
+
+
+@pytest.mark.anyio
+async def test_get_us_overview_serves_repeat_calls_from_cache():
+    calls: list[str] = []
+    async with httpx.AsyncClient(transport=httpx.MockTransport(_overview_handler(calls))) as c:
+        await get_us_overview("AAPL", client=c)
+        await get_us_overview("aapl", client=c)
+
+    assert sorted(calls) == ["/api/v1/quote", "/api/v1/stock/profile2"]
+
+
+@pytest.mark.anyio
+async def test_get_us_overview_refetches_only_the_quote_once_it_expires(monkeypatch):
+    calls: list[str] = []
+    async with httpx.AsyncClient(transport=httpx.MockTransport(_overview_handler(calls))) as c:
+        await get_us_overview("AAPL", client=c)
+        monkeypatch.setattr(market_data._quote_cache, "ttl", -1.0)
+        await get_us_overview("AAPL", client=c)
+
+    assert calls.count("/api/v1/quote") == 2
+    assert calls.count("/api/v1/stock/profile2") == 1
+
+
+@pytest.mark.anyio
+async def test_finnhub_budget_makes_an_interactive_call_give_up_instead_of_hanging(monkeypatch):
+    monkeypatch.setattr(market_data.FINNHUB_BUDGET, "per_minute", 2)
+    monkeypatch.setattr(market_data, "INTERACTIVE_MAX_WAIT_SECONDS", 0.0)
+    await market_data.FINNHUB_BUDGET.acquire()
+    await market_data.FINNHUB_BUDGET.acquire()
+
+    with pytest.raises(market_data.ProviderBudgetExceededError):
+        await market_data.FINNHUB_BUDGET.acquire()
+
+
+@pytest.mark.anyio
+async def test_spent_budget_surfaces_as_unavailable_not_a_crash(monkeypatch):
+    monkeypatch.setattr(market_data.FINNHUB_BUDGET, "per_minute", 0)
+    monkeypatch.setattr(market_data, "INTERACTIVE_MAX_WAIT_SECONDS", 0.0)
+    async with httpx.AsyncClient(transport=httpx.MockTransport(_overview_handler([]))) as c:
+        with pytest.raises(MarketDataUnavailableError):
+            await get_us_overview("AAPL", client=c)
+
+
+@pytest.mark.anyio
+async def test_background_lane_stops_earlier_and_leaves_budget_for_users(monkeypatch):
+    budget = market_data.FINNHUB_BUDGET
+    monkeypatch.setattr(budget, "per_minute", 3)
+    monkeypatch.setattr(budget, "background_per_minute", 1)
+    sleeps: list[float] = []
+
+    async def no_sleep(seconds: float) -> None:
+        sleeps.append(seconds)
+        raise RuntimeError("background call had to wait")
+
+    monkeypatch.setattr(market_data.asyncio, "sleep", no_sleep)
+    with market_data.background_lane():
+        await budget.acquire()
+        with pytest.raises(RuntimeError):
+            await budget.acquire()
+
+    # The user's own request still goes straight through.
+    await budget.acquire()
+    assert len(sleeps) == 1
+
+
+@pytest.mark.anyio
+async def test_twelvedata_daily_budget_is_enforced(monkeypatch):
+    monkeypatch.setattr(market_data.TWELVEDATA_BUDGET, "per_day", 1)
+    await market_data.TWELVEDATA_BUDGET.acquire()
+
+    with pytest.raises(market_data.ProviderBudgetExceededError):
+        await market_data.TWELVEDATA_BUDGET.acquire()

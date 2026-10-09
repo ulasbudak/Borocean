@@ -1,6 +1,6 @@
 import pytest
 
-from app import entitlements, market_data
+from app import bulletins, entitlements, market_data
 
 
 @pytest.fixture(autouse=True)
@@ -18,3 +18,13 @@ def _enable_bist(monkeypatch):
     BIST tests cover the enabled code paths, so they run with it on. Tests of the disabled
     behavior switch it back off explicitly."""
     monkeypatch.setattr(market_data, "BIST_ENABLED", True)
+
+
+@pytest.fixture(autouse=True)
+def _fresh_provider_state():
+    """Provider budgets and quote/profile caches are process-wide; start every test clean."""
+    market_data.reset_provider_state()
+    bulletins.reset_generation_state()
+    yield
+    market_data.reset_provider_state()
+    bulletins.reset_generation_state()

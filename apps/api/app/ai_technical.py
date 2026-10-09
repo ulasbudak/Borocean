@@ -32,6 +32,7 @@ from pydantic import BaseModel
 
 from app.ai_reports import (
     DISCLAIMER_LINE,
+    DISCLAIMER_LINE_EN,
     AIReportUnavailableError,
     get_cached_report,
     save_report,
@@ -60,6 +61,7 @@ MODEL_DOWNLOAD_TIMEOUT_SECONDS = 60.0
 # module docstring.
 MODEL_CLASS_NAMES = {0: "upward", 1: "downward"}
 PATTERN_NAMES_TR = {"upward": "yukarı yönlü örüntü", "downward": "aşağı yönlü örüntü"}
+PATTERN_NAMES_EN = {"upward": "upward pattern", "downward": "downward pattern"}
 
 # Matches ChartScanAI's own default confidence slider (30%) — see its app.py.
 DETECTION_CONFIDENCE_THRESHOLD = 0.30
@@ -178,7 +180,9 @@ class TechnicalAIReport(BaseModel):
     cached: bool
 
 
-def _summarize_detections(detections: list[Detection]) -> str:
+def _summarize_detections(detections: list[Detection], locale: str = "tr") -> str:
+    if locale == "en":
+        return _summarize_detections_en(detections)
     if not detections:
         return (
             "Grafik modeli bu grafikte belirgin bir yukarı ya da aşağı yönlü örüntü tespit "
@@ -201,6 +205,32 @@ def _summarize_detections(detections: list[Detection]) -> str:
         "gelecekteki fiyat hareketi hakkında bir tahmin değildir; deneysel/gösterge "
         "niteliğindedir.",
         DISCLAIMER_LINE,
+    ]
+    return "\n\n".join(lines)
+
+
+def _summarize_detections_en(detections: list[Detection]) -> str:
+    if not detections:
+        return (
+            "The chart model found no clear upward or downward pattern in this chart. This is "
+            "a third-party, experimental model's reading of the historical price chart. "
+            f"{DISCLAIMER_LINE_EN}"
+        )
+
+    upward = sum(1 for d in detections if d.label == "upward")
+    downward = sum(1 for d in detections if d.label == "downward")
+    top = max(detections, key=lambda d: d.confidence)
+
+    lines = [
+        f"In the historical price chart, the chart model found {upward} upward and "
+        f"{downward} downward patterns.",
+        f"Highest-confidence finding: {PATTERN_NAMES_EN[top.label]} "
+        f"({top.confidence * 100:.0f}% model confidence).",
+        "This is a binary pattern classification of the chart image by ChartScanAI, a "
+        "third-party open-source model. It does not detect named formations (triangles, "
+        "head and shoulders, etc.), has no published accuracy metric and is not a forecast "
+        "of future price movement; treat it as experimental and indicative only.",
+        DISCLAIMER_LINE_EN,
     ]
     return "\n\n".join(lines)
 
@@ -280,8 +310,10 @@ def _run_inference(candles: list[CandlePoint]) -> list[Detection]:
 
 
 async def get_technical_report(
-    symbol: str, exchange: str, timeframe: str = "daily"
+    symbol: str, exchange: str, timeframe: str = "daily", *, locale: str = "tr"
 ) -> TechnicalAIReport:
+    """The report text is a template over the model's detections, so one cached run serves
+    every language: detections are stored once and the text is rendered per request."""
     import asyncio
 
     from app.market_data import MarketDataUnavailableError, get_us_candles
@@ -289,14 +321,17 @@ async def get_technical_report(
     symbol = symbol.strip().upper()
     exchange_filter = exchange.strip().upper()
 
-    cached = get_cached_report(symbol, exchange_filter, "technical", CACHE_TTL_HOURS)
+    cached = await asyncio.to_thread(
+        get_cached_report, symbol, exchange_filter, "technical", CACHE_TTL_HOURS
+    )
     if cached is not None:
         content, generated_at = cached
+        detections = [Detection(**d) for d in content["detections"]]
         return TechnicalAIReport(
             symbol=symbol,
             exchange=exchange_filter,
-            report=content["report"],
-            detections=[Detection(**d) for d in content["detections"]],
+            report=_summarize_detections(detections, locale),
+            detections=detections,
             generated_at=generated_at,
             cached=True,
         )
@@ -316,14 +351,18 @@ async def get_technical_report(
 
     detections = await asyncio.to_thread(_run_inference, candles)
 
-    report_text = _summarize_detections(detections)
-    content = {"report": report_text, "detections": [d.model_dump() for d in detections]}
-    generated_at = save_report(symbol, exchange_filter, "technical", content)
+    content = {
+        "report": _summarize_detections(detections),
+        "detections": [d.model_dump() for d in detections],
+    }
+    generated_at = await asyncio.to_thread(
+        save_report, symbol, exchange_filter, "technical", content
+    )
 
     return TechnicalAIReport(
         symbol=symbol,
         exchange=exchange_filter,
-        report=report_text,
+        report=_summarize_detections(detections, locale),
         detections=detections,
         generated_at=generated_at,
         cached=False,

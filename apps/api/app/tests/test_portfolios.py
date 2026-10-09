@@ -1,5 +1,6 @@
 from contextlib import contextmanager
 from datetime import UTC, datetime
+from decimal import Decimal
 
 import psycopg
 import pytest
@@ -477,3 +478,59 @@ def test_portfolios_endpoint_requires_auth():
     response = client.get("/portfolios")
 
     assert response.status_code == 401
+
+
+class _RecordingConnection(FakeConnection):
+    def __init__(self, responses, queries):
+        super().__init__(responses)
+        self.queries = queries
+
+    def cursor(self, row_factory=None):
+        conn = self
+
+        class _Cursor(FakeCursor):
+            def execute(self, query, params=None):
+                conn.queries.append(query)
+                super().execute(query, params)
+
+        return _Cursor(self._responses)
+
+
+def _recording(responses, queries):
+    @contextmanager
+    def _get_connection():
+        yield _RecordingConnection(responses, queries)
+
+    return _get_connection
+
+
+@pytest.mark.parametrize(
+    "held",
+    # 0.1 + 0.2 and 0.3 - 0.1 as floats left these in the database before exact arithmetic.
+    [Decimal("0.30000000000000004"), Decimal("0.19999999999999998"), Decimal("0.3")],
+)
+def test_selling_the_whole_position_removes_it_despite_float_dust(monkeypatch, held):
+    from decimal import Decimal as D
+
+    queries: list[str] = []
+    monkeypatch.setattr(
+        portfolios,
+        "get_connection",
+        _recording(
+            [
+                {"fetchone": (1,)},
+                {"fetchone": {"id": "pos1", "quantity": held, "avg_cost": D("100")}},
+                {"fetchone": _position_row(quantity=0, avg_cost=100)},
+            ],
+            queries,
+        ),
+    )
+
+    sold = D("0.2") if held < D("0.25") else D("0.3")
+    portfolios.add_transaction(
+        "user-1", "f1", symbol="AAPL", exchange="US", name=None, quantity=float(sold), price=1,
+        side="sell",
+    )
+
+    assert queries[0].rstrip().endswith("FOR UPDATE")
+    assert queries[-1].startswith("DELETE FROM positions")

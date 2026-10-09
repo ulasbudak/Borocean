@@ -1,3 +1,4 @@
+import asyncio
 from html import escape
 
 import httpx
@@ -193,7 +194,7 @@ async def notify_trigger(
     triggered regardless of whether we manage to tell the user about it).
     """
     try:
-        settings = get_settings_for_user(user_id)
+        settings = await asyncio.to_thread(get_settings_for_user, user_id)
     except Exception:
         return
 

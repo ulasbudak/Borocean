@@ -434,3 +434,80 @@ def test_get_simulation_history_endpoint_returns_404_when_not_found(monkeypatch)
     response = client.get("/simulations/s1/history")
 
     assert response.status_code == 404
+
+
+def test_list_snapshots_keeps_the_newest_days_in_chronological_order(monkeypatch):
+    queries = []
+
+    def snap(day: int) -> dict:
+        return {
+            "snapshot_date": date(2026, 1, day), "cash_balance": 1, "positions_value": 0,
+            "total_equity": 1, "pnl_abs": 0, "pnl_pct": 0,
+        }
+
+    class RecordingCursor(FakeCursor):
+        def execute(self, query, params=None):
+            queries.append((query, params))
+            super().execute(query, params)
+
+    class RecordingConnection(FakeConnection):
+        def cursor(self, row_factory=None):
+            return RecordingCursor(self._responses)
+
+    @contextmanager
+    def _get_connection():
+        # The database answers newest-first for the DESC + LIMIT query.
+        yield RecordingConnection([{"fetchall": [snap(30), snap(29), snap(28)]}])
+
+    monkeypatch.setattr(simulations, "get_connection", _get_connection)
+
+    points = simulations.list_snapshots("s1", limit=3)
+
+    assert "ORDER BY snapshot_date DESC" in queries[0][0]
+    assert [p.snapshot_date.day for p in points] == [28, 29, 30]
+
+
+@pytest.mark.anyio
+async def test_selling_a_float_dust_position_closes_it_and_locks_the_simulation(monkeypatch):
+    from decimal import Decimal
+
+    queries = []
+
+    class RecordingCursor(FakeCursor):
+        def execute(self, query, params=None):
+            queries.append(query)
+            super().execute(query, params)
+
+    class RecordingConnection(FakeConnection):
+        def cursor(self, row_factory=None):
+            return RecordingCursor(self._responses)
+
+    @contextmanager
+    def _get_connection():
+        yield RecordingConnection(
+            [
+                {"fetchone": {"cash_balance": Decimal("100")}},
+                {
+                    "fetchone": {
+                        "id": "pos1",
+                        "quantity": Decimal("0.30000000000000004"),
+                        "avg_cost": Decimal("10"),
+                    }
+                },
+                {"fetchone": _position_row(quantity=0.3, avg_cost=10)},
+                {},
+            ]
+        )
+
+    async def fake_overview(symbol, *, client=None):
+        return StockOverview(symbol=symbol, exchange="US", name=symbol, price=10.0)
+
+    monkeypatch.setattr(simulations, "get_connection", _get_connection)
+    monkeypatch.setattr(simulations, "get_us_overview", fake_overview)
+
+    await place_order(
+        "user-1", "s1", symbol="AAPL", exchange="US", name=None, quantity=0.3, side="sell"
+    )
+
+    assert queries[0].rstrip().endswith("FOR UPDATE")
+    assert queries[2].startswith("DELETE FROM simulation_positions")

@@ -130,3 +130,22 @@ def test_highlights_endpoint_requires_auth():
     response = client.get("/highlights")
 
     assert response.status_code == 401
+
+
+@pytest.mark.anyio
+async def test_get_highlights_warns_when_some_quotes_could_not_be_fetched(monkeypatch):
+    monkeypatch.setattr(highlights, "load_us_universe", lambda: FAKE_UNIVERSE)
+
+    async def flaky_get_us_overview(symbol: str, *, client=None) -> StockOverview:
+        if symbol == "MSFT":
+            raise MarketDataUnavailableError("budget spent")
+        return StockOverview(
+            symbol=symbol, exchange="US", name=symbol, price=100.0, change_abs=1.0, change_pct=2.0
+        )
+
+    monkeypatch.setattr(highlights, "get_us_overview", flaky_get_us_overview)
+
+    result, warnings = await highlights.get_highlights(["Technology"])
+
+    assert [h.symbol for h in result] == ["AAPL"]
+    assert warnings == [highlights.PARTIAL_DATA_WARNING]

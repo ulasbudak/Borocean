@@ -52,8 +52,24 @@ def account_check_allowed(email: str, now: float | None = None) -> bool:
     now = time.monotonic() if now is None else now
     if not _allow(_checks_global, ACCOUNT_CHECK_GLOBAL, ACCOUNT_CHECK_GLOBAL_WINDOW, now):
         return False
+    _forget_quiet_addresses(now)
     bucket = _checks_by_email.setdefault(email, deque())
     return _allow(bucket, ACCOUNT_CHECK_PER_EMAIL, ACCOUNT_CHECK_PER_EMAIL_WINDOW, now)
+
+
+def _forget_quiet_addresses(now: float) -> None:
+    """Drop addresses whose last check is outside the window, so enumeration attempts can't
+    grow the dict forever. The global limit caps live keys at about
+    ACCOUNT_CHECK_GLOBAL * (per-email window / global window)."""
+    if len(_checks_by_email) <= ACCOUNT_CHECK_GLOBAL:
+        return
+    stale = [
+        email
+        for email, bucket in _checks_by_email.items()
+        if not bucket or now - bucket[-1] >= ACCOUNT_CHECK_PER_EMAIL_WINDOW
+    ]
+    for email in stale:
+        del _checks_by_email[email]
 
 
 def account_exists(email: str) -> bool:
