@@ -83,3 +83,19 @@ after = [1]
 hitl = false
 risk = "medium"
 references = ["docs/initiative-borocean/ux-borocean/ux-borocean.md", "docs/initiative-borocean/ux-borocean/EXPERIENCE.md"]
+
+[[entry]]
+id = 8
+type = "story"
+title = "Karşılama sayfasını (/) gerçek bir tanıtım sayfasına dönüştürmek"
+description = "Anonim ziyaretçi için web kök sayfası (/), EXPERIENCE.md › Karşılama Sayfası tablosundaki 8 bölüme göre yeniden yazılır: tek birincil CTA, gerçek ürün ekran görüntüsü, kısa sorun anlatısı, gruplanmış özellik kartları, Üç Görüş farklılaşma bölümü ve şeffaflık bandı eklenir. Oturumlu kullanıcı için davranış değişmez."
+verify = "Anonim bir ziyaretçi '/' adresine girdiğinde tek bir birincil CTA ('Ücretsiz Başla') görür, 'Giriş Yap' üst barda küçük bir bağlantıdır, hero'da gerçek bir hisse detay ekran görüntüsü vardır; oturum açık bir kullanıcı aynı sayfada yalnızca 'Panele git' görür."
+covers = []
+after = []
+hitl = false
+risk = "medium"
+references = [
+  "docs/initiative-borocean/ux-borocean/EXPERIENCE.md",
+  "docs/initiative-borocean/ux-borocean/mockups/key-landing.html",
+  "docs/initiative-borocean/ux-borocean/ux-borocean.md",
+]
