@@ -1,7 +1,7 @@
 ---
 name: Borocean
 status: final
-updated: 2026-10-09
+updated: 2026-10-10
 sources:
   - ../../PRD.md
   - ../../compliance.md
@@ -25,7 +25,7 @@ Bu belge, canlıdaki ürünün nasıl davrandığını kayda geçirir (brownfiel
 
 | Yüzey | Web | Mobil | Nereden ulaşılır | Amaç |
 |---|---|---|---|---|
-| Karşılama | `/` | — | Arama motoru, paylaşım | Ürünü tanıtır; Giriş ve Kayıt düğmeleri |
+| Karşılama | `/` | — | Arama motoru, paylaşım | Ürünü tanıtır; ayrıntı aşağıda |
 | Giriş / Kayıt | `/login`, `/signup` | AuthScreen (iki mod) | Karşılama, oturum yok | Ayrı ekranlar; kayıtta ad ve onay kutusu (Story 1.9) |
 | Şifre sıfırlama | `/forgot-password` → `/reset-password` | Web akışını tarayıcıda açar | Giriş | E-postayla sıfırlama |
 | Panel (ana sayfa) | `/dashboard` | HomeScreen | Giriş sonrası | Selamlama, hızlı erişim, arama, gelişmeler, öne çıkanlar, son bülten |
@@ -45,6 +45,28 @@ Bu belge, canlıdaki ürünün nasıl davrandığını kayda geçirir (brownfiel
 - **Mobil gezinme:** React Navigation yığını (`apps/mobile/navigation/RootNavigator.tsx`, 16.2). Android geri tuşu bir önceki ekrana döner. Gelişme push'u portföyü, alarm push'u ilgili alarm ekranını açar (soğuk başlatmada da). `borocean://` bağlantıları her ekranı açar (`borocean://stock/US/AAPL`). Bağlantı ya da push ile açılan bir ekranda "geri" Ana sayfaya döner.
 
 Görsel referans: [`mockups/key-panel.html`](mockups/key-panel.html), [`mockups/key-stock.html`](mockups/key-stock.html), [`mockups/key-mobile-portfolio.html`](mockups/key-mobile-portfolio.html). Çelişkide bu belge geçerlidir.
+
+## Karşılama Sayfası (`/`)
+
+Oturum açık kullanıcı için davranış değişmiyor: Logo + "Panele git" butonu görünür; aşağıdaki bölümler hiç render edilmiyor (mevcut `isAuthenticated` dalı). Aşağısı yalnızca **anonim ziyaretçi** için — mevcut tek-ekranlık hero + düz 6 kartlık yapının yerine geçer. Amaç: sayfa doğrudan bir üyelik kapısı gibi değil, ürünü anlatan bir tanıtım sayfası gibi hissettirsin (karar 2026-10-10).
+
+| # | Bölüm | İçerik | Not |
+|---|---|---|---|
+| 1 | Üst bar | Logo (sol) · "Giriş Yap" metin bağlantısı (sağ, düşük vurgu, `/login`'e gider) | Buton değil, altı çizili bağlantı — birincil CTA'yı hero'ya bırakır. Tıklanabilir alan en az 24×24px olacak şekilde dolgu eklenir (WCAG 2.2 SC 2.5.8; a11y incelemesi 2026-10-10) |
+| 2 | Hero | Mevcut `home.heroTitle` / `home.heroText` (i18n, metin değişmiyor) + **tek** birincil buton "Ücretsiz Başla" (`/signup`) + yanında gerçek ürün ekran görüntüsü | Ekran görüntüsü: Hisse detay sayfası, Genel Bakış sekmesi, fiyat grafiği + Metrik Puanı kartı görünür durumda (örn. AAPL, dolu veriyle). Gerçek yakalama `bmad-build`'de yapılır; burada hangi ekran olduğu sabitleniyor |
+| 3 | Sorun | Kısa geçiş metni (yeni i18n anahtarı `home.problemText`): "Bir hisseyi değerlendirmek genelde birden fazla uygulama, birden fazla dil ve doğrulanamayan kaynaklar arasında geziniliyor demek. Borocean temel analiz, teknik analiz ve yapay zekâ destekli özetleri tek ekranda birleştirir." | Playbook'un "parçalı araç yığını" anlatısından damıtıldı; marka/pazarlama iddiası değil, ürün açıklaması — Voice and Tone kurallarına tabi |
+| 4 | Özellikler | Mevcut 6 kart (`home.features`, metinler değişmiyor) üç başlık altında gruplanır: **Araştır** (temel analiz, teknik analiz) · **Takip Et** (tarama/karşılaştırma, izleme/alarm, portföy) · **Karar Desteği** (simülasyon, yapay zeka raporları) | Yalnızca gruplama/başlık eklenir; kart metinleri aynı. Üç grup başlığı gerçek `<h2>` öğesidir (stilize `<p>` değil) — ekran okuyucu başlık gezinmesi için (a11y incelemesi 2026-10-10) |
+| 5 | Üç Görüş | Üç küçük kart — **Kural Bazlı Puan** ("0-100 metrik puanı, kategori kırılımı — al/sat etiketi yok"), **AI Temel Analiz Yorumu** ("Kamuya açık temel verilere dayanan, kişiselleştirilmemiş yorum"), **AI Teknik Okuma** ("Grafik örüntüsünü okuyan, ayrı ve açıkça etiketlenmiş bir ikinci görüş") — üçü de "Üretimde" rozeti taşır (hepsi canlı) | Farklılaşma bölümü; dil `docs/compliance.md` §3'e tabi — "tavsiye", "sinyal", "fırsat" kelimeleri yasak. Bölüm başlığı ("Aynı hisseye üç ayrı görüş") gerçek `<h2>`. Kartlar yalnızca rozet rengiyle değil, başlık metniyle de ayrışır — tek bir düşük-kontrast "yakında" rozet varyantı tanımlanmaz (a11y incelemesi 2026-10-10: Ayarlar'da önceden düzeltilen düşük-kontrast rozet deseninin tekrarı riski) |
+| 6 | Şeffaflık bandı | Tek satır: "Borocean bir aracı kurum değildir. Hiçbir emir iletmez, kişiye özel yatırım tavsiyesi vermez — yalnızca kamuya açık verileri analiz eder." + Şartlar/KVKK bağlantıları | `{components.disclaimer}` tonunda ama görsel olarak ayrı bir bant; alt bilgideki uyarıyı tekrarlamaz, önceden güven kurar |
+| 7 | Son CTA | Hero'daki butonun tekrarı: "Ücretsiz Başla" | Aynı hedef (`/signup`), aynı metin |
+| 8 | Alt bilgi | Değişmiyor: `t.common.disclaimer` + Şartlar/KVKK/Gizlilik bağlantıları | — |
+
+- Hero ve Sorun bölümleri `max-w-3xl` yerine daha geniş bir konteyner genişliği kullanır (örn. `max-w-5xl`) — sayfanın "dar/kısa" hissini gidermek için `[ASSUMPTION]` tam değer `bmad-build`'de denenerek belirlenir.
+- **Duyarlı davranış (taahhüt, yalnızca mock değil):** Hero'nun iki sütunu (metin + ekran görüntüsü), özellik grupları ve Üç Görüş kartları, uygulamanın her yerde kullandığı `sm` kırılım noktasının altında (`< sm`) tek sütuna döner — bu sayfaya özgü yeni bir kırılım noktası icat edilmez (a11y incelemesi 2026-10-10; WCAG 1.4.10).
+- Üst bar kaydırmada sabitlenmez (sticky değil) `[ASSUMPTION]`.
+- Dekoratif SVG ikonlar (CTA ok işaretleri, ekran görüntüsü yer tutucusundaki simge, şeffaflık bandındaki kalkan simgesi) `aria-hidden="true"` taşır — yanlarındaki metin zaten anlamı taşıyor (a11y incelemesi 2026-10-10; Accessibility Floor'daki mobil ikon-etiket kuralının web'deki dekoratif ikon karşılığı).
+
+Görsel referans: [`mockups/key-landing.html`](mockups/key-landing.html). Hero'daki ekran görüntüsü yer tutucudur (gerçek yakalama `bmad-build`'de). Çelişkide bu belge geçerlidir.
 
 ## Voice and Tone
 
@@ -118,6 +140,8 @@ Hedef WCAG 2.2 AA. Web'de 18 sayfa iki temada axe ile taranır ve ciddi/kritik b
 - Hızlı erişim `nav` öğesi `aria-label` taşır. Sekmeler ve chip'ler `role="group"` içinde gerçek düğmelerdir.
 - Grafik tek başına bilgi taşımaz: aynı veri sinyal listesinde ve metrik satırlarında metin olarak vardır.
 - Mobilde dokunma hedefleri en az 44pt `[ASSUMPTION]`; yalnızca simgeden oluşan düğmeler `accessibilityRole` ve `accessibilityLabel` taşır.
+- Web'de tıklanabilir öğeler en az 24×24px'lik bir alana sahiptir (WCAG 2.2 SC 2.5.8) — küçük metin bağlantıları bile yeterli dolgu alır (eklendi 2026-10-10, Karşılama sayfası incelemesinden).
+- Web'de yanında anlam taşıyan metin bulunan dekoratif SVG ikonlar `aria-hidden="true"` taşır — yalnızca simgeden oluşan düğmelerdeki mobil `accessibilityLabel` kuralının web karşılığı (eklendi 2026-10-10).
 - Metin içindeki bağlantılar altı çizilidir; seçili chip ve sekmeler durumu kenarlıkla da gösterir, yalnızca renkle değil.
 
 ## Responsive & Platform
@@ -161,8 +185,8 @@ Hata: Veri sağlayıcı yanıt vermezse sayfa "Veri şu an güncellenemiyor." de
 
 ### Flow 3 — İlk kayıt (Zeynep, 22, öğrenci; Google'dan gelir)
 
-1. Zeynep "hisse analizi uygulaması" araması sonucunda borocean.com'a gelir; başlığı ve özellik listesini okur.
-2. "Kayıt Ol"a basar; ad, e-posta, şifre girer ve koşulları onaylar.
+1. Zeynep "hisse analizi uygulaması" araması sonucunda borocean.com'a gelir; hero'daki gerçek ekran görüntüsünü görür, kısa sorun anlatısını ve gruplanmış özellikleri okur.
+2. "Ücretsiz Başla"ya basar; ad, e-posta, şifre girer ve koşulları onaylar.
 3. "E-postanı doğrula" ekranını görür; Türkçe onay e-postasındaki bağlantıya dokunur.
 4. **Doruk:** Panel "Merhaba, Zeynep" diye açılır. Hızlı erişim en üstte, arama hemen altındadır; ilk hissesini bulması bir dakika sürmez.
 

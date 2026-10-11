@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Borocean — Karşılama (/), anonim ziyaretçi · key screen mock</title>
+<style>
+/*
+  KEY SCREEN: Web Karşılama (/), dark mode, anonim (oturumsuz) ziyaretçi.
+  Illustrative mock — the spine is the contract. Hero screenshot is a labeled
+  placeholder (real capture happens in bmad-build, not fabricated here).
+
+  Governing spine sections:
+  - DESIGN.md › colors (dark), typography, rounded, spacing, components.card / components.disclaimer;
+    Layout & Spacing (section gap, wider max-width for this page only).
+  - EXPERIENCE.md › Karşılama Sayfası (/) — full 8-row table (this mock renders rows 1-8);
+    Voice and Tone (no al/sat language); Compliance in the UI (disclaimer, no buy/sell labels);
+    Key Flows › Flow 3 step 1-2 (Zeynep's first visit).
+  Code grounding (unchanged strings): apps/web/src/app/page.tsx, packages/shared/src/i18n/messages/tr.ts
+  (home.heroTitle, home.heroText, home.features, common.disclaimer, legal.*).
+  New strings (home.problemText, "Üç Görüş" card copy, trust band sentence) are drafted in
+  EXPERIENCE.md's Karşılama Sayfası table, row 3/5/6 — not yet in i18n files.
+*/
+:root{
+  --canvas:#0A0B0D; --surface:#121417; --surface-hover:#1A1D21; --surface-elevated:#1E2126;
+  --border-subtle:#23262B; --border-default:#2E3239;
+  --text-primary:#F4F5F7; --text-secondary:#9CA3AF; --text-tertiary:#6B7280;
+  --accent:#3B82F6; --accent-text:#0A0B0D; --positive:#34D399; --negative:#F87171; --warning:#F59E0B;
+  --r-sm:6px; --r-md:10px; --r-lg:14px;
+  --font: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#050607;font-family:var(--font);color:var(--text-primary);padding:32px;-webkit-font-smoothing:antialiased}
+.i{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
+
+.browser{max-width:1200px;margin:0 auto;border:1px solid var(--border-default);border-radius:12px;overflow:hidden;box-shadow:0 30px 80px rgba(0,0,0,.6)}
+.chrome{display:flex;align-items:center;gap:12px;background:#17191C;padding:10px 14px;border-bottom:1px solid var(--border-subtle)}
+.dots{display:flex;gap:6px}.dots span{width:11px;height:11px;border-radius:50%;background:#3A3D42}
+.url{flex:1;background:#0E0F11;border:1px solid var(--border-subtle);border-radius:8px;padding:6px 12px;font-size:12px;color:var(--text-secondary)}
+.url b{color:var(--text-primary);font-weight:500}
+.page{background:var(--canvas);min-height:600px}
+
+/* row 1: top bar */
+.topbar{max-width:1040px;margin:0 auto;padding:20px 24px 0;display:flex;align-items:center;justify-content:space-between}
+.logo{display:flex;align-items:center;gap:8px;font-size:14px;font-weight:600;letter-spacing:-.01em}
+.loginlink{display:inline-block;padding:8px 4px;font-size:13px;font-weight:500;color:var(--text-secondary);text-decoration:underline;min-height:24px}
+
+/* row 2: hero — wider than the rest of the app (max-w-5xl vs max-w-3xl), two columns ≥ sm */
+.hero{max-width:1040px;margin:0 auto;padding:56px 24px 40px;display:grid;grid-template-columns:1fr 1fr;gap:40px;align-items:center}
+.hero h1{font-size:30px;line-height:1.2;font-weight:700;letter-spacing:-.01em}
+.hero p{margin-top:14px;font-size:15px;line-height:1.6;color:var(--text-secondary)}
+.cta{display:inline-flex;align-items:center;gap:8px;margin-top:22px;background:var(--accent);color:var(--accent-text);border-radius:var(--r-md);padding:12px 22px;font-size:14px;font-weight:600;text-decoration:none}
+.freenote{margin-top:10px;font-size:12px;color:var(--text-tertiary)}
+.shotplaceholder{border:1px dashed var(--border-default);border-radius:var(--r-lg);background:var(--surface);aspect-ratio:4/3;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;text-align:center;padding:24px;color:var(--text-tertiary)}
+.shotplaceholder b{color:var(--text-secondary);font-size:13px;font-weight:600}
+.shotplaceholder span{font-size:12px;max-width:260px;line-height:1.5}
+
+/* row 3: problem */
+.problem{max-width:1040px;margin:0 auto;padding:8px 24px 48px}
+.problem p{max-width:640px;margin:0 auto;text-align:center;font-size:15px;line-height:1.6;color:var(--text-secondary)}
+
+/* row 4: grouped features */
+.features{max-width:1040px;margin:0 auto;padding:0 24px 48px}
+.groups{display:grid;grid-template-columns:repeat(3,1fr);gap:24px}
+.group-label{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--accent);margin-bottom:12px}
+.card{background:var(--surface);border:1px solid var(--border-subtle);border-radius:var(--r-lg);padding:16px;margin-bottom:10px}
+.card h3{font-size:14px;font-weight:600}
+.card p{margin-top:4px;font-size:13px;line-height:1.5;color:var(--text-secondary)}
+
+/* row 5: üç görüş */
+.triad-wrap{max-width:1040px;margin:0 auto;padding:0 24px 48px}
+.sec-title{text-align:center;font-size:20px;font-weight:700;margin-bottom:6px}
+.sec-sub{text-align:center;font-size:13px;color:var(--text-tertiary);margin-bottom:24px;max-width:560px;margin-left:auto;margin-right:auto;line-height:1.5}
+.triad{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.tcard{background:var(--surface-elevated);border:1px solid var(--border-default);border-radius:var(--r-lg);padding:18px}
+.tcard .tag{display:inline-flex;font-size:11px;font-weight:600;border-radius:9999px;padding:2px 8px;margin-bottom:10px}
+.tag.live{background:rgba(52,211,153,.15);color:var(--positive)}
+/* no .tag.soon — all three cards are live; a low-contrast variant isn't needed and isn't drawn (a11y review 2026-10-10) */
+.tcard h3{font-size:14px;font-weight:600}
+.tcard p{margin-top:6px;font-size:12.5px;line-height:1.55;color:var(--text-secondary)}
+
+/* row 6: trust band */
+.trust{max-width:1040px;margin:0 auto;padding:0 24px 48px}
+.trustcard{background:var(--surface);border:1px solid var(--border-subtle);border-radius:var(--r-lg);padding:18px 22px;display:flex;align-items:flex-start;gap:14px}
+.trustcard .i{color:var(--positive);margin-top:2px}
+.trustcard p{font-size:13.5px;line-height:1.6;color:var(--text-secondary)}
+.trustcard a{color:var(--accent);text-decoration:underline}
+
+/* row 7: final CTA */
+.finalcta{max-width:1040px;margin:0 auto;padding:0 24px 56px;text-align:center}
+
+/* row 8: footer */
+footer{border-top:1px solid var(--border-subtle);padding:24px;text-align:center}
+footer p{font-size:12px;color:var(--text-tertiary)}
+footer nav{margin-top:8px;display:flex;justify-content:center;gap:16px;font-size:12px}
+footer nav a{color:var(--text-tertiary);text-decoration:underline}
+
+.note{max-width:1200px;margin:16px auto 0;font-size:12px;color:#555b63}
+@media (max-width: 640px){ /* aligned to the app's existing sm breakpoint, not a new one */
+  .hero,.groups,.triad{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+<div class="browser">
+  <div class="chrome">
+    <div class="dots"><span></span><span></span><span></span></div>
+    <div class="url">https://<b>borocean.com</b>/</div>
+  </div>
+  <div class="page">
+
+    <!-- 1. Üst bar -->
+    <div class="topbar">
+      <div class="logo">
+        <svg viewBox="0 0 120 120" width="22" height="22" style="color:var(--accent)" aria-label="Borocean logomark">
+          <line x1="28" y1="46" x2="28" y2="88" stroke="currentColor" stroke-width="4" stroke-linecap="round" opacity=".35"/>
+          <rect x="20" y="58" width="16" height="22" rx="6" fill="currentColor" opacity=".35"/>
+          <line x1="58" y1="26" x2="58" y2="92" stroke="currentColor" stroke-width="4.5" stroke-linecap="round" opacity=".68"/>
+          <rect x="49" y="40" width="18" height="30" rx="7" fill="currentColor" opacity=".68"/>
+          <line x1="90" y1="8" x2="90" y2="96" stroke="currentColor" stroke-width="5" stroke-linecap="round"/>
+          <rect x="80" y="24" width="20" height="38" rx="8" fill="currentColor"/>
+        </svg>
+        Borocean
+      </div>
+      <a class="loginlink" href="#">Giriş Yap</a>
+    </div>
+
+    <!-- 2. Hero -->
+    <div class="hero">
+      <div>
+        <h1>Hisse analizi, portföy takibi ve yapay zeka raporları tek uygulamada</h1>
+        <p>Borocean, ABD borsalarındaki hisseleri kamuya açık verilerle temel ve teknik analiz açısından incelemen için bir araştırma aracı. Al/sat önerisi vermez; verileri anlaşılır hale getirir.</p>
+        <a class="cta" href="#">Ücretsiz Başla <svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></a>
+        <p class="freenote">Ücretsiz. Kayıt olmak bir dakika sürer.</p>
+      </div>
+      <div class="shotplaceholder">
+        <svg class="i" viewBox="0 0 24 24" width="28" height="28" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg>
+        <b>Gerçek ekran görüntüsü buraya gelecek</b>
+        <span>Hisse detay sayfası — Genel Bakış sekmesi, fiyat grafiği + Metrik Puanı kartı görünür durumda (örn. AAPL, dolu veriyle). bmad-build'de yakalanır.</span>
+      </div>
+    </div>
+
+    <!-- 3. Sorun -->
+    <div class="problem">
+      <p>Bir hisseyi değerlendirmek genelde birden fazla uygulama, birden fazla dil ve doğrulanamayan kaynaklar arasında geziniliyor demek. Borocean temel analiz, teknik analiz ve yapay zekâ destekli özetleri tek ekranda birleştirir.</p>
+    </div>
+
+    <!-- 4. Özellikler (gruplanmış) -->
+    <div class="features">
+      <div class="groups">
+        <div>
+          <h2 class="group-label">Araştır</h2>
+          <div class="card"><h3>Temel analiz ve sektör kıyaslaması</h3><p>F/K, PD/DD, ROE, borçluluk ve kâr marjlarını sektör ortalamasıyla karşılaştır; 5 yıllık finansal geçmişi grafikte gör.</p></div>
+          <div class="card"><h3>Teknik analiz</h3><p>Mum grafiği, 30'dan fazla gösterge, çizim araçları ve kural bazlı sinyallerle fiyat hareketini incele.</p></div>
+        </div>
+        <div>
+          <h2 class="group-label">Takip Et</h2>
+          <div class="card"><h3>Tarama ve karşılaştırma</h3><p>Temel ve teknik kriterleri birleştirerek hisse tara, taramaları kaydet, hisseleri yan yana karşılaştır.</p></div>
+          <div class="card"><h3>İzleme listesi ve alarmlar</h3><p>Takip ettiğin hisseler için fiyat ve gösterge alarmı kur; tetiklendiğinde bildirim al.</p></div>
+          <div class="card"><h3>Portföy takibi</h3><p>Pozisyonlarının değerini ve kâr/zararını izle; portföyündeki hisselerdeki önemli gelişmeler her sabah önüne gelsin.</p></div>
+        </div>
+        <div>
+          <h2 class="group-label">Karar Desteği</h2>
+          <div class="card"><h3>Simülasyon ve yapay zeka raporları</h3><p>Sanal bütçeyle alım-satım dene; kamuya açık verilere dayanan yapay zeka analiz raporlarını ve günlük sektör bültenini oku.</p></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 5. Üç Görüş -->
+    <div class="triad-wrap">
+      <h2 class="sec-title">Aynı hisseye üç ayrı görüş</h2>
+      <p class="sec-sub">Her görüş ayrı ve açıkça etiketli. Hiçbiri "al" veya "sat" demez.</p>
+      <div class="triad">
+        <div class="tcard">
+          <span class="tag live">Üretimde</span>
+          <h3>Kural Bazlı Puan</h3>
+          <p>0-100 metrik puanı, kategori kırılımı (değerleme, kârlılık, borçluluk, büyüme, teknik görünüm) — al/sat etiketi yok.</p>
+        </div>
+        <div class="tcard">
+          <span class="tag live">Üretimde</span>
+          <h3>AI Temel Analiz Yorumu</h3>
+          <p>Kamuya açık temel verilere dayanan, kişiselleştirilmemiş yorum.</p>
+        </div>
+        <div class="tcard">
+          <span class="tag live">Üretimde</span>
+          <h3>AI Teknik Okuma</h3>
+          <p>Grafik örüntüsünü okuyan, ayrı ve açıkça etiketlenmiş bir ikinci görüş.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- 6. Şeffaflık bandı -->
+    <div class="trust">
+      <div class="trustcard">
+        <svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2 4 6v6c0 5 8 10 8 10s8-5 8-10V6z"/></svg>
+        <p>Borocean bir aracı kurum değildir. Hiçbir emir iletmez, kişiye özel yatırım tavsiyesi vermez — yalnızca kamuya açık verileri analiz eder. <a href="#">Kullanım Koşulları</a> · <a href="#">KVKK Aydınlatma Metni</a></p>
+      </div>
+    </div>
+
+    <!-- 7. Son CTA -->
+    <div class="finalcta">
+      <a class="cta" href="#">Ücretsiz Başla <svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></a>
+    </div>
+
+    <!-- 8. Alt bilgi -->
+    <footer>
+      <p>Bu içerik yatırım tavsiyesi değildir; yalnızca kamuya açık verilerin analizi ve bilgilendirme amacı taşır.</p>
+      <nav>
+        <a href="#">Kullanım Koşulları</a>
+        <a href="#">KVKK Aydınlatma Metni</a>
+        <a href="#">Gizlilik Politikası</a>
+      </nav>
+    </footer>
+
+  </div>
+</div>
+<p class="note">Illustrative mock (dark mode, ≥ sm width, anonymous visitor). Hero image is a labeled placeholder, not a real screenshot — capture happens in bmad-build. Source of truth: EXPERIENCE.md › Karşılama Sayfası (/).</p>
+</body>
+</html>

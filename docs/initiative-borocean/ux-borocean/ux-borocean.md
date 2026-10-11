@@ -2,7 +2,7 @@
 type: ux
 title: "Borocean UX"
 status: final
-updated: 2026-10-09
+updated: 2026-10-10
 spines: [DESIGN.md, EXPERIENCE.md]
 ---
 
@@ -20,6 +20,7 @@ Canlıdaki arayüzün incelenmesinden çıkan iyileştirmeler, öncelik sırası
 |---|---|---|---|---|
 | 16.1 | **Kontrastı WCAG AA'ya çıkarmak** | Ölçüldü (aşağıdaki tablo): `text-tertiary` her iki modda AA altında. Bu renk "yatırım tavsiyesi değildir" ibaresini taşıyor, yani okunamayan bir hukuki metin. Koyu moddaki birincil düğme metni ve açık moddaki yeşil ve turuncu da AA altında. | Yüksek | — |
 | 16.2 | **Mobilde gerçek gezinme** | Ekranlar durum bayraklarıyla açılıyor. Android geri tuşu uygulamadan çıkıyor, push yalnızca portföyü açabiliyor, derin bağlantı yok. | Yüksek | Mağaza yayını ileride; geri tuşu ve derin bağlantı yine gerekli |
+| 16.8 | **Karşılama sayfasını (`/`) gerçek bir tanıtım sayfasına dönüştürmek** | Kullanıcı isteği (2026-10-10): sayfa "direkt üye girişi" gibi hissettiriyor — Giriş/Kayıt düğmeleri çok erken, ekran görüntüsü yok, sayfa dar/kısa. İçerik zaten doğru ve uyumluydu (EXPERIENCE.md'de ayrıntılı yapı var); eksik olan sunumdu. | Yüksek (ilk izlenim/dönüşüm) | — |
 | 16.3 | **Web'de kalıcı gezinme** | Alt sayfalardan başka bir alt sayfaya ancak Panel'e dönerek gidiliyor; geri tuşuna bağımlı. | Orta | — |
 | 16.4 | **İlk kullanım rehberi** | Yeni kullanıcının Paneli boş (ilgi alanı yok, portföy yok, gelişme yok). İlk girişte ilgi alanı seçimi ve ilk hisse araması önerilmeli. `[ASSUMPTION]` | Orta | — |
 | 16.5 | **Mobilde manuel tema seçimi** | Web'de sistem/koyu/açık seçimi var, mobil yalnızca sistem temasına uyuyor (AD-16 eşitlik). | Düşük | — |
