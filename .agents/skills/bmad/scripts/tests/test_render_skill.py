@@ -24,6 +24,8 @@ from pathlib import Path
 from types import SimpleNamespace
 from unittest import mock
 
+from helpers import chmod
+
 SCRIPTS_SRC = Path(__file__).resolve().parents[1]
 REPO = SCRIPTS_SRC.parents[2]
 SKILLS_SRC = REPO / "skills"
@@ -94,10 +96,15 @@ class PublishInternalsTests(unittest.TestCase):
             with self.assertRaisesRegex(rs.RenderError, "collision or corruption"):
                 rs._publish(dest, outputs, {**manifest, "extra": True})
 
-            (dest / "extra.md").write_text("stray\n", encoding="utf-8")
-            with self.assertRaisesRegex(rs.RenderError, "unexpected or missing"):
+            (dest / "Thumbs.db").write_bytes(b"stray")
+            rs._publish(dest, outputs, manifest)
+            self.assertEqual((dest / "Thumbs.db").read_bytes(), b"stray")
+
+            (dest / "workflow.md").unlink()
+            with self.assertRaisesRegex(
+                rs.RenderError, rf"missing rendered files: workflow\.md in {re.escape(str(dest))}"
+            ):
                 rs._publish(dest, outputs, manifest)
-            (dest / "extra.md").unlink()
 
             (dest / "workflow.md").write_bytes(b"hello\ncorrupt")
             with self.assertRaisesRegex(rs.RenderError, "hash mismatch"):
@@ -142,7 +149,13 @@ class RenderSkillTests(unittest.TestCase):
         return _copy_skill(ws.outer / "skills" / name, name)
 
     def _cli(
-        self, project: Path, skill: Path, *, cwd: Path | None = None, args: tuple[str, ...] = ()
+        self,
+        project: Path,
+        skill: Path,
+        *,
+        cwd: Path | None = None,
+        args: tuple[str, ...] = (),
+        timeout: float | None = None,
     ) -> subprocess.CompletedProcess[str]:
         return subprocess.run(
             [
@@ -158,6 +171,7 @@ class RenderSkillTests(unittest.TestCase):
             text=True,
             capture_output=True,
             check=False,
+            timeout=timeout,
         )
 
     def _entry(self, result: subprocess.CompletedProcess[str]) -> Path:
@@ -185,8 +199,9 @@ class RenderSkillTests(unittest.TestCase):
         markdown = _markdown(snap)
         self.assertIsNone(COMPILE_TOKEN.search(markdown), markdown)
         self.assertNotIn("{skill-root}", markdown)
-        artifacts = str(project.resolve() / "_bmad-output" / "implementation-artifacts")
-        self.assertIn(artifacts, markdown)
+        if skill_name != "bmad-retrospective":
+            artifacts = (project.resolve() / "_bmad-output").as_posix()
+            self.assertIn(artifacts, markdown)
         return snap
 
     def _fixture_skill(self, ws: SimpleNamespace, defaults: str, workflow: str, **sources: str) -> Path:
@@ -310,6 +325,55 @@ class RenderSkillTests(unittest.TestCase):
                 with self.assertRaisesRegex(rs.RenderError, "conflicts with earlier --set"):
                     rs.render(ws.project, skill, assignments=assignments)
 
+    def test_undeclared_persistent_key_halts_and_unread_declared_key_renders(self):
+        ws = self._workspace()
+        skill = self._fixture_skill(ws, '[workflow]\nmessage = "base"\nunread = "base"\n', "{{ workflow.message }}")
+        team = ws.bmad / "custom" / f"{skill.name}.toml"
+        user = ws.bmad / "custom" / f"{skill.name}.user.toml"
+        # A declared key this render never reads is still a valid persistent override.
+        user.write_text('[workflow]\nunread = "changed"\n', encoding="utf-8")
+        self.assertEqual(rs.render(ws.project, skill).read_text(), "base")
+        generations = set((ws.bmad / "render" / skill.name).rglob("manifest.json"))
+        for layer, content, expected in (
+            (
+                user,
+                '[workflow]\nmessage = "ok"\nmesage = "typo"\n',
+                r"user\.toml sets keys fixture does not declare: workflow\.mesage$",
+            ),
+            (
+                team,
+                '[[workflow.review_layers]]\nid = "stale"\nname = "Stale"\ninstruction = "x"\n',
+                r"workflow\.review_layers$",
+            ),
+            (team, "[workflow.message]\nnested = true\n", r"workflow\.message\.nested$"),
+            (team, 'message = "top level"\n', r"does not declare: message$"),
+        ):
+            with self.subTest(layer=layer.name, content=content):
+                layer.write_text(content, encoding="utf-8")
+                with self.assertRaisesRegex(rs.RenderError, expected):
+                    rs.render(ws.project, skill)
+                self.assertEqual(set((ws.bmad / "render" / skill.name).rglob("manifest.json")), generations)
+                layer.unlink()
+
+    @unittest.skipIf(hasattr(os, "geteuid") and os.geteuid() == 0, "root bypasses file permission bits")
+    def test_render_folder_that_refuses_new_files_halts(self):
+        ws = self._workspace()
+        skill = self._fixture_skill(ws, '[workflow]\nmessage = "shipped"\n', "{{ workflow.message }}\n")
+        namespace = _namespace_dir(ws.project, "fixture")
+        namespace.mkdir(parents=True)
+        chmod(namespace, 0o555, deny="WD,AD")
+        self.addCleanup(chmod, namespace, 0o755)
+
+        # The timeout: on Windows, older Pythons' mkdtemp retried here some two
+        # billion times, and a hang must fail this test, not the job.
+        result = self._cli(ws.project, skill, timeout=60)
+
+        self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
+        self.assertTrue(result.stdout.startswith("HALT:"), result.stdout)
+        self.assertIn("denied", result.stdout.lower())
+        self.assertNotIn("Traceback", result.stdout + result.stderr)
+        self.assertEqual(list(namespace.iterdir()), [])
+
     def test_invalid_invocation_halts_before_publication(self):
         invalid = (
             ("--set", "workflow.message"),
@@ -361,12 +425,12 @@ class RenderSkillTests(unittest.TestCase):
         left = rs.render(ws.project, skill)
         before = _files(left.parent)
         # Standalone tag lines leave no blank lines behind.
-        self.assertEqual(left.read_text(), f"Left {left.parent / 'left.md'}\nEnabled\n")
+        self.assertEqual(left.read_text(), f"Left {(left.parent / 'left.md').as_posix()}\nEnabled\n")
         self.assertEqual((left.parent / "left.md").read_text(), "Left detail\n")
         self.assertFalse((left.parent / "right.md").exists())
         right = rs.render(ws.project, skill, assignments=["workflow.choice=right"])
         self.assertNotEqual(left, right)
-        self.assertEqual(right.read_text(), f"Right {right.parent / 'right.md'}\n")
+        self.assertEqual(right.read_text(), f"Right {(right.parent / 'right.md').as_posix()}\n")
         self.assertFalse((right.parent / "left.md").exists())
         self.assertTrue((right.parent / "right.md").exists())
         self.assertEqual(before, _files(left.parent))
@@ -419,7 +483,7 @@ class RenderSkillTests(unittest.TestCase):
         snap = entry.parent
         self.assertEqual(
             entry.read_text(),
-            f"* one\n* two\n- one\n- two\na: Read {snap}/a.md\n#### A (`a`)\n\nRead {snap}/a.md\n",
+            f"* one\n* two\n- one\n- two\na: Read {snap.as_posix()}/a.md\n#### A (`a`)\n\nRead {snap.as_posix()}/a.md\n",
         )
         manifest = json.loads((snap / "manifest.json").read_text())
         self.assertEqual(
@@ -451,6 +515,7 @@ class RenderSkillTests(unittest.TestCase):
             "{% for item in workflow.count %}{{ item }}{% endfor %}\n",
             '{{ rendered("missing.md") }}\n',
             "{{ rendered(workflow.items) }}\n",
+            '{{ halt("rejected") }}\n',
         )
         for template in templates:
             with self.subTest(template=template):
@@ -470,6 +535,13 @@ class RenderSkillTests(unittest.TestCase):
             rs.RenderError, r"^detail\.md:1: missing customization parameter `workflow\.missing`$"
         ):
             rs.render(ws.project, skill)
+        guard = '{% if workflow.value not in ("two", "three") %}{{ halt("value must be two or three, not " ~ workflow.value) }}{% endif %}\n'
+        (skill / "detail.md").write_text(guard + "kept\n", encoding="utf-8")
+        with self.assertRaisesRegex(rs.RenderError, r"^detail\.md:1: value must be two or three, not one$"):
+            rs.render(ws.project, skill)
+        self.assertEqual(
+            _files(rs.render(ws.project, skill, assignments=["workflow.value=two"]).parent)["detail.md"], b"kept\n"
+        )
 
     def test_excluded_entry_and_surviving_reference_to_excluded_file_halt(self):
         for workflow in (
@@ -501,7 +573,7 @@ class RenderSkillTests(unittest.TestCase):
         literal = "{% if workflow.missing %}\n{{ workflow.missing }} {{ config.missing }} {# note #}\n{% endif %}"
         literal += '\n{{ rendered("missing.md") }} {skill-root}/detail.md'
         entry = rs.render(ws.project, skill, assignments=[f"workflow.message={literal}"])
-        self.assertEqual(entry.read_text(), literal.replace("{skill-root}", str(entry.parent)) + "\n")
+        self.assertEqual(entry.read_text(), literal.replace("{skill-root}", entry.parent.as_posix()) + "\n")
 
     def test_jinja2_version_is_part_of_the_generation_identity(self):
         ws = self._workspace()
@@ -520,12 +592,12 @@ class RenderSkillTests(unittest.TestCase):
             with self.subTest(name):
                 ws = self._workspace()
                 skill = self._skill(ws, name)
-                workflow = rs.render(ws.project, skill)
+                workflow = rs.render(ws.project, skill, assignments=["workflow.review=thorough"])
                 snap = self._assert_rendered(workflow, ws.project, name)
-                self.assertIn("{spec_file}", _markdown(snap))
+                self.assertIn("{plan_file}", _markdown(snap))
                 hunter = snap / "review-prompts" / "edge-case-hunter.md"
                 self.assertTrue(hunter.is_file())
-                self.assertIn(str(hunter), _markdown(snap))
+                self.assertIn(hunter.as_posix(), _markdown(snap))
 
     def test_rendered_skills_publish_snapshots_without_skill_root(self):
         for name in RENDERED_SKILLS:
@@ -535,21 +607,38 @@ class RenderSkillTests(unittest.TestCase):
                 workflow = rs.render(ws.project, skill)
                 self._assert_rendered(workflow, ws.project, name)
 
+    def test_build_skills_render_each_pinned_route(self):
+        for name in ("bmad-build", "bmad-build-auto"):
+            for route in ("oneshot", "full"):
+                with self.subTest(name=name, route=route):
+                    ws = self._workspace()
+                    skill = self._skill(ws, name)
+                    workflow = rs.render(ws.project, skill, assignments=[f"workflow.route={route}"])
+                    self._assert_rendered(workflow, ws.project, name)
+
+    def test_build_skills_default_to_quick_review(self):
+        for name in ("bmad-build", "bmad-build-auto"):
+            with self.subTest(name):
+                ws = self._workspace()
+                skill = self._skill(ws, name)
+                snap = rs.render(ws.project, skill).parent
+                markdown = _markdown(snap)
+                self.assertIn("Write `review: 'quick'` and `review_source: 'pinned'`", markdown)
+                self.assertIn("Quick (`quick`)", markdown)
+                self.assertNotIn((snap / "review-prompts" / "edge-case-hunter.md").as_posix(), markdown)
+
     def test_skill_root_binds_bundled_scripts_to_the_installed_skill(self):
         ws = self._workspace()
         skill = self._skill(ws, "bmad-retrospective")
         snap = self._assert_rendered(rs.render(ws.project, skill), ws.project, "bmad-retrospective")
         markdown = _markdown(snap)
-        self.assertIn(str(skill / "scripts" / "sprint_status.py"), markdown)
-        self.assertIn("epic: {{epic_number}}\n", markdown)
-        self.assertIn("epic-{{prev}}-retro-*.md", markdown)
-        self.assertIn(str(skill / "scripts" / "git_evidence.py"), markdown)
+        self.assertIn((skill / "scripts" / "git_evidence.py").as_posix(), markdown)
         manifest = json.loads((snap / "manifest.json").read_text(encoding="utf-8"))
         self.assertEqual(manifest["inputs"]["skill_root"], str(skill.resolve()))
         elsewhere = _copy_skill(ws.outer / "elsewhere" / "bmad-retrospective", "bmad-retrospective")
         other = rs.render(ws.project, elsewhere)
         self.assertNotEqual(other.parent, snap)
-        self.assertIn(str(elsewhere / "scripts" / "sprint_status.py"), _markdown(other.parent))
+        self.assertIn((elsewhere / "scripts" / "git_evidence.py").as_posix(), _markdown(other.parent))
 
     def test_cli_from_nested_cwd_dispatches_one_absolute_workflow(self):
         ws = self._workspace()
@@ -578,7 +667,7 @@ class RenderSkillTests(unittest.TestCase):
         before = rs.render(ws.project, skill)
         before_files = _files(before.parent)
         (ws.bmad / "custom" / "config.toml").write_text(
-            '[modules.bmm]\nimplementation_artifacts = "{project-root}/impl-v2"\n',
+            '[core]\noutput_folder = "{project-root}/impl-v2"\n',
             encoding="utf-8",
         )
         after_config = rs.render(ws.project, skill)
@@ -586,8 +675,8 @@ class RenderSkillTests(unittest.TestCase):
         self.assertIn("/impl-v2/", after_config.read_text(encoding="utf-8"))
         self.assertTrue(before.exists())
 
-        (skill / "compile-epic-context.md").write_text(
-            (skill / "compile-epic-context.md").read_text(encoding="utf-8") + "\n<!-- effective change -->\n",
+        (skill / "plan-template.md").write_text(
+            (skill / "plan-template.md").read_text(encoding="utf-8") + "\n<!-- effective change -->\n",
             encoding="utf-8",
         )
         after_source = rs.render(ws.project, skill)
@@ -603,8 +692,8 @@ class RenderSkillTests(unittest.TestCase):
         one = rs.render(first.project, skill)
         two = rs.render(second.project, skill)
         self.assertNotEqual(one, two)
-        self.assertIn(str(first.project.resolve()), one.read_text(encoding="utf-8"))
-        self.assertIn(str(second.project.resolve()), two.read_text(encoding="utf-8"))
+        self.assertIn(first.project.resolve().as_posix(), one.read_text(encoding="utf-8"))
+        self.assertIn(second.project.resolve().as_posix(), two.read_text(encoding="utf-8"))
 
     def test_concurrent_cli_renderers_reuse_one_complete_generation(self):
         ws = self._workspace()
@@ -634,7 +723,7 @@ class RenderSkillTests(unittest.TestCase):
     def test_missing_wrong_type_and_non_string_layer_id_halt(self):
         template = _team_config(Path("project"))
         missing = template.replace(
-            'implementation_artifacts = "{project-root}/_bmad-output/implementation-artifacts"\n',
+            'output_folder = "{project-root}/_bmad-output"\n',
             "",
         )
         ws = self._workspace(config=missing)
@@ -643,8 +732,8 @@ class RenderSkillTests(unittest.TestCase):
         self.assertIn("missing config value", result.stdout)
 
         wrong = template.replace(
-            'implementation_artifacts = "{project-root}/_bmad-output/implementation-artifacts"',
-            "implementation_artifacts = 42",
+            'output_folder = "{project-root}/_bmad-output"',
+            "output_folder = 42",
         )
         ws = self._workspace(config=wrong)
         skill = self._skill(ws, "bmad-build")
@@ -654,7 +743,7 @@ class RenderSkillTests(unittest.TestCase):
         ws = self._workspace()
         skill = self._skill(ws, "bmad-build")
         (ws.bmad / "custom" / f"{skill.name}.toml").write_text(
-            '[[workflow.review_layers]]\nid = 42\nname = "bad"\ninstruction = "bad"\n',
+            '[[workflow.thorough_lenses]]\nid = 42\nname = "bad"\ninstruction = "bad"\n',
             encoding="utf-8",
         )
         result = self._cli(ws.project, skill)
@@ -679,7 +768,9 @@ class RenderSkillTests(unittest.TestCase):
         (ws.bmad / "custom" / f"{skill.name}.toml").write_text(
             "\n".join(
                 [
-                    "[[workflow.review_layers]]",
+                    "[workflow]",
+                    'review = "thorough"',
+                    "[[workflow.thorough_lenses]]",
                     'id = "blind-hunter"',
                     'name = "Replacement"',
                     'instruction = "Run replacement review."',
@@ -695,25 +786,25 @@ class RenderSkillTests(unittest.TestCase):
         self.assertIn("Run replacement review.", review)
 
         defaults = tomllib.loads((skill / "customize.toml").read_text(encoding="utf-8"))
-        disabled = "\n".join(
-            f'[[workflow.review_layers]]\nid = "{layer["id"]}"\nname = "disabled"\ninstruction = ""\n'
-            for layer in defaults["workflow"]["review_layers"]
+        disabled = '[workflow]\nreview = "thorough"\n' + "\n".join(
+            f'[[workflow.thorough_lenses]]\nid = "{layer["id"]}"\nname = "disabled"\ninstruction = ""\n'
+            for layer in defaults["workflow"]["thorough_lenses"]
         )
         (ws.bmad / "custom" / f"{skill.name}.toml").write_text(disabled, encoding="utf-8")
         review = (rs.render(ws.project, skill).parent / "step-04-review.md").read_text(encoding="utf-8")
         self.assertIn("No active review layers. HALT", review)
 
-    def test_non_empty_open_spec_override_reaches_both_terminal_routes(self):
+    def test_non_empty_open_plan_override_reaches_both_terminal_routes(self):
         ws = self._workspace()
         skill = self._skill(ws, "bmad-build")
         (ws.bmad / "custom" / f"{skill.name}.user.toml").write_text(
-            '[workflow]\nopen_spec = "OPEN-SPEC-SENTINEL {project-root} {spec_file}"\n',
+            '[workflow]\nopen_plan = "OPEN-PLAN-SENTINEL {project-root} {plan_file}"\n',
             encoding="utf-8",
         )
         snap = rs.render(ws.project, skill).parent
         for name in ("step-05-present.md", "step-oneshot.md"):
             rendered = (snap / name).read_text(encoding="utf-8")
-            self.assertIn("OPEN-SPEC-SENTINEL {project-root} {spec_file}", rendered)
+            self.assertIn("OPEN-PLAN-SENTINEL {project-root} {plan_file}", rendered)
 
     def test_installed_renderer_identity_change_publishes_a_new_generation(self):
         ws = self._workspace()
@@ -734,14 +825,10 @@ class RenderSkillTests(unittest.TestCase):
         workflow = rs.render(ws.project, skill)
         self.assertIn(f"{os.sep}render{os.sep}plain-workflow{os.sep}", str(workflow))
         self.assertTrue((workflow.parent / "step.md").is_file())
-        self.assertIn(str(workflow.parent / "step.md"), workflow.read_text(encoding="utf-8"))
+        self.assertIn((workflow.parent / "step.md").as_posix(), workflow.read_text(encoding="utf-8"))
 
     def test_ambiguous_shorthand_and_source_symlink_escape_halt(self):
-        config = _team_config(Path("project")).replace(
-            "[core]\n",
-            '[core]\nimplementation_artifacts = "{project-root}/dup"\n',
-            1,
-        )
+        config = _team_config(Path("project")) + '\n[modules.bmm]\noutput_folder = "{project-root}/dup"\n'
         ws = self._workspace(config=config)
         skill = self._skill(ws, "bmad-build")
         result = self._cli(ws.project, skill)
@@ -763,13 +850,13 @@ class RenderSkillTests(unittest.TestCase):
         self.assertLessEqual(len(workflow.parent.parent.name), 93)
 
     def test_snapshot_paths_stay_opaque_when_the_project_name_looks_like_tokens(self):
-        ws = self._workspace(name="{{ workflow.on_complete }}-{{ config.planning_artifacts }}")
+        ws = self._workspace(name="{{ workflow.on_complete }}-{{ config.output_folder }}")
         skill = self._skill(ws, "bmad-build")
         workflow = rs.render(ws.project, skill)
         text = workflow.read_text(encoding="utf-8")
         match = re.search(r"`([^`]*step-01-clarify-and-route\.md)`", text)
         self.assertIsNotNone(match, text)
-        self.assertTrue(match.group(1).startswith(str(ws.project.resolve())))
+        self.assertTrue(match.group(1).startswith(ws.project.resolve().as_posix()))
         self.assertTrue(Path(match.group(1)).is_file())
 
     def test_publication_failure_does_not_dispatch_or_alter_another_root(self):
@@ -798,6 +885,26 @@ class RenderSkillTests(unittest.TestCase):
         self.assertNotEqual(result.returncode, 0)
         self.assertIn("hash mismatch", result.stdout)
         self.assertTrue(workflow.read_text(encoding="utf-8").endswith("corrupt"))
+
+    def test_stray_file_in_generation_is_ignored_and_missing_output_is_named(self):
+        ws = self._workspace()
+        skill = self._skill(ws, "bmad-build")
+        workflow = rs.render(ws.project, skill)
+        stray = workflow.parent / "Thumbs.db"
+        stray.write_bytes(b"explorer")
+        result = self._cli(ws.project, skill)
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertEqual(result.stdout, f"{DISPATCH_PREFIX}{workflow}\n")
+        self.assertEqual(stray.read_bytes(), b"explorer")
+
+        workflow.unlink()
+        result = self._cli(ws.project, skill)
+        self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
+        self.assertEqual(len(result.stdout.splitlines()), 1, result.stdout)
+        self.assertNotIn("Traceback", result.stdout + result.stderr)
+        self.assertIn(f"missing rendered files: workflow.md in {workflow.parent}", result.stdout)
+        self.assertIn("deleting that folder is safe", result.stdout)
+        self.assertFalse(workflow.exists())
 
     def test_skill_md_command_dispatches_for_every_rendered_skill(self):
         for name in RENDERED_SKILLS:

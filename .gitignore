@@ -23,3 +23,8 @@ apps/api/app/models/
 
 # Vercel CLI local link (project/org ids)
 .vercel/
+
+# BMAD: other agent hosts' skill symlink mirrors and the render cache
+data/
+.aider-desk/
+_bmad/render/

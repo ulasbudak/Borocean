@@ -14,7 +14,6 @@ import os
 import re
 import shutil
 import sys
-import tempfile
 import tomllib
 from datetime import date, time
 from pathlib import Path
@@ -110,6 +109,24 @@ def _leaf_paths(table: dict[str, Any], prefix: str = "") -> set[str]:
     return leaves
 
 
+def _declares(defaults: dict[str, Any], path: str) -> bool:
+    node: Any = defaults
+    for part in path.split("."):
+        if not isinstance(node, dict) or part not in node:
+            return False
+        node = node[part]
+    return True
+
+
+def _check_persistent_layers(project_root: Path, skill_dir: Path, defaults: dict[str, Any] | None) -> None:
+    """A persistent override may only set keys the skill declares; a stale or misspelled key halts."""
+    custom_dir = project_root / "_bmad" / "custom"
+    for layer in (custom_dir / f"{skill_dir.name}.toml", custom_dir / f"{skill_dir.name}.user.toml"):
+        undeclared = sorted(path for path in _leaf_paths(load_toml(layer)) if not _declares(defaults or {}, path))
+        if undeclared:
+            raise RenderError(f"{layer} sets keys {skill_dir.name} does not declare: {', '.join(undeclared)}")
+
+
 def _lookup(data: dict[str, Any], dotted_path: str, label: str) -> Any:
     current: Any = data
     for part in dotted_path.split("."):
@@ -184,7 +201,7 @@ def _resolve_config_value(value: Any, label: str, project_root: Path) -> str:
     text = _require_string(value, label)
     if "{project-root}" not in text:
         return text
-    resolved = text.replace("{project-root}", str(project_root))
+    resolved = text.replace("{project-root}", project_root.as_posix())
     if not Path(resolved).is_absolute():
         raise RenderError(f"{label} must resolve to an absolute path: {resolved}")
     return resolved
@@ -241,7 +258,7 @@ def _format_review_layers(layers: list[dict[str, str]]) -> str:
 def _resolve_customization_value(value: Any, default: Any, label: str) -> Any:
     """Validate an effective customization leaf against the shape of its shipped default."""
     if isinstance(default, str):
-        allow_empty = not default.strip() or label == "customization.workflow.open_spec"
+        allow_empty = not default.strip()
         return _require_string(value, label, allow_empty=allow_empty)
     if isinstance(default, list):
         if default and all(isinstance(item, dict) for item in default):
@@ -282,7 +299,7 @@ class _LayerList(list):
 
 def _bind_customization(value: Any, label: str, destination: Path) -> Any:
     """Bind `{skill-root}` in customization prose to the generation and wrap lists for insertion."""
-    root = str(destination)
+    root = destination.as_posix()
     if isinstance(value, str):
         return _Text(value.replace("{skill-root}", root), label)
     if isinstance(value, list):
@@ -400,14 +417,20 @@ class _RenderContext:
                 self,
             ),
             "rendered": self._rendered,
+            "halt": self._halt,
         }
+
+    @staticmethod
+    def _halt(message: Any) -> str:
+        """Let a template reject its inputs; the caller prefixes the source and line."""
+        raise RenderError(str(message))
 
     @jinja2.pass_context
     def _rendered(self, context: jinja2.runtime.Context, target: Any) -> str:
         if not isinstance(target, str) or target not in self._source_names:
             raise RenderError(f"rendered() targets undeclared source: {target}")
         self.links.setdefault(context.name or "", set()).add(target)
-        return str(self.destination / target)
+        return (self.destination / target).as_posix()
 
 
 class _SourceLoader(jinja2.BaseLoader):
@@ -439,7 +462,7 @@ def _render_sources(sources: dict[str, str], skill_dir: Path, context: _RenderCo
     """Render every source as a Jinja2 template against the context; return the non-empty outputs."""
     # Skill sources name their bundled non-Markdown files (scripts, assets)
     # through {skill-root}; those stay in the installed skill directory.
-    bound = {name: content.replace("{skill-root}", str(skill_dir)) for name, content in sources.items()}
+    bound = {name: content.replace("{skill-root}", skill_dir.as_posix()) for name, content in sources.items()}
     environment = jinja2.Environment(
         loader=_SourceLoader(bound),
         undefined=jinja2.StrictUndefined,
@@ -474,10 +497,14 @@ def _verify_existing(destination: Path, manifest: dict[str, Any]) -> None:
         raise RenderError(f"corrupt existing generation {destination}: {error}") from error
     if existing != manifest:
         raise RenderError(f"generation collision or corruption at {destination}")
-    expected_files = set(manifest["outputs"]) | {"manifest.json"}
-    actual_files = {path.relative_to(destination).as_posix() for path in destination.rglob("*") if path.is_file()}
-    if actual_files != expected_files:
-        raise RenderError(f"generation contains unexpected or missing files: {destination}")
+    # Only the manifest's own files are verified. Anything else in the folder (Thumbs.db,
+    # editor swap files, sync conflict copies) is read by nobody and is left alone.
+    missing = sorted(name for name in manifest["outputs"] if not (destination / name).is_file())
+    if missing:
+        raise RenderError(
+            f"generation is missing rendered files: {', '.join(missing)} in {destination}; "
+            "deleting that folder is safe because the next run renders it again"
+        )
     for name, expected_hash in manifest["outputs"].items():
         try:
             actual_hash = _hash_bytes((destination / name).read_bytes())
@@ -492,7 +519,11 @@ def _publish(destination: Path, outputs: dict[str, bytes], manifest: dict[str, A
     if destination.exists():
         _verify_existing(destination, manifest)
         return
-    staging = Path(tempfile.mkdtemp(prefix=".staging-", dir=destination.parent))
+    # One attempt, not mkdtemp: on Windows, older Pythons' mkdtemp takes "access denied"
+    # for a name collision and tries the next name, some two billion times. The render
+    # would hang in a folder it cannot write to instead of halting.
+    staging = destination.parent / f".staging-{os.urandom(8).hex()}"
+    staging.mkdir(mode=0o700)
     try:
         for name, content in outputs.items():
             path = staging / name
@@ -526,6 +557,7 @@ def render(
     central = load_central_config(project_root)
     has_customization = bool(overrides is not None or assignments) or (skill_dir / "customize.toml").is_file()
     defaults = load_toml(skill_dir / "customize.toml", required=True) if has_customization else None
+    _check_persistent_layers(project_root, skill_dir, defaults)
     customization = load_customization(project_root, skill_dir) if has_customization else {}
     supplied: set[str] = set()
     if defaults is not None:
@@ -588,6 +620,16 @@ def render(
     return destination / "workflow.md"
 
 
+def report_owed_setup(skill_dir: Path, project_root: Path) -> None:
+    # Runs before rendering so the note lands ahead of the instruction to follow,
+    # and still shows when rendering halts. It must never fail the render.
+    try:
+        import setup_check
+    except Exception:
+        return
+    setup_check.report(skill_dir, project_root)
+
+
 def main() -> int:
     parser = _ArgumentParser(description=__doc__)
     parser.add_argument("--project-root", required=True)
@@ -599,6 +641,7 @@ def main() -> int:
         reconfigure(encoding="utf-8")
     try:
         args = parser.parse_args()
+        report_owed_setup(Path(args.skill).resolve(), Path(args.project_root).resolve())
         entry = render(
             Path(args.project_root), Path(args.skill), overrides=args.overrides, assignments=args.assignments
         )
@@ -610,4 +653,8 @@ def main() -> int:
 
 
 if __name__ == "__main__":
+    if sys.platform == "win32":
+        # Piped output on Windows defaults to a legacy code page, not UTF-8.
+        sys.stdout.reconfigure(encoding="utf-8")
+        sys.stderr.reconfigure(encoding="utf-8")
     raise SystemExit(main())

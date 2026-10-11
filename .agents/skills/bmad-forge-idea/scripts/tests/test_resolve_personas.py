@@ -4,6 +4,8 @@
 # ///
 """Unit tests for resolve_personas.py — pool merge, alias, party resolution."""
 
+import contextlib
+import io
 import sys
 import tempfile
 import unittest
@@ -149,6 +151,118 @@ class TestResolverInvocation(unittest.TestCase):
             cmd = self._captured_command(tmp)
             self.assertIn("--project-root", cmd)
             self.assertEqual(cmd[cmd.index("--project-root") + 1], str(Path(tmp) / "project"))
+
+
+class TestLoadRoster(unittest.TestCase):
+    def _load(self, replies):
+        calls = []
+        original = rp._run_json
+
+        def fake(cmd):
+            calls.append(Path(cmd[1]).name)
+            return replies.get(Path(cmd[1]).name)
+
+        rp._run_json = fake
+        try:
+            return rp.load_roster(Path("/project"), Path("/skills/bmad-forge-idea")), calls
+        finally:
+            rp._run_json = original
+
+    def test_reads_agents_guests_and_groups_from_the_roster(self):
+        roster = {
+            "agents": {"bmad-agent-pm": {"name": "John"}},
+            "members": {
+                "bmad-agent-pm": {"name": "John", "skill": "bmad-agent-pm", "installed": True},
+                "skeptic": {"name": "The Skeptic", "persona": "Doubts everything."},
+            },
+            "groups": [{"id": "product-team", "members": ["bmad-agent-pm", "skeptic"]}],
+        }
+        (agents, guests, groups, resolved), calls = self._load({"roster.py": roster})
+        self.assertEqual((sorted(agents), sorted(guests), resolved), (["bmad-agent-pm"], ["skeptic"], True))
+        self.assertEqual(groups[0]["id"], "product-team")
+        self.assertEqual(calls, ["roster.py"])
+
+    def test_falls_back_to_the_config_agents_when_the_roster_script_is_absent(self):
+        (agents, guests, groups, resolved), calls = self._load({"resolve_config.py": {"agents": AGENTS}})
+        self.assertEqual((sorted(agents), guests, groups, resolved), (sorted(AGENTS), {}, [], True))
+        self.assertEqual(calls, ["roster.py", "resolve_config.py"])
+
+    def test_nothing_resolves_when_both_scripts_fail(self):
+        (agents, _, _, resolved), _ = self._load({})
+        self.assertEqual((agents, resolved), ({}, False))
+
+
+class TestRosterInThePool(unittest.TestCase):
+    def test_a_guest_joins_the_pool_but_not_the_default_room_and_a_roster_group_resolves(self):
+        guests = {"skeptic": {"name": "The Skeptic", "persona": "Doubts everything."}}
+        pool, index, installed, extra = rp.build_pool(AGENTS, [], guests)
+        self.assertEqual((installed, extra), (list(AGENTS), ["skeptic"]))
+        self.assertEqual(pool["skeptic"]["source"], "roster")
+        groups = rp.merge_groups([{"id": "team", "members": ["pm", "skeptic"]}], [])
+        (party,) = rp.resolve_parties(groups, pool, index)
+        self.assertEqual([member["code"] for member in party["members"]], ["bmad-agent-pm", "skeptic"])
+
+    def test_a_custom_group_replaces_a_roster_group_with_its_id(self):
+        merged = rp.merge_groups([{"id": "team", "name": "Shipped"}], [{"id": "team", "name": "Mine"}, {"id": "x"}])
+        self.assertEqual([(group["id"], group.get("name")) for group in merged], [("team", "Mine"), ("x", None)])
+
+
+class TestMalformedMembers(unittest.TestCase):
+    """A member whose code or name is not a string is left out with a warning; the rest load."""
+
+    def _build(self, agents, members, guests=None):
+        err = io.StringIO()
+        with contextlib.redirect_stderr(err):
+            col, _, installed, _ = rp.build_pool(agents, members, guests)
+        return col, installed, err.getvalue()
+
+    def test_custom_member_with_non_string_code_or_name_is_left_out(self):
+        members = [
+            {"code": 7, "name": "Seven"},
+            {"code": 0, "name": "Zero"},
+            {"code": "neo", "name": ["Neo"]},
+            {"code": "trin", "name": "Trinity"},
+        ]
+        col, _, err = self._build(AGENTS, members)
+        self.assertIn("trin", col)
+        self.assertNotIn("neo", col)
+        self.assertNotIn(7, col)
+        self.assertIn("7", err)
+        self.assertNotIn(0, col)
+        self.assertIn("persona 0 left out", err)
+        self.assertIn("'neo'", err)
+
+    def test_guest_with_non_string_name_is_left_out(self):
+        col, _, err = self._build(AGENTS, [], {"pip": {"name": 3}, "kit": {"name": "Kit"}})
+        self.assertNotIn("pip", col)
+        self.assertIn("kit", col)
+        self.assertIn("'pip'", err)
+
+    def test_installed_agent_with_non_string_name_is_left_out(self):
+        agents = {**AGENTS, "bmad-agent-odd": {"name": 42}}
+        col, installed, err = self._build(agents, [])
+        self.assertEqual(installed, ["bmad-agent-analyst", "bmad-agent-pm"])
+        self.assertNotIn("bmad-agent-odd", col)
+        self.assertIn("'bmad-agent-odd'", err)
+
+
+class TestRejectedOverride(unittest.TestCase):
+    def test_a_rejected_override_warns_with_the_resolver_message_and_uses_the_shipped_party(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            project, skill = Path(tmp) / "project", Path(tmp) / "skill"
+            scripts = project / "_bmad" / "scripts"
+            scripts.mkdir(parents=True)
+            (scripts / "resolve_customization.py").write_text(
+                "import sys\nsys.stderr.write('party_members[0].code must be a string')\nsys.exit(1)\n"
+            )
+            skill.mkdir()
+            (skill / "customize.toml").write_text('[workflow]\ndefault_party = "shipped"\n')
+            err = io.StringIO()
+            with contextlib.redirect_stderr(err):
+                wf = rp.load_party_workflow(project, skill)
+        self.assertEqual(wf, {"default_party": "shipped"})
+        self.assertIn("not applied", err.getvalue())
+        self.assertIn("party_members[0].code must be a string", err.getvalue())
 
 
 if __name__ == "__main__":
