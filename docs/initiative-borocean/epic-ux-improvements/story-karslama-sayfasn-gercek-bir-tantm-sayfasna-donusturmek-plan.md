@@ -3,7 +3,7 @@ title: 'Karşılama sayfasını (/) gerçek bir tanıtım sayfasına dönüştü
 type: 'feature'
 ticket: 8
 created: '2026-10-11'
-status: 'built'
+status: done
 baseline_revision: '9f515458ad7e6de6fad4b4615e1241de60cbc37e'
 route: 'full'
 route_source: 'auto'
