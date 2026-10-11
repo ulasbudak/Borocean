@@ -53,7 +53,7 @@ Oturum açık kullanıcı için davranış değişmiyor: Logo + "Panele git" but
 | # | Bölüm | İçerik | Not |
 |---|---|---|---|
 | 1 | Üst bar | Logo (sol) · "Giriş Yap" metin bağlantısı (sağ, düşük vurgu, `/login`'e gider) | Buton değil, altı çizili bağlantı — birincil CTA'yı hero'ya bırakır. Tıklanabilir alan en az 24×24px olacak şekilde dolgu eklenir (WCAG 2.2 SC 2.5.8; a11y incelemesi 2026-10-10) |
-| 2 | Hero | Mevcut `home.heroTitle` / `home.heroText` (i18n, metin değişmiyor) + **tek** birincil buton "Ücretsiz Başla" (`/signup`) + yanında gerçek ürün ekran görüntüsü | Ekran görüntüsü: Hisse detay sayfası, Genel Bakış sekmesi, fiyat grafiği + Metrik Puanı kartı görünür durumda (örn. AAPL, dolu veriyle). Gerçek yakalama `bmad-build`'de yapılır; burada hangi ekran olduğu sabitleniyor |
+| 2 | Hero | Mevcut `home.heroTitle` / `home.heroText` (i18n, metin değişmiyor) + **tek** birincil buton "Ücretsiz Başla" (`/signup`) + yanında gerçek ürün ekran görüntüsü | Ekran görüntüsü: Hisse detay sayfası, Genel Bakış sekmesi — hisse başlığı, Metrik Puanı kartı ve fiyat satırı görünür (AAPL, dolu veriyle; fiyat grafiği Teknik Analiz sekmesinde olduğu için kadrajda değil). Koyu ve açık tema için ayrı birer yakalama vardır; sayfa etkin temaya uyanı gösterir. Yakalama betiği `apps/web/scripts/capture-landing-screenshot.mts` (Story 16.8, 2026-10-11) |
 | 3 | Sorun | Kısa geçiş metni (yeni i18n anahtarı `home.problemText`): "Bir hisseyi değerlendirmek genelde birden fazla uygulama, birden fazla dil ve doğrulanamayan kaynaklar arasında geziniliyor demek. Borocean temel analiz, teknik analiz ve yapay zekâ destekli özetleri tek ekranda birleştirir." | Playbook'un "parçalı araç yığını" anlatısından damıtıldı; marka/pazarlama iddiası değil, ürün açıklaması — Voice and Tone kurallarına tabi |
 | 4 | Özellikler | Mevcut 6 kart (`home.features`, metinler değişmiyor) üç başlık altında gruplanır: **Araştır** (temel analiz, teknik analiz) · **Takip Et** (tarama/karşılaştırma, izleme/alarm, portföy) · **Karar Desteği** (simülasyon, yapay zeka raporları) | Yalnızca gruplama/başlık eklenir; kart metinleri aynı. Üç grup başlığı gerçek `<h2>` öğesidir (stilize `<p>` değil) — ekran okuyucu başlık gezinmesi için (a11y incelemesi 2026-10-10) |
 | 5 | Üç Görüş | Üç küçük kart — **Kural Bazlı Puan** ("0-100 metrik puanı, kategori kırılımı — al/sat etiketi yok"), **AI Temel Analiz Yorumu** ("Kamuya açık temel verilere dayanan, kişiselleştirilmemiş yorum"), **AI Teknik Okuma** ("Grafik örüntüsünü okuyan, ayrı ve açıkça etiketlenmiş bir ikinci görüş") — üçü de "Üretimde" rozeti taşır (hepsi canlı) | Farklılaşma bölümü; dil `docs/compliance.md` §3'e tabi — "tavsiye", "sinyal", "fırsat" kelimeleri yasak. Bölüm başlığı ("Aynı hisseye üç ayrı görüş") gerçek `<h2>`. Kartlar yalnızca rozet rengiyle değil, başlık metniyle de ayrışır — tek bir düşük-kontrast "yakında" rozet varyantı tanımlanmaz (a11y incelemesi 2026-10-10: Ayarlar'da önceden düzeltilen düşük-kontrast rozet deseninin tekrarı riski) |
@@ -61,12 +61,12 @@ Oturum açık kullanıcı için davranış değişmiyor: Logo + "Panele git" but
 | 7 | Son CTA | Hero'daki butonun tekrarı: "Ücretsiz Başla" | Aynı hedef (`/signup`), aynı metin |
 | 8 | Alt bilgi | Değişmiyor: `t.common.disclaimer` + Şartlar/KVKK/Gizlilik bağlantıları | — |
 
-- Hero ve Sorun bölümleri `max-w-3xl` yerine daha geniş bir konteyner genişliği kullanır (örn. `max-w-5xl`) — sayfanın "dar/kısa" hissini gidermek için `[ASSUMPTION]` tam değer `bmad-build`'de denenerek belirlenir.
+- Tüm bölümler `max-w-3xl` yerine `max-w-5xl` konteyner genişliği kullanır — sayfanın "dar/kısa" hissini gidermek için (Story 16.8'de uygulandı, 2026-10-11).
 - **Duyarlı davranış (taahhüt, yalnızca mock değil):** Hero'nun iki sütunu (metin + ekran görüntüsü), özellik grupları ve Üç Görüş kartları, uygulamanın her yerde kullandığı `sm` kırılım noktasının altında (`< sm`) tek sütuna döner — bu sayfaya özgü yeni bir kırılım noktası icat edilmez (a11y incelemesi 2026-10-10; WCAG 1.4.10).
-- Üst bar kaydırmada sabitlenmez (sticky değil) `[ASSUMPTION]`.
+- Üst bar kaydırmada sabitlenmez (sticky değil); sayfa sunucu bileşeni olarak kalır, istemci JS'i yoktur (Story 16.8, 2026-10-11).
 - Dekoratif SVG ikonlar (CTA ok işaretleri, ekran görüntüsü yer tutucusundaki simge, şeffaflık bandındaki kalkan simgesi) `aria-hidden="true"` taşır — yanlarındaki metin zaten anlamı taşıyor (a11y incelemesi 2026-10-10; Accessibility Floor'daki mobil ikon-etiket kuralının web'deki dekoratif ikon karşılığı).
 
-Görsel referans: [`mockups/key-landing.html`](mockups/key-landing.html). Hero'daki ekran görüntüsü yer tutucudur (gerçek yakalama `bmad-build`'de). Çelişkide bu belge geçerlidir.
+Görsel referans: [`mockups/key-landing.html`](mockups/key-landing.html). Mock'taki ekran görüntüsü yer tutucudur; canlıda gerçek yakalama kullanılır. Çelişkide bu belge geçerlidir.
 
 ## Voice and Tone
 

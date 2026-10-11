@@ -24,6 +24,27 @@ export const en: Messages = {
       { title: "Simulation and AI reports", text: "Try trading with a virtual budget; read AI analysis reports and a daily sector bulletin based on public data." },
     ],
     freeNote: "Free. Signing up takes a minute.",
+    getStarted: "Get started for free",
+    screenshotAlt: "Borocean stock detail page: the Overview tab for AAPL with the current price and the Metric Score card",
+    problemText:
+      "Evaluating a stock usually means hopping between several apps, several languages and sources you cannot verify. Borocean brings fundamental analysis, technical analysis and AI-assisted summaries together on one screen.",
+    featureGroups: [
+      { title: "Research", features: [0, 1] },
+      { title: "Track", features: [2, 3, 4] },
+      { title: "Decision support", features: [5] },
+    ],
+    threeViews: {
+      title: "Three separate views of the same stock",
+      subtitle: "Each view is separate and clearly labeled. None of them says \"buy\" or \"sell\".",
+      liveBadge: "Live",
+      cards: [
+        { title: "Rule-based score", text: "A 0-100 metric score with a category breakdown (valuation, profitability, leverage, growth, technical picture) — no buy/sell label." },
+        { title: "AI fundamentals commentary", text: "Non-personalized commentary based on publicly available fundamental data." },
+        { title: "AI technical read", text: "A second view that reads the chart pattern, kept separate and clearly labeled." },
+      ],
+    },
+    transparencyText:
+      "Borocean is not a brokerage. It does not route orders or give personalized investment advice — it only analyzes publicly available data.",
   },
   auth: {
     title: "Log In",

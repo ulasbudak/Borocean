@@ -48,8 +48,51 @@
   }
 }
 
-/* Manual overrides (future theme toggle) take priority over the media query. */
+/* Theme-matched static assets (landing hero screenshot): one element per theme, CSS-only swap
+   that follows both the system scheme and the manual [data-theme] override. */
+.theme-light-only {
+  display: none;
+}
+@media (prefers-color-scheme: light) {
+  .theme-dark-only {
+    display: none;
+  }
+  .theme-light-only {
+    display: block;
+  }
+}
+:root[data-theme="dark"] .theme-dark-only {
+  display: block;
+}
+:root[data-theme="dark"] .theme-light-only {
+  display: none;
+}
+:root[data-theme="light"] .theme-dark-only {
+  display: none;
+}
+:root[data-theme="light"] .theme-light-only {
+  display: block;
+}
+
+/* Manual overrides (Settings → tema) take priority over the media query; each re-declares its full
+   token set so a stored "dark" choice also wins on a light-OS machine. */
 :root[data-theme="dark"] {
+  --tk-canvas: #0a0b0d;
+  --tk-surface: #121417;
+  --tk-surface-hover: #1a1d21;
+  --tk-surface-elevated: #1e2126;
+  --tk-border-subtle: #23262b;
+  --tk-border-default: #2e3239;
+  --tk-text-primary: #f4f5f7;
+  --tk-text-secondary: #9ca3af;
+  --tk-text-tertiary: #848c98;
+  --tk-text-disabled: #4b5563;
+  --tk-accent: #3b82f6;
+  --tk-accent-text: #0a0b0d;
+  --tk-positive: #34d399;
+  --tk-negative: #f87171;
+  --tk-warning: #f59e0b;
+  --tk-info: #38bdf8;
   color-scheme: dark;
 }
 :root[data-theme="light"] {

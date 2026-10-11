@@ -24,6 +24,27 @@ export const tr: Messages = {
       { title: "Simülasyon ve yapay zeka raporları", text: "Sanal bütçeyle alım-satım dene; kamuya açık verilere dayanan yapay zeka analiz raporlarını ve günlük sektör bültenini oku." },
     ],
     freeNote: "Ücretsiz. Kayıt olmak bir dakika sürer.",
+    getStarted: "Ücretsiz Başla",
+    screenshotAlt: "Borocean hisse detay sayfası: AAPL için Genel Bakış sekmesi, güncel fiyat ve Metrik Puanı kartı",
+    problemText:
+      "Bir hisseyi değerlendirmek genelde birden fazla uygulama, birden fazla dil ve doğrulanamayan kaynaklar arasında geziniliyor demek. Borocean temel analiz, teknik analiz ve yapay zekâ destekli özetleri tek ekranda birleştirir.",
+    featureGroups: [
+      { title: "Araştır", features: [0, 1] },
+      { title: "Takip Et", features: [2, 3, 4] },
+      { title: "Karar Desteği", features: [5] },
+    ],
+    threeViews: {
+      title: "Aynı hisseye üç ayrı görüş",
+      subtitle: "Her görüş ayrı ve açıkça etiketli. Hiçbiri \"al\" veya \"sat\" demez.",
+      liveBadge: "Üretimde",
+      cards: [
+        { title: "Kural Bazlı Puan", text: "0-100 metrik puanı, kategori kırılımı (değerleme, kârlılık, borçluluk, büyüme, teknik görünüm) — al/sat etiketi yok." },
+        { title: "AI Temel Analiz Yorumu", text: "Kamuya açık temel verilere dayanan, kişiselleştirilmemiş yorum." },
+        { title: "AI Teknik Okuma", text: "Grafik örüntüsünü okuyan, ayrı ve açıkça etiketlenmiş bir ikinci görüş." },
+      ],
+    },
+    transparencyText:
+      "Borocean bir aracı kurum değildir. Hiçbir emir iletmez, kişiye özel yatırım tavsiyesi vermez — yalnızca kamuya açık verileri analiz eder.",
   },
   auth: {
     title: "Giriş Yap",

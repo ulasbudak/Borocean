@@ -103,3 +103,12 @@ test("sub-pages carry a compact navigation to every area", async ({ page }) => {
   );
   expect(overflow).toBe(false);
 });
+
+test("root page sends a signed-in user to the dashboard instead of the landing pitch", async ({ page }) => {
+  await page.goto("/");
+
+  await expect(page.getByRole("link", { name: "Panele git" })).toHaveAttribute("href", "/dashboard");
+  await expect(page.getByRole("link", { name: "Ücretsiz Başla" })).toHaveCount(0);
+  await expect(page.getByRole("link", { name: "Giriş Yap" })).toHaveCount(0);
+  await expect(page.getByRole("heading", { level: 2 })).toHaveCount(0);
+});

@@ -31,6 +31,18 @@ export interface Messages {
     featuresTitle: string;
     features: { title: string; text: string }[];
     freeNote: string;
+    getStarted: string;
+    screenshotAlt: string;
+    problemText: string;
+    /** Landing page groups; `features` holds indexes into `home.features`. */
+    featureGroups: { title: string; features: number[] }[];
+    threeViews: {
+      title: string;
+      subtitle: string;
+      liveBadge: string;
+      cards: { title: string; text: string }[];
+    };
+    transparencyText: string;
   };
   auth: {
     title: string;
