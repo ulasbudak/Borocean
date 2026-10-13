@@ -5,7 +5,6 @@ story_id: "1.1"
 status: done
 created: 2026-09-15
 updated: 2026-09-26
-author: Bob (BMAD Scrum Master)
 based_on: ["docs/PRD.md", "docs/architecture.md"]
 depends_on: []
 ---

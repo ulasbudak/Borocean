@@ -3,7 +3,6 @@ title: "Epic 13 — Portföy Gelişme Takibi (Arka Plan AI Taraması): Karar Not
 status: draft
 created: 2026-09-28
 updated: 2026-09-28
-author: Bob (BMAD Scrum Master) — kullanıcı isteğiyle, 2026-09-28
 relatedDocs: ["docs/PRD.md §5.15", "docs/epics.md §17 (Epic 13)", "docs/compliance.md", "docs/architecture.md AD-8"]
 ---
 

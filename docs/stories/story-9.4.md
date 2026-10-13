@@ -20,7 +20,7 @@ As a **kullanıcı (premium)**,
 I want hisse detay sayfasındaki AI Analiz sekmesinde, temel ve teknik raporların birbiriyle uyumlu mu yoksa çelişkili mi olduğunu özetleyen tek bir "ortak değerlendirme" görmek,
 So that iki ayrı raporu kendim okuyup karşılaştırmak zorunda kalmadan hızlıca genel tabloyu anlayabileyim.
 
-*(Kaynak: bu story, `docs/epics.md`/`docs/PRD.md`'de önceden tanımlanmış bir FR'ye dayanmıyor — kullanıcının 2026-09-19'da doğrudan koda yazdırdığı bir genişleme. Bu dosya, [[project_bmad_workflow]] anısında not edilen "retroaktif story eksikliği" bulgusunu kapatmak için sonradan (2026-09-20) yazıldı; AC'ler koddan çıkarıldı, önceden yazılıp da uygulanmamış bir tasarım değil.)*
+*(Kaynak: bu story, `docs/epics.md`/`docs/PRD.md`'de önceden tanımlanmış bir FR'ye dayanmıyor — kullanıcının 2026-09-19'da doğrudan koda yazdırdığı bir genişleme. Bu dosya sonradan (2026-09-20) yazıldı; AC'ler koddan çıkarıldı, önceden yazılıp da uygulanmamış bir tasarım değil.)*
 
 ## Bağlam
 
@@ -47,7 +47,7 @@ Aynı gün (2026-09-19), AI Analiz sekmesindeki ağ hatası mesajlaşması da d�
 
 **Kapsam dışı / bilinen eksik:**
 - `GET /symbols/ai-report/combined` uç noktası için otomatik test suite'inde ayrı bir HTTP-seviyesi test yok (yalnızca `app/ai_combined.py::get_combined_report()` için 3 birim testi var, `app/tests/test_ai_combined.py`); bu revizyonda (2026-09-20) elle/canlı doğrulandı (bkz. DoD) ama otomatik teste eklenmedi.
-- Mobil tarafta gerçek cihaz/simülatör görsel doğrulaması yapılmadı (bkz. DoD) — bu, projede zaten tekrarlanan, kullanıcının kendisinin yapması gereken bir açık madde ([[project_theme_system]]'de de aynı sınırlama not edilmiş).
+- Mobil tarafta gerçek cihaz/simülatör görsel doğrulaması yapılmadı (bkz. DoD) — bu, projede zaten tekrarlanan, kullanıcının kendisinin yapması gereken bir açık madde.
 
 ## Görevler
 
@@ -90,6 +90,6 @@ Aynı gün (2026-09-19), AI Analiz sekmesindeki ağ hatası mesajlaşması da d�
 
 - **Neden ayrı bir tablo değil:** `ai_reports` zaten sembol+borsa+rapor-türü bazlı genel bir önbellek şeması; `combined` yalnızca `report_type` check kısıtına eklenen üçüncü bir değer, yeni bir migration şeması gerekmedi.
 - **Eşzamanlılık:** `asyncio.gather(get_fundamental_report(...), get_technical_report(...))` — ikisi de kendi içinde önbellek kontrolü yaptığından, ikisi de zaten önbellekteyse bu adım gecikme eklemez; ikisi de soğuksa iki LLM/CV çağrısı paralel çalışır (sıralı değil).
-- **Retroaktif belgeleme notu:** Bu story dosyası, kodun yazılmasından bir gün sonra (2026-09-20) açıldı — [[project_bmad_workflow]] anısında işaretlenen "son 4 özellik BMAD sürecinin dışında kalmış" bulgusunun bir parçası. Buradaki AC/Görev/DoD, koddan geriye doğru çıkarıldı; ileriye dönük bir tasarım kararı değil.
+- **Retroaktif belgeleme notu:** Bu story dosyası, kodun yazılmasından bir gün sonra (2026-09-20) açıldı. Buradaki AC/Görev/DoD, koddan geriye doğru çıkarıldı; ileriye dönük bir tasarım kararı değil.
 - **Test verisi artığı:** Görsel doğrulama için oluşturulan `borocean-visual-check-20260920@example.com` Supabase auth kullanıcısı, `entitlements` satırı silinmiş olsa da (artık `free` tier) auth sisteminde duruyor — projede bir `SUPABASE_SERVICE_ROLE_KEY` olmadığından (yalnızca `anon key`) admin API ile kullanıcı silinemedi. Zararsız (girişte kullanılan gerçek bir kimlik değil, entitlement'ı yok) ama temizlik isteniyorsa Supabase Dashboard'dan elle silinebilir.
 - **Mobilin web'den daha DRY olması:** Web, üç neredeyse özdeş bileşen (`CombinedReportCard`/`TechnicalReportCard`/`FundamentalReportCard`) kopyalayarak yazıldı; mobil ise baştan beri tek bir generic `ReportCard<T extends { report: string; cached: boolean }>` bileşenini üç farklı `fetcher` ile kullanıyordu. Mobil tarafı genişletirken bu deseni bozmadık — web'i mobile kopyalamak yerine, mobilin zaten sahip olduğu generic bileşene üçüncü bir kullanım eklendi.

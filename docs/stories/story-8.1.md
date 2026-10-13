@@ -5,7 +5,6 @@ story_id: "8.1"
 status: done
 created: 2026-09-18
 updated: 2026-09-21
-author: Bob (BMAD Scrum Master) & Amelia (BMAD Developer)
 based_on: ["docs/PRD.md", "docs/architecture.md §7", "docs/epics.md §12"]
 depends_on: ["5.1", "5.2", "5.4", "6.1", "6.3"]
 ---

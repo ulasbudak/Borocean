@@ -3,7 +3,6 @@ title: "Borocean (Stock Tracking App) - System Architecture"
 status: draft
 created: 2026-09-15
 updated: 2026-09-15
-author: Winston (BMAD System Architect)
 based_on: docs/PRD.md
 language: en
 translationOf: docs/architecture.md
@@ -298,6 +297,6 @@ borocean/
 ## 13. Next Steps
 
 1. This document should be reviewed by the user, finalizing AD-5, AD-6, and the BIST data-provider decisions.
-2. Screen flows/wireframes via `bmad-ux`.
-3. Epic/story breakdown of the Phase 1 (MVP) FRs via `bmad-create-epics-and-stories`.
+2. Screen flows/wireframes.
+3. Epic/story breakdown of the Phase 1 (MVP) FRs.
 4. License/cost negotiation with BIST data providers (Foreks, Matriks, Algolab) — a business-side action, outside engineering.

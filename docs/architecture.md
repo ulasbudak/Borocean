@@ -3,7 +3,6 @@ title: "Borocean (Borsa Takip Uygulaması) - Sistem Mimarisi"
 status: draft
 created: 2026-09-15
 updated: 2026-09-15
-author: Winston (BMAD System Architect)
 based_on: docs/PRD.md
 ---
 
@@ -296,6 +295,6 @@ borocean/
 ## 13. Sonraki Adımlar
 
 1. Bu doküman kullanıcı tarafından gözden geçirilip AD-5, AD-6 ve BIST veri sağlayıcı kararları netleştirilmeli.
-2. `bmad-ux` ile ekran akışları/wireframe çalışması.
-3. `bmad-create-epics-and-stories` ile Faz 1 (MVP) FR'lerinin epic/story kırılımı.
+2. Ekran akışları/wireframe çalışması.
+3. Faz 1 (MVP) FR'lerinin epic/story kırılımı.
 4. BIST veri sağlayıcıları (Foreks, Matriks, Algolab) ile lisans/maliyet görüşmesi (iş tarafı, mühendislik dışı bir aksiyon).

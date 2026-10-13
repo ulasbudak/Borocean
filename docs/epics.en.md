@@ -3,7 +3,6 @@ title: "Borocean (Stock Tracking App) - Epic & Story Backlog"
 status: active
 created: 2026-09-15
 updated: 2026-09-28
-author: Bob (BMAD Scrum Master)
 inputDocuments: ["docs/PRD.md", "docs/architecture.md"]
 language: en
 translationOf: docs/epics.md
@@ -11,13 +10,13 @@ translationOf: docs/epics.md
 
 # Borocean — Epic & Story Backlog
 
-> **2026-10-09:** Planning and status now live in the BMAD ticket tree: `docs/initiative-borocean/` (`tickets.py status`). This document stays as history; epic and story numbers are the same there.
+> **2026-10-09:** Planning and status now live in `docs/initiative-borocean/`. This document stays as history; epic and story numbers are the same there.
 
 *This is the English translation of [`docs/epics.md`](epics.md), which remains the source of truth. If the two ever disagree, the Turkish version wins until this file is re-synced. Last re-synced: 2026-09-28 (Epic 13 added).*
 
 ## 1. Overview
 
-Based on `docs/PRD.md` and `docs/architecture.md`, this document splits the Phase 1 (MVP) functional requirements into user-value-focused epics and stories that can each be completed in a single developer session. Since a UX design document (`bmad-ux`) has not been produced yet, this backlog is based on the PRD + Architecture; UX-DR (UX Design Requirement) lines should be added to the relevant epics once a UX spec is prepared.
+Based on `docs/PRD.md` and `docs/architecture.md`, this document splits the Phase 1 (MVP) functional requirements into user-value-focused epics and stories that can each be completed in a single developer session. Since a UX design document has not been produced yet, this backlog is based on the PRD + Architecture; UX-DR (UX Design Requirement) lines should be added to the relevant epics once a UX spec is prepared.
 
 ## 2. Requirements Inventory
 

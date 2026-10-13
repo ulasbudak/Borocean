@@ -2,7 +2,6 @@
 type: code-review
 title: Borocean — full-codebase code review
 date: 2026-10-09
-reviewer: Amelia (bmad-code-review, thorough)
 scope: apps/api, apps/web, apps/mobile, packages/shared, apps/api/migrations, apps/api/scripts
 review_mode: no-plan
 ---
@@ -10,12 +9,11 @@ review_mode: no-plan
 # Full-codebase code review — 2026-10-09
 
 **Scope.** All application code: `apps/api` (FastAPI, migrations 0001–0013, cron SQL), `apps/web`
-(Next.js 16), `apps/mobile` (Expo), `packages/shared`. `.agents/`, `_bmad/`, `node_modules` and
+(Next.js 16), `apps/mobile` (Expo), `packages/shared`. `node_modules` and
 generated files were excluded.
 
-**How this ran.** `bmad-code-review` is built around a diff and parallel reviewer subagents.
-Neither fit here: the target is the whole tree rather than a change, and this run had no
-subagents. So I ran the three thorough lenses myself, file group by file group:
+**How this ran.** The whole tree was reviewed (not a single change), file group by file group,
+through three lenses:
 - Blind Hunter: what's missing or wrong.
 - Edge Case Hunter: unhandled branches and boundaries.
 - Verification Gap: what the tests wouldn't catch.

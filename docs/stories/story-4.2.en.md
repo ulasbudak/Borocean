@@ -5,7 +5,6 @@ story_id: "4.2"
 status: done
 created: 2026-09-16
 updated: 2026-09-16
-author: Bob (BMAD Scrum Master) & Amelia (BMAD Developer)
 based_on: ["docs/PRD.en.md", "docs/architecture.en.md", "docs/epics.en.md §8"]
 language: en
 translationOf: docs/stories/story-4.2.md

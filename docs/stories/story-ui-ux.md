@@ -5,7 +5,6 @@ story_id: "UI.1"
 status: done
 created: 2026-09-15
 updated: 2026-09-19
-author: "Sally (BMAD UX Designer), Bob (BMAD Scrum Master) & Amelia (BMAD Developer)"
 based_on: ["docs/PRD.md", "docs/architecture.md", "docs/epics.md §2.4"]
 ---
 
@@ -54,7 +53,6 @@ Kapsam gereği **tüm ekranları tek seferde yeniden tasarlamak yerine**, bu sto
 
 ## Tasarım Sistemi Spesifikasyonu
 
-*(Sally — BMAD UX Designer)*
 
 Bu bölüm, dağınık `Teknik Notlar` bilgisini tek bir bağlayıcı spesifikasyona dönüştürür — yeni bir ekran/bileşen eklerken referans alınacak kaynak budur.
 

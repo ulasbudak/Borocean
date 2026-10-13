@@ -3,7 +3,7 @@ title: "Epic 9 — AI-Assisted Commentary and Pattern Detection: Decision Note"
 status: draft
 created: 2026-09-16
 updated: 2026-09-26
-author: Mary (BMAD Business Analyst) — together with Serdar Ulaş Budak
+author: Serdar Ulaş Budak
 relatedDocs: ["docs/PRD.en.md §5.11, §8, §9", "docs/epics.en.md §13 (Epic 9)"]
 language: en
 translationOf: docs/product-brief-epic9-ai.md

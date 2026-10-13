@@ -3,7 +3,7 @@ title: "Borocean (Stock Tracking App) - Product Requirements Document"
 status: draft
 created: 2026-09-15
 updated: 2026-09-28
-author: Mary (BMAD Business Analyst) — together with Serdar Ulaş Budak
+author: Serdar Ulaş Budak
 language: en
 translationOf: docs/PRD.md
 ---

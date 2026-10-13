@@ -1,6 +1,6 @@
 # Test Automation Summary — Borocean (all features)
 
-Date: 2026-10-09 · Workflow: `bmad-qa-generate-e2e-tests` · Scope chosen by the user: everything.
+Date: 2026-10-09 · Scope chosen by the user: everything.
 
 ## Framework
 

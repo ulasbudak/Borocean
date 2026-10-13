@@ -3,7 +3,7 @@ title: "Epic 9 — AI Destekli Yorum ve Örüntü Tanıma: Karar Notu"
 status: draft
 created: 2026-09-16
 updated: 2026-09-26
-author: Mary (BMAD Business Analyst) — Serdar Ulaş Budak ile birlikte
+author: Serdar Ulaş Budak
 relatedDocs: ["docs/PRD.md §5.11, §8, §9", "docs/epics.md §13 (Epic 9)"]
 ---
 

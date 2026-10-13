@@ -3,19 +3,18 @@ title: "Borocean (Borsa Takip Uygulaması) - Epic ve Story Backlog"
 status: active
 created: 2026-09-15
 updated: 2026-09-28
-author: Bob (BMAD Scrum Master)
 inputDocuments: ["docs/PRD.md", "docs/architecture.md"]
 ---
 
 # Borocean — Epic & Story Backlog
 
-> **2026-10-09:** Planlama ve durum takibi artık BMAD ticket ağacında: `docs/initiative-borocean/` (`tickets.py status`). Bu belge geçmiş kaydı olarak duruyor; epic ve story numaraları orada aynı.
+> **2026-10-09:** Planlama ve durum takibi artık `docs/initiative-borocean/` altında. Bu belge geçmiş kaydı olarak duruyor; epic ve story numaraları orada aynı.
 
 *İngilizce versiyon: [`docs/epics.en.md`](epics.en.md).*
 
 ## 1. Genel Bakış
 
-Bu doküman, `docs/PRD.md` ve `docs/architecture.md` temel alınarak Faz 1 (MVP) kapsamındaki fonksiyonel gereksinimleri kullanıcı-değeri odaklı epic'lere ve tek bir geliştirici oturumunda tamamlanabilir story'lere ayırır. UX tasarım dokümanı (`bmad-ux`) henüz üretilmediği için bu backlog PRD + Architecture'a dayanır; UX spesifikasyonu hazırlandığında ilgili epiklere UX-DR (UX Design Requirement) satırları eklenmelidir.
+Bu doküman, `docs/PRD.md` ve `docs/architecture.md` temel alınarak Faz 1 (MVP) kapsamındaki fonksiyonel gereksinimleri kullanıcı-değeri odaklı epic'lere ve tek bir geliştirici oturumunda tamamlanabilir story'lere ayırır. UX tasarım dokümanı henüz üretilmediği için bu backlog PRD + Architecture'a dayanır; UX spesifikasyonu hazırlandığında ilgili epiklere UX-DR (UX Design Requirement) satırları eklenmelidir.
 
 ## 2. Gereksinim Envanteri
 

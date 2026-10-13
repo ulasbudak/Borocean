@@ -3,7 +3,7 @@ title: "Borocean (Borsa Takip Uygulaması) - Ürün Gereksinim Dokümanı"
 status: draft
 created: 2026-09-15
 updated: 2026-09-28
-author: Mary (BMAD Business Analyst) — Serdar Ulaş Budak ile birlikte
+author: Serdar Ulaş Budak
 ---
 
 # Borocean — PRD

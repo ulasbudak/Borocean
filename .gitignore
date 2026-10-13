@@ -24,7 +24,18 @@ apps/api/app/models/
 # Vercel CLI local link (project/org ids)
 .vercel/
 
-# BMAD: other agent hosts' skill symlink mirrors and the render cache
+# AI agent tooling and planning-workflow files (kept local, not part of the project)
 data/
 .aider-desk/
-_bmad/render/
+.agents/
+.claude/
+_bmad/
+_bmad-output/
+skills-lock.json
+AGENTS.md
+CLAUDE.md
+docs/initiative-borocean/**/tickets.toml
+docs/initiative-borocean/**/.memlog.md
+docs/initiative-borocean/**/reviews/
+docs/initiative-borocean/**/validation-report.*
+docs/initiative-borocean/**/review-accessibility.md

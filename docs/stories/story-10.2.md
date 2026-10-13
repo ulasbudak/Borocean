@@ -18,7 +18,7 @@ As a **kullanıcı**,
 I want simülasyon emir formundaki sembol alanına yazarken dashboard/karşılaştırma ekranlarındaki gibi öneri listesi görmek,
 So that tam sembol kodunu ezbere bilmeden, şirket adıyla arayarak doğru sembolü ve borsayı seçebileyim.
 
-*(Kaynak: bu story önceden tanımlanmış bir FR'ye dayanmıyor — Story 10.1'in emir formunun küçük bir UX eksiğini kapatan, kullanıcının 2026-09-19'da doğrudan koda yazdırdığı bir iyileştirme. Bu dosya [[project_bmad_workflow]] anısındaki "retroaktif story eksikliği" bulgusunu kapatmak için sonradan (2026-09-20) yazıldı.)*
+*(Kaynak: bu story önceden tanımlanmış bir FR'ye dayanmıyor — Story 10.1'in emir formunun küçük bir UX eksiğini kapatan, kullanıcının 2026-09-19'da doğrudan koda yazdırdığı bir iyileştirme. Bu dosya sonradan (2026-09-20) yazıldı.)*
 
 ## Bağlam
 
@@ -64,4 +64,4 @@ Story 10.1'in emir formu (`PlaceOrderForm`, hem web `simulation-view.tsx` hem mo
 ## Teknik Notlar
 
 - **Yeni bir desen değil:** Bu story, dashboard ve `/compare`'de zaten var olan debounce+`AbortController` sembol arama desenini üçüncü bir yüzeye (emir formu) kopyalıyor; backend veya veri modeli değişikliği yok.
-- **Retroaktif belgeleme notu:** Bu story dosyası, kodun yazılmasından bir gün sonra (2026-09-20) açıldı — [[project_bmad_workflow]] anısında işaretlenen "son 4 özellik BMAD sürecinin dışında kalmış" bulgusunun bir parçası.
+- **Retroaktif belgeleme notu:** Bu story dosyası, kodun yazılmasından bir gün sonra (2026-09-20) açıldı.

@@ -3,7 +3,6 @@ title: "Epic 13 — Portfolio Insight Tracking (Background AI Scan): Decision No
 status: draft
 created: 2026-09-28
 updated: 2026-09-28
-author: Bob (BMAD Scrum Master) — at the user's request, 2026-09-28
 relatedDocs: ["docs/PRD.en.md §5.15", "docs/epics.en.md §17 (Epic 13)", "docs/compliance.md", "docs/architecture.en.md AD-8"]
 language: en
 translationOf: docs/product-brief-epic13-portfolio-insights.md

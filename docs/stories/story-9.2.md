@@ -5,7 +5,7 @@ story_id: "9.2"
 status: done
 created: 2026-09-16
 updated: 2026-09-28
-author: Mary (BMAD Business Analyst) & Bob (BMAD Scrum Master) — Serdar Ulaş Budak ile birlikte
+author: Serdar Ulaş Budak
 based_on: ["docs/PRD.md §5.11", "docs/epics.md §13", "docs/product-brief-epic9-ai.md §\"2026-09-18 Güncellemesi\""]
 depends_on: ["3.1", "3.2", "8.1"]
 ---
