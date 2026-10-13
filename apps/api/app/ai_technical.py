@@ -51,7 +51,7 @@ if TYPE_CHECKING:
 # docs/product-brief-epic9-ai.md), hosted as a release asset because it exceeds GitHub's
 # 100 MB per-file limit. The SHA-256 pin means the file can't change under us.
 MODEL_URL = (
-    "https://github.com/ulasbudak/trendus/releases/download/"
+    "https://github.com/ulasbudak/borocean/releases/download/"
     "chartscan-yolov8-onnx-v1/chartscan_yolov8.onnx"
 )
 MODEL_SHA256 = "f57623db970b7bb31133618aedd2ad3dad3cacbdffb8ab33aca0f23eedd84d07"
