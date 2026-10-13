@@ -1012,6 +1012,8 @@ So that the "Email notifications" setting actually works.
 
 ### Story 14.3: Company Contact Addresses (KVKK and Support)
 
+- [x] **Done (2026-10-13).** `kvkk@` and `destek@borocean.com` forward to the personal Gmail via ImprovMX (Squarespace DNS: 2 MX + SPF on the root domain; Resend records unchanged). A test email arrived. `/kvkk`, `/privacy` and `/terms` now show `kvkk@borocean.com`. Note: the first forwarded test email landed in Gmail spam; a Gmail "Never send it to Spam" filter is set up for these two addresses.
+
 As a **product owner**,
 I want to use `@borocean.com` addresses for KVKK requests and support,
 So that my personal Gmail address isn't published in the legal texts and on the site.

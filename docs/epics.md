@@ -1010,6 +1010,8 @@ So that ayarlardaki "E-posta bildirimleri" seçeneği gerçekten çalışsın.
 
 ### Story 14.3: Kurumsal İletişim Adresleri (KVKK ve Destek)
 
+- [x] **Tamamlandı (2026-10-13).** ImprovMX ile `kvkk@` ve `destek@borocean.com` kişisel Gmail'e yönleniyor (Squarespace DNS: kök alan adında 2 MX + SPF; Resend kayıtları değişmedi). Test e-postası ulaştı. `/kvkk`, `/privacy`, `/terms` artık `kvkk@borocean.com` gösteriyor. Not: yönlendirilen ilk test e-postası Gmail'de spam'e düştü; Gmail'de bu iki adres için "Asla spam'e gönderme" filtresi kurulur.
+
 As a **ürün sahibi**,
 I want KVKK başvuruları ve destek için `@borocean.com` adresleri kullanmak,
 So that kişisel Gmail adresim hukuki metinlerde ve sitede yayımlanmasın.
