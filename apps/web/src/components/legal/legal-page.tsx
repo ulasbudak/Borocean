@@ -42,4 +42,4 @@ export function LegalPage({
   );
 }
 
-export const CONTACT_EMAIL = "serdarulasbudak@gmail.com";
+export const CONTACT_EMAIL = "kvkk@borocean.com";
