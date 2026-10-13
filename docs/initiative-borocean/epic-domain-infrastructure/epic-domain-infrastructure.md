@@ -28,7 +28,7 @@ Alan adı olmadığı için ertelenen işler canlıda tamamlanır: e-posta gönd
 ## Done when
 
 1. Onay, sıfırlama ve alarm e-postaları noreply@borocean.com'dan gider ve spam'e düşmez.
-2. Hukuki sayfalardaki iletişim adresi kvkk@borocean.com'dur ve e-postalar ulaşır.
+2. Hukuki sayfalardaki iletişim adresi kvkk@borocean.com'dur ve e-postalar ulaşır; bu adreslerden verilen yanıtlar SPF/DKIM/DMARC'tan geçer (14.7).
 3. Google ile giriş canlıda uçtan uca çalışır.
 4. www ve vercel.app adresleri borocean.com'a 308 ile yönlenir; site haritası Search Console'da.
 
@@ -47,6 +47,7 @@ Panel/DNS işleri kullanıcıda, kod ve doğrulama geliştiricide (epics.md §18
 
 - Decision: önerilen sıra 14.1 → 14.2 → 14.3 → 14.4, 14.6 bağımsız, 14.5 karar bekliyor (epics.md §18). Tracer bullet: 14.1 (alan adından e-posta).
 - Decision: 2026-10-09 — entry'ler çoğunlukla panel/DNS yapılandırması, birbirinden bağımsız; Refactor sweep eklenmedi.
+- Decision: 2026-10-13 — gelen posta için ImprovMX (Squarespace yönlendirmesi Resend'in `send` MX kaydı yüzünden kapalı, Workspace ücretli); yanıt gönderimi Gmail "Send mail as" + Resend SMTP ile, ayrı gönderim anahtarı (14.7).
 - Decision: 2026-10-09 — kullanıcı: mobil mağaza yayını ileriki planlarda; şimdilik yapılmayacak. 14.5 (Apple) mağaza yayınına kadar zorunlu değil.
 - Waits on epic 1 because: kayıt/giriş akışı (1.9).
 - Waits on epic 5 because: alarm ve bildirim kodu (5.4).

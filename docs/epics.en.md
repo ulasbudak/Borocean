@@ -122,7 +122,7 @@ Every day, without the user doing anything, the app scans the stocks in portfoli
 **FRs covered:** FR-140, FR-141, FR-142, FR-143, FR-144, FR-145, FR-146
 
 ### Epic 14: Post-Domain Infrastructure (borocean.com) (Backlog — 2026-10-09)
-Work deferred for lack of a domain: sending email from the domain and Supabase SMTP, alert emails, company contact addresses, Google sign-in, the Apple sign-in decision, domain consolidation and SEO.
+Work deferred for lack of a domain: sending email from the domain and Supabase SMTP, alert emails, company contact addresses and replying from them, Google sign-in, the Apple sign-in decision, domain consolidation and SEO.
 **FRs covered:** no new FR; completes existing FR-060 (social sign-in), FR-043/FR-070 (email notifications) and NFR-7 (KVKK contact) in production.
 
 **Epic independence note:** Each epic may use the output of an earlier one (e.g. Epic 3 uses the fundamental data model produced by Epic 2), but no epic waits on a later epic to be completed. Epic 8 (Subscription) places the feature limits produced in Epic 1–7 behind freemium gates but does not change those epics' functionality.
@@ -1018,8 +1018,25 @@ So that my personal Gmail address isn't published in the legal texts and on the 
 
 **Acceptance Criteria:**
 
-- **Given** Squarespace Domains' email forwarding (or another mailbox), **When** `kvkk@borocean.com` and `destek@borocean.com` are forwarded to the personal address, **Then** incoming emails arrive (MX records set up so they don't conflict with Resend's bounce record from Story 14.1).
+- **Given** ImprovMX's free plan (1 domain, 25 aliases, 500 forwards/day), **When** `kvkk@borocean.com` and `destek@borocean.com` are forwarded to the personal address, **Then** incoming emails arrive. In Squarespace DNS add, for the root domain, `MX @ mx1.improvmx.com` (10), `MX @ mx2.improvmx.com` (20) and `TXT @ v=spf1 include:spf.improvmx.com ~all`; Resend's records on the `send` subdomain and `_dmarc` stay untouched.
 - **And** the contact address on `/kvkk`, `/privacy` and `/terms` is changed to `kvkk@borocean.com` (`components/legal/legal-page.tsx` → `CONTACT_EMAIL`).
+- **And** the code change (`CONTACT_EMAIL` → `kvkk@borocean.com`) is ready on the `story-14.3-iletisim-adresleri` branch; it does not ship until forwarding is confirmed with a test email (otherwise KVKK requests sent in between are lost).
+
+> **Decision (2026-10-13):** Squarespace's built-in email forwarding can't be used: "Add rule" is disabled while the domain has any MX record, and Resend's `send.borocean.com` bounce MX record triggers that (deleting it breaks Resend sending). Google Workspace is paid. Cloudflare Email Routing is free but requires moving all DNS to Cloudflare. So **ImprovMX** was chosen; it only forwards incoming mail, and sending is done via Resend SMTP in Story 14.7.
+
+### Story 14.7: Replying from the Company Addresses (Gmail + Resend SMTP)
+
+As a **product owner**,
+I want to reply to KVKK and support emails from Gmail as `kvkk@borocean.com` / `destek@borocean.com`,
+So that my personal Gmail address doesn't show in the correspondence and replies don't land in spam.
+
+**Acceptance Criteria:**
+
+- **Given** forwarding from Story 14.3 works, **When** a new Resend API key with sending access only (restricted to `borocean.com`) is created, **Then** that key is used only for Gmail SMTP and isn't shared with `RESEND_API_KEY` on Render (revoking one doesn't affect the other).
+- **And** in Gmail → Settings → Accounts and Import → "Add another email address", `kvkk@borocean.com` and `destek@borocean.com` are added ("Treat as an alias" on); SMTP: `smtp.resend.com`, port `465` (SSL), username `resend`, password that API key. The verification code Gmail sends (it arrives via ImprovMX) is entered.
+- **And** "When replying" is set to "Reply from the same address the message was sent to", so a reply to mail sent to `kvkk@` goes out from `kvkk@` automatically.
+- **And** a test reply is sent to a separate address (e.g. another Gmail account); the received email's headers show `SPF: PASS`, `DKIM: PASS (d=borocean.com)` and `DMARC: PASS`, and the personal Gmail address appears in no header.
+- **And** note: Gmail's own SMTP (`smtp.gmail.com`) is not used; that path signs DKIM as `gmail.com` and DMARC alignment fails. The Resend free plan's 100 emails/day limit is shared with sign-up and alert emails.
 
 ### Story 14.4: Sign In with Google (Web)
 
@@ -1071,7 +1088,8 @@ So that the `www`, `vercel.app` and `onrender.com` addresses don't look scattere
 |---|---|---|---|
 | 1 | 14.1 Email | Resend account, DNS records, Supabase SMTP and rate limit | Record checks, template copy, end-to-end test in production |
 | 2 | 14.2 Alert email | Two environment variables on Render | Email copy (language, notice, settings link), test |
-| 3 | 14.3 Contact addresses | Squarespace email forwarding | Address on the legal pages |
+| 3 | 14.3 Contact addresses | ImprovMX account + 2 MX and 1 TXT record in Squarespace DNS | DNS check, address on the legal pages |
+| 3b | 14.7 Replying | Sending-only Resend key, Gmail "Add another address" | Header check (SPF/DKIM/DMARC) |
 | 4 | 14.4 Google sign-in | Google Cloud consent screen + client, Supabase provider | KVKK notice, end-to-end test in production |
 | 5 | 14.6 Domain/SEO | `www` redirect in Vercel | metadata, robots, sitemap |
 | — | 14.5 Apple | 99 USD/year decision | — |

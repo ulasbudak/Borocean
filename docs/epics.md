@@ -120,7 +120,7 @@ Uygulama her gün, kullanıcı hiçbir şey yapmadan, portföylerdeki hisseleri 
 **FRs covered:** FR-140, FR-141, FR-142, FR-143, FR-144, FR-145, FR-146
 
 ### Epic 14: Alan Adı Sonrası Altyapı (borocean.com) (Backlog — 2026-10-09)
-Alan adı olmadığı için ertelenen işler: alan adından e-posta gönderimi ve Supabase SMTP, alarm e-postaları, kurumsal iletişim adresleri, Google ile giriş, Apple ile giriş kararı, alan adı düzeni ve SEO.
+Alan adı olmadığı için ertelenen işler: alan adından e-posta gönderimi ve Supabase SMTP, alarm e-postaları, kurumsal iletişim adresleri ve bu adreslerden yanıt gönderimi, Google ile giriş, Apple ile giriş kararı, alan adı düzeni ve SEO.
 **FRs covered:** yeni FR yok; mevcut FR-060 (sosyal giriş), FR-043/FR-070 (e-posta bildirimi), NFR-7 (KVKK iletişim) gereksinimlerinin canlıda tamamlanması.
 
 **Epic bağımsızlığı notu:** Her epic bir öncekinin çıktısını kullanabilir (örn. Epic 3, Epic 2'nin ürettiği temel veri modelini kullanır) ama hiçbir epic sonraki bir epiğin tamamlanmasını beklemez. Epic 8 (Abonelik), Epic 1-7'de üretilen özellik sınırlarını freemium kapıları arkasına yerleştirir ama bu epiklerin fonksiyonelliğini değiştirmez.
@@ -1016,8 +1016,25 @@ So that kişisel Gmail adresim hukuki metinlerde ve sitede yayımlanmasın.
 
 **Acceptance Criteria:**
 
-- **Given** Squarespace Domains'in e-posta yönlendirme özelliği (ya da başka bir posta kutusu), **When** `kvkk@borocean.com` ve `destek@borocean.com` kişisel adrese yönlendirilirse, **Then** gelen e-postalar ulaşır (MX kayıtları Story 14.1'deki Resend bounce kaydıyla çakışmayacak şekilde kurulur).
+- **Given** ImprovMX ücretsiz planı (1 alan adı, 25 adres, günde 500 yönlendirme), **When** `kvkk@borocean.com` ve `destek@borocean.com` kişisel adrese yönlendirilirse, **Then** gelen e-postalar ulaşır. Squarespace DNS'e kök alan adı için `MX @ mx1.improvmx.com` (10), `MX @ mx2.improvmx.com` (20) ve `TXT @ v=spf1 include:spf.improvmx.com ~all` eklenir; Resend'in `send` alt alan adındaki kayıtlarına ve `_dmarc`'a dokunulmaz.
 - **And** `/kvkk`, `/privacy`, `/terms` sayfalarındaki iletişim adresi `kvkk@borocean.com` ile değiştirilir (`components/legal/legal-page.tsx` → `CONTACT_EMAIL`).
+- **And** kod değişikliği (`CONTACT_EMAIL` → `kvkk@borocean.com`) `story-14.3-iletisim-adresleri` dalında hazır; yönlendirme test e-postasıyla doğrulanmadan yayına alınmaz (aksi halde o arada gelen KVKK başvuruları kaybolur).
+
+> **Karar (2026-10-13):** Squarespace'in yerleşik e-posta yönlendirmesi kullanılamıyor: alan adında MX kaydı varken "Add rule" kapalı ve Resend'in `send.borocean.com` bounce MX kaydı bunu tetikliyor (silinirse Resend gönderimi bozulur). Google Workspace ücretli. Cloudflare Email Routing ücretsiz ama tüm DNS'in Cloudflare'e taşınmasını gerektiriyor. Bu yüzden **ImprovMX** seçildi; yalnızca gelen postayı yönlendirir, gönderim Story 14.7'de Resend SMTP ile yapılır.
+
+### Story 14.7: Kurumsal Adreslerden Yanıt Gönderimi (Gmail + Resend SMTP)
+
+As a **ürün sahibi**,
+I want KVKK ve destek e-postalarına Gmail'den `kvkk@borocean.com` / `destek@borocean.com` adıyla yanıt vermek,
+So that kişisel Gmail adresim yazışmalarda görünmesin ve yanıtlar spam'e düşmesin.
+
+**Acceptance Criteria:**
+
+- **Given** Story 14.3'teki yönlendirme çalışıyor, **When** Resend panelinde yalnızca gönderim yetkili (Sending access, `borocean.com` ile sınırlı) yeni bir API anahtarı oluşturulursa, **Then** bu anahtar yalnızca Gmail SMTP'si için kullanılır; Render'daki `RESEND_API_KEY` ile paylaşılmaz (biri iptal edilirse diğeri etkilenmez).
+- **And** Gmail → Ayarlar → Hesaplar ve İçe Aktarma → "Başka bir e-posta adresi ekle" ile `kvkk@borocean.com` ve `destek@borocean.com` eklenir ("Takma ad olarak işle" açık); SMTP: `smtp.resend.com`, port `465` (SSL), kullanıcı adı `resend`, şifre bu API anahtarı. Gmail'in gönderdiği doğrulama kodu (ImprovMX üzerinden gelir) girilir.
+- **And** "Yanıtla" ayarı "Mesajın gönderildiği adresten yanıtla" yapılır; böylece `kvkk@`'ye gelen e-postaya yanıt otomatik olarak `kvkk@`'den gider.
+- **And** ayrı bir adrese (örn. başka bir Gmail hesabı) deneme yanıtı gönderilir; gelen e-postanın başlıklarında `SPF: PASS`, `DKIM: PASS (d=borocean.com)` ve `DMARC: PASS` görülür, kişisel Gmail adresi hiçbir başlıkta görünmez.
+- **And** not: Gmail'in kendi SMTP'si (`smtp.gmail.com`) kullanılmaz; o yolda DKIM imzası `gmail.com` olur ve DMARC hizalaması tutmaz. Resend ücretsiz planın günlük 100 e-posta sınırı, kayıt/alarm e-postalarıyla ortak kullanılır.
 
 ### Story 14.4: Google ile Giriş (Web)
 
@@ -1069,7 +1086,8 @@ So that `www`, `vercel.app` ve `onrender.com` adresleri dağınık görünmesin.
 |---|---|---|---|
 | 1 | 14.1 E-posta | Resend hesabı, DNS kayıtları, Supabase SMTP ve rate limit | Kayıt kontrolü, şablon metinleri, prod'da uçtan uca deneme |
 | 2 | 14.2 Alarm e-postası | Render'a iki ortam değişkeni | E-posta metni (dil, uyarı ibaresi, ayar bağlantısı), deneme |
-| 3 | 14.3 İletişim adresleri | Squarespace e-posta yönlendirme | Hukuki sayfalardaki adres |
+| 3 | 14.3 İletişim adresleri | ImprovMX hesabı + Squarespace DNS'e 2 MX ve 1 TXT kaydı | DNS kontrolü, hukuki sayfalardaki adres |
+| 3b | 14.7 Yanıt gönderimi | Resend'de gönderim anahtarı, Gmail "Başka adres ekle" | Başlık kontrolü (SPF/DKIM/DMARC) |
 | 4 | 14.4 Google ile giriş | Google Cloud onay ekranı + istemci, Supabase provider | KVKK metni, prod'da uçtan uca deneme |
 | 5 | 14.6 Alan adı düzeni/SEO | Vercel'de `www` yönlendirmesi | metadata, robots, sitemap |
 | — | 14.5 Apple | 99 USD/yıl kararı | — |
